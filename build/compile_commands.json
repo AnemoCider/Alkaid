@@ -1,0 +1,398 @@
+[
+{
+  "directory": "E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/build",
+  "command": "E:\\yjw\\CS\\mingw64-posix\\bin\\g++.exe  @CMakeFiles/Renderer.dir/includes_CXX.rsp  -DVK_USE_PLATFORM_WIN32_KHR -g -std=gnu++17 -o CMakeFiles\\Renderer.dir\\source\\examples\\basicTriangle.cpp.obj -c E:\\yjw\\Graphics\\Learning\\Project\\Renderer\\Alkaid\\source\\examples\\basicTriangle.cpp",
+  "file": "E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/source/examples/basicTriangle.cpp",
+  "output": "CMakeFiles/Renderer.dir/source/examples/basicTriangle.cpp.obj"
+},
+{
+  "directory": "E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/build/source/base",
+  "command": "E:\\yjw\\CS\\mingw64-posix\\bin\\g++.exe  @CMakeFiles/base.dir/includes_CXX.rsp -g -std=gnu++17 -o CMakeFiles\\base.dir\\VulkanDevice.cpp.obj -c E:\\yjw\\Graphics\\Learning\\Project\\Renderer\\Alkaid\\source\\base\\VulkanDevice.cpp",
+  "file": "E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/source/base/VulkanDevice.cpp",
+  "output": "source/base/CMakeFiles/base.dir/VulkanDevice.cpp.obj"
+},
+{
+  "directory": "E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/build/source/base",
+  "command": "E:\\yjw\\CS\\mingw64-posix\\bin\\g++.exe  @CMakeFiles/base.dir/includes_CXX.rsp -g -std=gnu++17 -o CMakeFiles\\base.dir\\vulkanBase.cpp.obj -c E:\\yjw\\Graphics\\Learning\\Project\\Renderer\\Alkaid\\source\\base\\vulkanBase.cpp",
+  "file": "E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/source/base/vulkanBase.cpp",
+  "output": "source/base/CMakeFiles/base.dir/vulkanBase.cpp.obj"
+},
+{
+  "directory": "E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/build/external/glfw/src",
+  "command": "E:\\yjw\\CS\\mingw64-posix\\bin\\gcc.exe -DUNICODE -DWINVER=0x0501 -D_GLFW_WIN32 -D_UNICODE @CMakeFiles/glfw.dir/includes_C.rsp -g -std=c99 -Wall -Wdeclaration-after-statement -o CMakeFiles\\glfw.dir\\context.c.obj -c E:\\yjw\\Graphics\\Learning\\Project\\Renderer\\Alkaid\\external\\glfw\\src\\context.c",
+  "file": "E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/external/glfw/src/context.c",
+  "output": "external/glfw/src/CMakeFiles/glfw.dir/context.c.obj"
+},
+{
+  "directory": "E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/build/external/glfw/src",
+  "command": "E:\\yjw\\CS\\mingw64-posix\\bin\\gcc.exe -DUNICODE -DWINVER=0x0501 -D_GLFW_WIN32 -D_UNICODE @CMakeFiles/glfw.dir/includes_C.rsp -g -std=c99 -Wall -Wdeclaration-after-statement -o CMakeFiles\\glfw.dir\\init.c.obj -c E:\\yjw\\Graphics\\Learning\\Project\\Renderer\\Alkaid\\external\\glfw\\src\\init.c",
+  "file": "E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/external/glfw/src/init.c",
+  "output": "external/glfw/src/CMakeFiles/glfw.dir/init.c.obj"
+},
+{
+  "directory": "E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/build/external/glfw/src",
+  "command": "E:\\yjw\\CS\\mingw64-posix\\bin\\gcc.exe -DUNICODE -DWINVER=0x0501 -D_GLFW_WIN32 -D_UNICODE @CMakeFiles/glfw.dir/includes_C.rsp -g -std=c99 -Wall -Wdeclaration-after-statement -o CMakeFiles\\glfw.dir\\input.c.obj -c E:\\yjw\\Graphics\\Learning\\Project\\Renderer\\Alkaid\\external\\glfw\\src\\input.c",
+  "file": "E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/external/glfw/src/input.c",
+  "output": "external/glfw/src/CMakeFiles/glfw.dir/input.c.obj"
+},
+{
+  "directory": "E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/build/external/glfw/src",
+  "command": "E:\\yjw\\CS\\mingw64-posix\\bin\\gcc.exe -DUNICODE -DWINVER=0x0501 -D_GLFW_WIN32 -D_UNICODE @CMakeFiles/glfw.dir/includes_C.rsp -g -std=c99 -Wall -Wdeclaration-after-statement -o CMakeFiles\\glfw.dir\\monitor.c.obj -c E:\\yjw\\Graphics\\Learning\\Project\\Renderer\\Alkaid\\external\\glfw\\src\\monitor.c",
+  "file": "E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/external/glfw/src/monitor.c",
+  "output": "external/glfw/src/CMakeFiles/glfw.dir/monitor.c.obj"
+},
+{
+  "directory": "E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/build/external/glfw/src",
+  "command": "E:\\yjw\\CS\\mingw64-posix\\bin\\gcc.exe -DUNICODE -DWINVER=0x0501 -D_GLFW_WIN32 -D_UNICODE @CMakeFiles/glfw.dir/includes_C.rsp -g -std=c99 -Wall -Wdeclaration-after-statement -o CMakeFiles\\glfw.dir\\platform.c.obj -c E:\\yjw\\Graphics\\Learning\\Project\\Renderer\\Alkaid\\external\\glfw\\src\\platform.c",
+  "file": "E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/external/glfw/src/platform.c",
+  "output": "external/glfw/src/CMakeFiles/glfw.dir/platform.c.obj"
+},
+{
+  "directory": "E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/build/external/glfw/src",
+  "command": "E:\\yjw\\CS\\mingw64-posix\\bin\\gcc.exe -DUNICODE -DWINVER=0x0501 -D_GLFW_WIN32 -D_UNICODE @CMakeFiles/glfw.dir/includes_C.rsp -g -std=c99 -Wall -Wdeclaration-after-statement -o CMakeFiles\\glfw.dir\\vulkan.c.obj -c E:\\yjw\\Graphics\\Learning\\Project\\Renderer\\Alkaid\\external\\glfw\\src\\vulkan.c",
+  "file": "E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/external/glfw/src/vulkan.c",
+  "output": "external/glfw/src/CMakeFiles/glfw.dir/vulkan.c.obj"
+},
+{
+  "directory": "E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/build/external/glfw/src",
+  "command": "E:\\yjw\\CS\\mingw64-posix\\bin\\gcc.exe -DUNICODE -DWINVER=0x0501 -D_GLFW_WIN32 -D_UNICODE @CMakeFiles/glfw.dir/includes_C.rsp -g -std=c99 -Wall -Wdeclaration-after-statement -o CMakeFiles\\glfw.dir\\window.c.obj -c E:\\yjw\\Graphics\\Learning\\Project\\Renderer\\Alkaid\\external\\glfw\\src\\window.c",
+  "file": "E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/external/glfw/src/window.c",
+  "output": "external/glfw/src/CMakeFiles/glfw.dir/window.c.obj"
+},
+{
+  "directory": "E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/build/external/glfw/src",
+  "command": "E:\\yjw\\CS\\mingw64-posix\\bin\\gcc.exe -DUNICODE -DWINVER=0x0501 -D_GLFW_WIN32 -D_UNICODE @CMakeFiles/glfw.dir/includes_C.rsp -g -std=c99 -Wall -Wdeclaration-after-statement -o CMakeFiles\\glfw.dir\\egl_context.c.obj -c E:\\yjw\\Graphics\\Learning\\Project\\Renderer\\Alkaid\\external\\glfw\\src\\egl_context.c",
+  "file": "E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/external/glfw/src/egl_context.c",
+  "output": "external/glfw/src/CMakeFiles/glfw.dir/egl_context.c.obj"
+},
+{
+  "directory": "E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/build/external/glfw/src",
+  "command": "E:\\yjw\\CS\\mingw64-posix\\bin\\gcc.exe -DUNICODE -DWINVER=0x0501 -D_GLFW_WIN32 -D_UNICODE @CMakeFiles/glfw.dir/includes_C.rsp -g -std=c99 -Wall -Wdeclaration-after-statement -o CMakeFiles\\glfw.dir\\osmesa_context.c.obj -c E:\\yjw\\Graphics\\Learning\\Project\\Renderer\\Alkaid\\external\\glfw\\src\\osmesa_context.c",
+  "file": "E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/external/glfw/src/osmesa_context.c",
+  "output": "external/glfw/src/CMakeFiles/glfw.dir/osmesa_context.c.obj"
+},
+{
+  "directory": "E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/build/external/glfw/src",
+  "command": "E:\\yjw\\CS\\mingw64-posix\\bin\\gcc.exe -DUNICODE -DWINVER=0x0501 -D_GLFW_WIN32 -D_UNICODE @CMakeFiles/glfw.dir/includes_C.rsp -g -std=c99 -Wall -Wdeclaration-after-statement -o CMakeFiles\\glfw.dir\\null_init.c.obj -c E:\\yjw\\Graphics\\Learning\\Project\\Renderer\\Alkaid\\external\\glfw\\src\\null_init.c",
+  "file": "E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/external/glfw/src/null_init.c",
+  "output": "external/glfw/src/CMakeFiles/glfw.dir/null_init.c.obj"
+},
+{
+  "directory": "E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/build/external/glfw/src",
+  "command": "E:\\yjw\\CS\\mingw64-posix\\bin\\gcc.exe -DUNICODE -DWINVER=0x0501 -D_GLFW_WIN32 -D_UNICODE @CMakeFiles/glfw.dir/includes_C.rsp -g -std=c99 -Wall -Wdeclaration-after-statement -o CMakeFiles\\glfw.dir\\null_monitor.c.obj -c E:\\yjw\\Graphics\\Learning\\Project\\Renderer\\Alkaid\\external\\glfw\\src\\null_monitor.c",
+  "file": "E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/external/glfw/src/null_monitor.c",
+  "output": "external/glfw/src/CMakeFiles/glfw.dir/null_monitor.c.obj"
+},
+{
+  "directory": "E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/build/external/glfw/src",
+  "command": "E:\\yjw\\CS\\mingw64-posix\\bin\\gcc.exe -DUNICODE -DWINVER=0x0501 -D_GLFW_WIN32 -D_UNICODE @CMakeFiles/glfw.dir/includes_C.rsp -g -std=c99 -Wall -Wdeclaration-after-statement -o CMakeFiles\\glfw.dir\\null_window.c.obj -c E:\\yjw\\Graphics\\Learning\\Project\\Renderer\\Alkaid\\external\\glfw\\src\\null_window.c",
+  "file": "E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/external/glfw/src/null_window.c",
+  "output": "external/glfw/src/CMakeFiles/glfw.dir/null_window.c.obj"
+},
+{
+  "directory": "E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/build/external/glfw/src",
+  "command": "E:\\yjw\\CS\\mingw64-posix\\bin\\gcc.exe -DUNICODE -DWINVER=0x0501 -D_GLFW_WIN32 -D_UNICODE @CMakeFiles/glfw.dir/includes_C.rsp -g -std=c99 -Wall -Wdeclaration-after-statement -o CMakeFiles\\glfw.dir\\null_joystick.c.obj -c E:\\yjw\\Graphics\\Learning\\Project\\Renderer\\Alkaid\\external\\glfw\\src\\null_joystick.c",
+  "file": "E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/external/glfw/src/null_joystick.c",
+  "output": "external/glfw/src/CMakeFiles/glfw.dir/null_joystick.c.obj"
+},
+{
+  "directory": "E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/build/external/glfw/src",
+  "command": "E:\\yjw\\CS\\mingw64-posix\\bin\\gcc.exe -DUNICODE -DWINVER=0x0501 -D_GLFW_WIN32 -D_UNICODE @CMakeFiles/glfw.dir/includes_C.rsp -g -std=c99 -Wall -Wdeclaration-after-statement -o CMakeFiles\\glfw.dir\\win32_module.c.obj -c E:\\yjw\\Graphics\\Learning\\Project\\Renderer\\Alkaid\\external\\glfw\\src\\win32_module.c",
+  "file": "E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/external/glfw/src/win32_module.c",
+  "output": "external/glfw/src/CMakeFiles/glfw.dir/win32_module.c.obj"
+},
+{
+  "directory": "E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/build/external/glfw/src",
+  "command": "E:\\yjw\\CS\\mingw64-posix\\bin\\gcc.exe -DUNICODE -DWINVER=0x0501 -D_GLFW_WIN32 -D_UNICODE @CMakeFiles/glfw.dir/includes_C.rsp -g -std=c99 -Wall -Wdeclaration-after-statement -o CMakeFiles\\glfw.dir\\win32_time.c.obj -c E:\\yjw\\Graphics\\Learning\\Project\\Renderer\\Alkaid\\external\\glfw\\src\\win32_time.c",
+  "file": "E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/external/glfw/src/win32_time.c",
+  "output": "external/glfw/src/CMakeFiles/glfw.dir/win32_time.c.obj"
+},
+{
+  "directory": "E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/build/external/glfw/src",
+  "command": "E:\\yjw\\CS\\mingw64-posix\\bin\\gcc.exe -DUNICODE -DWINVER=0x0501 -D_GLFW_WIN32 -D_UNICODE @CMakeFiles/glfw.dir/includes_C.rsp -g -std=c99 -Wall -Wdeclaration-after-statement -o CMakeFiles\\glfw.dir\\win32_thread.c.obj -c E:\\yjw\\Graphics\\Learning\\Project\\Renderer\\Alkaid\\external\\glfw\\src\\win32_thread.c",
+  "file": "E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/external/glfw/src/win32_thread.c",
+  "output": "external/glfw/src/CMakeFiles/glfw.dir/win32_thread.c.obj"
+},
+{
+  "directory": "E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/build/external/glfw/src",
+  "command": "E:\\yjw\\CS\\mingw64-posix\\bin\\gcc.exe -DUNICODE -DWINVER=0x0501 -D_GLFW_WIN32 -D_UNICODE @CMakeFiles/glfw.dir/includes_C.rsp -g -std=c99 -Wall -Wdeclaration-after-statement -o CMakeFiles\\glfw.dir\\win32_init.c.obj -c E:\\yjw\\Graphics\\Learning\\Project\\Renderer\\Alkaid\\external\\glfw\\src\\win32_init.c",
+  "file": "E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/external/glfw/src/win32_init.c",
+  "output": "external/glfw/src/CMakeFiles/glfw.dir/win32_init.c.obj"
+},
+{
+  "directory": "E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/build/external/glfw/src",
+  "command": "E:\\yjw\\CS\\mingw64-posix\\bin\\gcc.exe -DUNICODE -DWINVER=0x0501 -D_GLFW_WIN32 -D_UNICODE @CMakeFiles/glfw.dir/includes_C.rsp -g -std=c99 -Wall -Wdeclaration-after-statement -o CMakeFiles\\glfw.dir\\win32_joystick.c.obj -c E:\\yjw\\Graphics\\Learning\\Project\\Renderer\\Alkaid\\external\\glfw\\src\\win32_joystick.c",
+  "file": "E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/external/glfw/src/win32_joystick.c",
+  "output": "external/glfw/src/CMakeFiles/glfw.dir/win32_joystick.c.obj"
+},
+{
+  "directory": "E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/build/external/glfw/src",
+  "command": "E:\\yjw\\CS\\mingw64-posix\\bin\\gcc.exe -DUNICODE -DWINVER=0x0501 -D_GLFW_WIN32 -D_UNICODE @CMakeFiles/glfw.dir/includes_C.rsp -g -std=c99 -Wall -Wdeclaration-after-statement -o CMakeFiles\\glfw.dir\\win32_monitor.c.obj -c E:\\yjw\\Graphics\\Learning\\Project\\Renderer\\Alkaid\\external\\glfw\\src\\win32_monitor.c",
+  "file": "E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/external/glfw/src/win32_monitor.c",
+  "output": "external/glfw/src/CMakeFiles/glfw.dir/win32_monitor.c.obj"
+},
+{
+  "directory": "E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/build/external/glfw/src",
+  "command": "E:\\yjw\\CS\\mingw64-posix\\bin\\gcc.exe -DUNICODE -DWINVER=0x0501 -D_GLFW_WIN32 -D_UNICODE @CMakeFiles/glfw.dir/includes_C.rsp -g -std=c99 -Wall -Wdeclaration-after-statement -o CMakeFiles\\glfw.dir\\win32_window.c.obj -c E:\\yjw\\Graphics\\Learning\\Project\\Renderer\\Alkaid\\external\\glfw\\src\\win32_window.c",
+  "file": "E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/external/glfw/src/win32_window.c",
+  "output": "external/glfw/src/CMakeFiles/glfw.dir/win32_window.c.obj"
+},
+{
+  "directory": "E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/build/external/glfw/src",
+  "command": "E:\\yjw\\CS\\mingw64-posix\\bin\\gcc.exe -DUNICODE -DWINVER=0x0501 -D_GLFW_WIN32 -D_UNICODE @CMakeFiles/glfw.dir/includes_C.rsp -g -std=c99 -Wall -Wdeclaration-after-statement -o CMakeFiles\\glfw.dir\\wgl_context.c.obj -c E:\\yjw\\Graphics\\Learning\\Project\\Renderer\\Alkaid\\external\\glfw\\src\\wgl_context.c",
+  "file": "E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/external/glfw/src/wgl_context.c",
+  "output": "external/glfw/src/CMakeFiles/glfw.dir/wgl_context.c.obj"
+},
+{
+  "directory": "E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/build/external/glfw/examples",
+  "command": "E:\\yjw\\CS\\mingw64-posix\\bin\\gcc.exe  @CMakeFiles/boing.dir/includes_C.rsp -g -std=gnu99 -o CMakeFiles\\boing.dir\\boing.c.obj -c E:\\yjw\\Graphics\\Learning\\Project\\Renderer\\Alkaid\\external\\glfw\\examples\\boing.c",
+  "file": "E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/external/glfw/examples/boing.c",
+  "output": "external/glfw/examples/CMakeFiles/boing.dir/boing.c.obj"
+},
+{
+  "directory": "E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/build/external/glfw/examples",
+  "command": "E:\\yjw\\CS\\mingw64-posix\\bin\\gcc.exe  @CMakeFiles/gears.dir/includes_C.rsp -g -std=gnu99 -o CMakeFiles\\gears.dir\\gears.c.obj -c E:\\yjw\\Graphics\\Learning\\Project\\Renderer\\Alkaid\\external\\glfw\\examples\\gears.c",
+  "file": "E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/external/glfw/examples/gears.c",
+  "output": "external/glfw/examples/CMakeFiles/gears.dir/gears.c.obj"
+},
+{
+  "directory": "E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/build/external/glfw/examples",
+  "command": "E:\\yjw\\CS\\mingw64-posix\\bin\\gcc.exe  @CMakeFiles/heightmap.dir/includes_C.rsp -g -std=gnu99 -o CMakeFiles\\heightmap.dir\\heightmap.c.obj -c E:\\yjw\\Graphics\\Learning\\Project\\Renderer\\Alkaid\\external\\glfw\\examples\\heightmap.c",
+  "file": "E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/external/glfw/examples/heightmap.c",
+  "output": "external/glfw/examples/CMakeFiles/heightmap.dir/heightmap.c.obj"
+},
+{
+  "directory": "E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/build/external/glfw/examples",
+  "command": "E:\\yjw\\CS\\mingw64-posix\\bin\\gcc.exe  @CMakeFiles/offscreen.dir/includes_C.rsp -g -std=gnu99 -o CMakeFiles\\offscreen.dir\\offscreen.c.obj -c E:\\yjw\\Graphics\\Learning\\Project\\Renderer\\Alkaid\\external\\glfw\\examples\\offscreen.c",
+  "file": "E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/external/glfw/examples/offscreen.c",
+  "output": "external/glfw/examples/CMakeFiles/offscreen.dir/offscreen.c.obj"
+},
+{
+  "directory": "E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/build/external/glfw/examples",
+  "command": "E:\\yjw\\CS\\mingw64-posix\\bin\\gcc.exe  @CMakeFiles/particles.dir/includes_C.rsp -g -std=gnu99 -o CMakeFiles\\particles.dir\\particles.c.obj -c E:\\yjw\\Graphics\\Learning\\Project\\Renderer\\Alkaid\\external\\glfw\\examples\\particles.c",
+  "file": "E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/external/glfw/examples/particles.c",
+  "output": "external/glfw/examples/CMakeFiles/particles.dir/particles.c.obj"
+},
+{
+  "directory": "E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/build/external/glfw/examples",
+  "command": "E:\\yjw\\CS\\mingw64-posix\\bin\\gcc.exe  @CMakeFiles/particles.dir/includes_C.rsp -g -std=gnu99 -o CMakeFiles\\particles.dir\\__\\deps\\tinycthread.c.obj -c E:\\yjw\\Graphics\\Learning\\Project\\Renderer\\Alkaid\\external\\glfw\\deps\\tinycthread.c",
+  "file": "E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/external/glfw/deps/tinycthread.c",
+  "output": "external/glfw/examples/CMakeFiles/particles.dir/__/deps/tinycthread.c.obj"
+},
+{
+  "directory": "E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/build/external/glfw/examples",
+  "command": "E:\\yjw\\CS\\mingw64-posix\\bin\\gcc.exe  @CMakeFiles/particles.dir/includes_C.rsp -g -std=gnu99 -o CMakeFiles\\particles.dir\\__\\deps\\getopt.c.obj -c E:\\yjw\\Graphics\\Learning\\Project\\Renderer\\Alkaid\\external\\glfw\\deps\\getopt.c",
+  "file": "E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/external/glfw/deps/getopt.c",
+  "output": "external/glfw/examples/CMakeFiles/particles.dir/__/deps/getopt.c.obj"
+},
+{
+  "directory": "E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/build/external/glfw/examples",
+  "command": "E:\\yjw\\CS\\mingw64-posix\\bin\\gcc.exe  @CMakeFiles/sharing.dir/includes_C.rsp -g -std=gnu99 -o CMakeFiles\\sharing.dir\\sharing.c.obj -c E:\\yjw\\Graphics\\Learning\\Project\\Renderer\\Alkaid\\external\\glfw\\examples\\sharing.c",
+  "file": "E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/external/glfw/examples/sharing.c",
+  "output": "external/glfw/examples/CMakeFiles/sharing.dir/sharing.c.obj"
+},
+{
+  "directory": "E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/build/external/glfw/examples",
+  "command": "E:\\yjw\\CS\\mingw64-posix\\bin\\gcc.exe  @CMakeFiles/splitview.dir/includes_C.rsp -g -std=gnu99 -o CMakeFiles\\splitview.dir\\splitview.c.obj -c E:\\yjw\\Graphics\\Learning\\Project\\Renderer\\Alkaid\\external\\glfw\\examples\\splitview.c",
+  "file": "E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/external/glfw/examples/splitview.c",
+  "output": "external/glfw/examples/CMakeFiles/splitview.dir/splitview.c.obj"
+},
+{
+  "directory": "E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/build/external/glfw/examples",
+  "command": "E:\\yjw\\CS\\mingw64-posix\\bin\\gcc.exe  @CMakeFiles/triangle-opengl.dir/includes_C.rsp -g -std=gnu99 -o CMakeFiles\\triangle-opengl.dir\\triangle-opengl.c.obj -c E:\\yjw\\Graphics\\Learning\\Project\\Renderer\\Alkaid\\external\\glfw\\examples\\triangle-opengl.c",
+  "file": "E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/external/glfw/examples/triangle-opengl.c",
+  "output": "external/glfw/examples/CMakeFiles/triangle-opengl.dir/triangle-opengl.c.obj"
+},
+{
+  "directory": "E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/build/external/glfw/examples",
+  "command": "E:\\yjw\\CS\\mingw64-posix\\bin\\gcc.exe  @CMakeFiles/triangle-opengles.dir/includes_C.rsp -g -std=gnu99 -o CMakeFiles\\triangle-opengles.dir\\triangle-opengles.c.obj -c E:\\yjw\\Graphics\\Learning\\Project\\Renderer\\Alkaid\\external\\glfw\\examples\\triangle-opengles.c",
+  "file": "E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/external/glfw/examples/triangle-opengles.c",
+  "output": "external/glfw/examples/CMakeFiles/triangle-opengles.dir/triangle-opengles.c.obj"
+},
+{
+  "directory": "E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/build/external/glfw/examples",
+  "command": "E:\\yjw\\CS\\mingw64-posix\\bin\\gcc.exe  @CMakeFiles/wave.dir/includes_C.rsp -g -std=gnu99 -o CMakeFiles\\wave.dir\\wave.c.obj -c E:\\yjw\\Graphics\\Learning\\Project\\Renderer\\Alkaid\\external\\glfw\\examples\\wave.c",
+  "file": "E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/external/glfw/examples/wave.c",
+  "output": "external/glfw/examples/CMakeFiles/wave.dir/wave.c.obj"
+},
+{
+  "directory": "E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/build/external/glfw/examples",
+  "command": "E:\\yjw\\CS\\mingw64-posix\\bin\\gcc.exe  @CMakeFiles/windows.dir/includes_C.rsp -g -std=gnu99 -o CMakeFiles\\windows.dir\\windows.c.obj -c E:\\yjw\\Graphics\\Learning\\Project\\Renderer\\Alkaid\\external\\glfw\\examples\\windows.c",
+  "file": "E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/external/glfw/examples/windows.c",
+  "output": "external/glfw/examples/CMakeFiles/windows.dir/windows.c.obj"
+},
+{
+  "directory": "E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/build/external/glfw/tests",
+  "command": "E:\\yjw\\CS\\mingw64-posix\\bin\\gcc.exe  @CMakeFiles/allocator.dir/includes_C.rsp -g -std=gnu99 -o CMakeFiles\\allocator.dir\\allocator.c.obj -c E:\\yjw\\Graphics\\Learning\\Project\\Renderer\\Alkaid\\external\\glfw\\tests\\allocator.c",
+  "file": "E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/external/glfw/tests/allocator.c",
+  "output": "external/glfw/tests/CMakeFiles/allocator.dir/allocator.c.obj"
+},
+{
+  "directory": "E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/build/external/glfw/tests",
+  "command": "E:\\yjw\\CS\\mingw64-posix\\bin\\gcc.exe  @CMakeFiles/clipboard.dir/includes_C.rsp -g -std=gnu99 -o CMakeFiles\\clipboard.dir\\clipboard.c.obj -c E:\\yjw\\Graphics\\Learning\\Project\\Renderer\\Alkaid\\external\\glfw\\tests\\clipboard.c",
+  "file": "E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/external/glfw/tests/clipboard.c",
+  "output": "external/glfw/tests/CMakeFiles/clipboard.dir/clipboard.c.obj"
+},
+{
+  "directory": "E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/build/external/glfw/tests",
+  "command": "E:\\yjw\\CS\\mingw64-posix\\bin\\gcc.exe  @CMakeFiles/clipboard.dir/includes_C.rsp -g -std=gnu99 -o CMakeFiles\\clipboard.dir\\__\\deps\\getopt.c.obj -c E:\\yjw\\Graphics\\Learning\\Project\\Renderer\\Alkaid\\external\\glfw\\deps\\getopt.c",
+  "file": "E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/external/glfw/deps/getopt.c",
+  "output": "external/glfw/tests/CMakeFiles/clipboard.dir/__/deps/getopt.c.obj"
+},
+{
+  "directory": "E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/build/external/glfw/tests",
+  "command": "E:\\yjw\\CS\\mingw64-posix\\bin\\gcc.exe  @CMakeFiles/events.dir/includes_C.rsp -g -std=gnu99 -o CMakeFiles\\events.dir\\events.c.obj -c E:\\yjw\\Graphics\\Learning\\Project\\Renderer\\Alkaid\\external\\glfw\\tests\\events.c",
+  "file": "E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/external/glfw/tests/events.c",
+  "output": "external/glfw/tests/CMakeFiles/events.dir/events.c.obj"
+},
+{
+  "directory": "E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/build/external/glfw/tests",
+  "command": "E:\\yjw\\CS\\mingw64-posix\\bin\\gcc.exe  @CMakeFiles/events.dir/includes_C.rsp -g -std=gnu99 -o CMakeFiles\\events.dir\\__\\deps\\getopt.c.obj -c E:\\yjw\\Graphics\\Learning\\Project\\Renderer\\Alkaid\\external\\glfw\\deps\\getopt.c",
+  "file": "E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/external/glfw/deps/getopt.c",
+  "output": "external/glfw/tests/CMakeFiles/events.dir/__/deps/getopt.c.obj"
+},
+{
+  "directory": "E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/build/external/glfw/tests",
+  "command": "E:\\yjw\\CS\\mingw64-posix\\bin\\gcc.exe  @CMakeFiles/msaa.dir/includes_C.rsp -g -std=gnu99 -o CMakeFiles\\msaa.dir\\msaa.c.obj -c E:\\yjw\\Graphics\\Learning\\Project\\Renderer\\Alkaid\\external\\glfw\\tests\\msaa.c",
+  "file": "E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/external/glfw/tests/msaa.c",
+  "output": "external/glfw/tests/CMakeFiles/msaa.dir/msaa.c.obj"
+},
+{
+  "directory": "E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/build/external/glfw/tests",
+  "command": "E:\\yjw\\CS\\mingw64-posix\\bin\\gcc.exe  @CMakeFiles/msaa.dir/includes_C.rsp -g -std=gnu99 -o CMakeFiles\\msaa.dir\\__\\deps\\getopt.c.obj -c E:\\yjw\\Graphics\\Learning\\Project\\Renderer\\Alkaid\\external\\glfw\\deps\\getopt.c",
+  "file": "E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/external/glfw/deps/getopt.c",
+  "output": "external/glfw/tests/CMakeFiles/msaa.dir/__/deps/getopt.c.obj"
+},
+{
+  "directory": "E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/build/external/glfw/tests",
+  "command": "E:\\yjw\\CS\\mingw64-posix\\bin\\gcc.exe  @CMakeFiles/glfwinfo.dir/includes_C.rsp -g -std=gnu99 -o CMakeFiles\\glfwinfo.dir\\glfwinfo.c.obj -c E:\\yjw\\Graphics\\Learning\\Project\\Renderer\\Alkaid\\external\\glfw\\tests\\glfwinfo.c",
+  "file": "E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/external/glfw/tests/glfwinfo.c",
+  "output": "external/glfw/tests/CMakeFiles/glfwinfo.dir/glfwinfo.c.obj"
+},
+{
+  "directory": "E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/build/external/glfw/tests",
+  "command": "E:\\yjw\\CS\\mingw64-posix\\bin\\gcc.exe  @CMakeFiles/glfwinfo.dir/includes_C.rsp -g -std=gnu99 -o CMakeFiles\\glfwinfo.dir\\__\\deps\\getopt.c.obj -c E:\\yjw\\Graphics\\Learning\\Project\\Renderer\\Alkaid\\external\\glfw\\deps\\getopt.c",
+  "file": "E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/external/glfw/deps/getopt.c",
+  "output": "external/glfw/tests/CMakeFiles/glfwinfo.dir/__/deps/getopt.c.obj"
+},
+{
+  "directory": "E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/build/external/glfw/tests",
+  "command": "E:\\yjw\\CS\\mingw64-posix\\bin\\gcc.exe  @CMakeFiles/iconify.dir/includes_C.rsp -g -std=gnu99 -o CMakeFiles\\iconify.dir\\iconify.c.obj -c E:\\yjw\\Graphics\\Learning\\Project\\Renderer\\Alkaid\\external\\glfw\\tests\\iconify.c",
+  "file": "E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/external/glfw/tests/iconify.c",
+  "output": "external/glfw/tests/CMakeFiles/iconify.dir/iconify.c.obj"
+},
+{
+  "directory": "E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/build/external/glfw/tests",
+  "command": "E:\\yjw\\CS\\mingw64-posix\\bin\\gcc.exe  @CMakeFiles/iconify.dir/includes_C.rsp -g -std=gnu99 -o CMakeFiles\\iconify.dir\\__\\deps\\getopt.c.obj -c E:\\yjw\\Graphics\\Learning\\Project\\Renderer\\Alkaid\\external\\glfw\\deps\\getopt.c",
+  "file": "E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/external/glfw/deps/getopt.c",
+  "output": "external/glfw/tests/CMakeFiles/iconify.dir/__/deps/getopt.c.obj"
+},
+{
+  "directory": "E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/build/external/glfw/tests",
+  "command": "E:\\yjw\\CS\\mingw64-posix\\bin\\gcc.exe  @CMakeFiles/monitors.dir/includes_C.rsp -g -std=gnu99 -o CMakeFiles\\monitors.dir\\monitors.c.obj -c E:\\yjw\\Graphics\\Learning\\Project\\Renderer\\Alkaid\\external\\glfw\\tests\\monitors.c",
+  "file": "E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/external/glfw/tests/monitors.c",
+  "output": "external/glfw/tests/CMakeFiles/monitors.dir/monitors.c.obj"
+},
+{
+  "directory": "E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/build/external/glfw/tests",
+  "command": "E:\\yjw\\CS\\mingw64-posix\\bin\\gcc.exe  @CMakeFiles/monitors.dir/includes_C.rsp -g -std=gnu99 -o CMakeFiles\\monitors.dir\\__\\deps\\getopt.c.obj -c E:\\yjw\\Graphics\\Learning\\Project\\Renderer\\Alkaid\\external\\glfw\\deps\\getopt.c",
+  "file": "E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/external/glfw/deps/getopt.c",
+  "output": "external/glfw/tests/CMakeFiles/monitors.dir/__/deps/getopt.c.obj"
+},
+{
+  "directory": "E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/build/external/glfw/tests",
+  "command": "E:\\yjw\\CS\\mingw64-posix\\bin\\gcc.exe  @CMakeFiles/reopen.dir/includes_C.rsp -g -std=gnu99 -o CMakeFiles\\reopen.dir\\reopen.c.obj -c E:\\yjw\\Graphics\\Learning\\Project\\Renderer\\Alkaid\\external\\glfw\\tests\\reopen.c",
+  "file": "E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/external/glfw/tests/reopen.c",
+  "output": "external/glfw/tests/CMakeFiles/reopen.dir/reopen.c.obj"
+},
+{
+  "directory": "E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/build/external/glfw/tests",
+  "command": "E:\\yjw\\CS\\mingw64-posix\\bin\\gcc.exe  @CMakeFiles/cursor.dir/includes_C.rsp -g -std=gnu99 -o CMakeFiles\\cursor.dir\\cursor.c.obj -c E:\\yjw\\Graphics\\Learning\\Project\\Renderer\\Alkaid\\external\\glfw\\tests\\cursor.c",
+  "file": "E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/external/glfw/tests/cursor.c",
+  "output": "external/glfw/tests/CMakeFiles/cursor.dir/cursor.c.obj"
+},
+{
+  "directory": "E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/build/external/glfw/tests",
+  "command": "E:\\yjw\\CS\\mingw64-posix\\bin\\gcc.exe  @CMakeFiles/empty.dir/includes_C.rsp -g -std=gnu99 -o CMakeFiles\\empty.dir\\empty.c.obj -c E:\\yjw\\Graphics\\Learning\\Project\\Renderer\\Alkaid\\external\\glfw\\tests\\empty.c",
+  "file": "E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/external/glfw/tests/empty.c",
+  "output": "external/glfw/tests/CMakeFiles/empty.dir/empty.c.obj"
+},
+{
+  "directory": "E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/build/external/glfw/tests",
+  "command": "E:\\yjw\\CS\\mingw64-posix\\bin\\gcc.exe  @CMakeFiles/empty.dir/includes_C.rsp -g -std=gnu99 -o CMakeFiles\\empty.dir\\__\\deps\\tinycthread.c.obj -c E:\\yjw\\Graphics\\Learning\\Project\\Renderer\\Alkaid\\external\\glfw\\deps\\tinycthread.c",
+  "file": "E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/external/glfw/deps/tinycthread.c",
+  "output": "external/glfw/tests/CMakeFiles/empty.dir/__/deps/tinycthread.c.obj"
+},
+{
+  "directory": "E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/build/external/glfw/tests",
+  "command": "E:\\yjw\\CS\\mingw64-posix\\bin\\gcc.exe  @CMakeFiles/gamma.dir/includes_C.rsp -g -std=gnu99 -o CMakeFiles\\gamma.dir\\gamma.c.obj -c E:\\yjw\\Graphics\\Learning\\Project\\Renderer\\Alkaid\\external\\glfw\\tests\\gamma.c",
+  "file": "E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/external/glfw/tests/gamma.c",
+  "output": "external/glfw/tests/CMakeFiles/gamma.dir/gamma.c.obj"
+},
+{
+  "directory": "E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/build/external/glfw/tests",
+  "command": "E:\\yjw\\CS\\mingw64-posix\\bin\\gcc.exe  @CMakeFiles/icon.dir/includes_C.rsp -g -std=gnu99 -o CMakeFiles\\icon.dir\\icon.c.obj -c E:\\yjw\\Graphics\\Learning\\Project\\Renderer\\Alkaid\\external\\glfw\\tests\\icon.c",
+  "file": "E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/external/glfw/tests/icon.c",
+  "output": "external/glfw/tests/CMakeFiles/icon.dir/icon.c.obj"
+},
+{
+  "directory": "E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/build/external/glfw/tests",
+  "command": "E:\\yjw\\CS\\mingw64-posix\\bin\\gcc.exe  @CMakeFiles/inputlag.dir/includes_C.rsp -g -std=gnu99 -o CMakeFiles\\inputlag.dir\\inputlag.c.obj -c E:\\yjw\\Graphics\\Learning\\Project\\Renderer\\Alkaid\\external\\glfw\\tests\\inputlag.c",
+  "file": "E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/external/glfw/tests/inputlag.c",
+  "output": "external/glfw/tests/CMakeFiles/inputlag.dir/inputlag.c.obj"
+},
+{
+  "directory": "E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/build/external/glfw/tests",
+  "command": "E:\\yjw\\CS\\mingw64-posix\\bin\\gcc.exe  @CMakeFiles/inputlag.dir/includes_C.rsp -g -std=gnu99 -o CMakeFiles\\inputlag.dir\\__\\deps\\getopt.c.obj -c E:\\yjw\\Graphics\\Learning\\Project\\Renderer\\Alkaid\\external\\glfw\\deps\\getopt.c",
+  "file": "E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/external/glfw/deps/getopt.c",
+  "output": "external/glfw/tests/CMakeFiles/inputlag.dir/__/deps/getopt.c.obj"
+},
+{
+  "directory": "E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/build/external/glfw/tests",
+  "command": "E:\\yjw\\CS\\mingw64-posix\\bin\\gcc.exe  @CMakeFiles/joysticks.dir/includes_C.rsp -g -std=gnu99 -o CMakeFiles\\joysticks.dir\\joysticks.c.obj -c E:\\yjw\\Graphics\\Learning\\Project\\Renderer\\Alkaid\\external\\glfw\\tests\\joysticks.c",
+  "file": "E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/external/glfw/tests/joysticks.c",
+  "output": "external/glfw/tests/CMakeFiles/joysticks.dir/joysticks.c.obj"
+},
+{
+  "directory": "E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/build/external/glfw/tests",
+  "command": "E:\\yjw\\CS\\mingw64-posix\\bin\\gcc.exe  @CMakeFiles/tearing.dir/includes_C.rsp -g -std=gnu99 -o CMakeFiles\\tearing.dir\\tearing.c.obj -c E:\\yjw\\Graphics\\Learning\\Project\\Renderer\\Alkaid\\external\\glfw\\tests\\tearing.c",
+  "file": "E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/external/glfw/tests/tearing.c",
+  "output": "external/glfw/tests/CMakeFiles/tearing.dir/tearing.c.obj"
+},
+{
+  "directory": "E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/build/external/glfw/tests",
+  "command": "E:\\yjw\\CS\\mingw64-posix\\bin\\gcc.exe  @CMakeFiles/threads.dir/includes_C.rsp -g -std=gnu99 -o CMakeFiles\\threads.dir\\threads.c.obj -c E:\\yjw\\Graphics\\Learning\\Project\\Renderer\\Alkaid\\external\\glfw\\tests\\threads.c",
+  "file": "E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/external/glfw/tests/threads.c",
+  "output": "external/glfw/tests/CMakeFiles/threads.dir/threads.c.obj"
+},
+{
+  "directory": "E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/build/external/glfw/tests",
+  "command": "E:\\yjw\\CS\\mingw64-posix\\bin\\gcc.exe  @CMakeFiles/threads.dir/includes_C.rsp -g -std=gnu99 -o CMakeFiles\\threads.dir\\__\\deps\\tinycthread.c.obj -c E:\\yjw\\Graphics\\Learning\\Project\\Renderer\\Alkaid\\external\\glfw\\deps\\tinycthread.c",
+  "file": "E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/external/glfw/deps/tinycthread.c",
+  "output": "external/glfw/tests/CMakeFiles/threads.dir/__/deps/tinycthread.c.obj"
+},
+{
+  "directory": "E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/build/external/glfw/tests",
+  "command": "E:\\yjw\\CS\\mingw64-posix\\bin\\gcc.exe  @CMakeFiles/timeout.dir/includes_C.rsp -g -std=gnu99 -o CMakeFiles\\timeout.dir\\timeout.c.obj -c E:\\yjw\\Graphics\\Learning\\Project\\Renderer\\Alkaid\\external\\glfw\\tests\\timeout.c",
+  "file": "E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/external/glfw/tests/timeout.c",
+  "output": "external/glfw/tests/CMakeFiles/timeout.dir/timeout.c.obj"
+},
+{
+  "directory": "E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/build/external/glfw/tests",
+  "command": "E:\\yjw\\CS\\mingw64-posix\\bin\\gcc.exe  @CMakeFiles/title.dir/includes_C.rsp -g -std=gnu99 -o CMakeFiles\\title.dir\\title.c.obj -c E:\\yjw\\Graphics\\Learning\\Project\\Renderer\\Alkaid\\external\\glfw\\tests\\title.c",
+  "file": "E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/external/glfw/tests/title.c",
+  "output": "external/glfw/tests/CMakeFiles/title.dir/title.c.obj"
+},
+{
+  "directory": "E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/build/external/glfw/tests",
+  "command": "E:\\yjw\\CS\\mingw64-posix\\bin\\gcc.exe  @CMakeFiles/triangle-vulkan.dir/includes_C.rsp -g -std=gnu99 -o CMakeFiles\\triangle-vulkan.dir\\triangle-vulkan.c.obj -c E:\\yjw\\Graphics\\Learning\\Project\\Renderer\\Alkaid\\external\\glfw\\tests\\triangle-vulkan.c",
+  "file": "E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/external/glfw/tests/triangle-vulkan.c",
+  "output": "external/glfw/tests/CMakeFiles/triangle-vulkan.dir/triangle-vulkan.c.obj"
+},
+{
+  "directory": "E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/build/external/glfw/tests",
+  "command": "E:\\yjw\\CS\\mingw64-posix\\bin\\gcc.exe  @CMakeFiles/window.dir/includes_C.rsp -g -std=gnu99 -o CMakeFiles\\window.dir\\window.c.obj -c E:\\yjw\\Graphics\\Learning\\Project\\Renderer\\Alkaid\\external\\glfw\\tests\\window.c",
+  "file": "E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/external/glfw/tests/window.c",
+  "output": "external/glfw/tests/CMakeFiles/window.dir/window.c.obj"
+}
+]

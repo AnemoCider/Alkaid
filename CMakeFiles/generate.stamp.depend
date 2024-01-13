@@ -1,0 +1,27 @@
+# CMake generation dependency list for this directory.
+E:/yjw/CS/Plugin/CMake/share/cmake-3.26/Modules/CMakeCInformation.cmake
+E:/yjw/CS/Plugin/CMake/share/cmake-3.26/Modules/CMakeCXXInformation.cmake
+E:/yjw/CS/Plugin/CMake/share/cmake-3.26/Modules/CMakeCommonLanguageInclude.cmake
+E:/yjw/CS/Plugin/CMake/share/cmake-3.26/Modules/CMakeGenericSystem.cmake
+E:/yjw/CS/Plugin/CMake/share/cmake-3.26/Modules/CMakeInitializeConfigs.cmake
+E:/yjw/CS/Plugin/CMake/share/cmake-3.26/Modules/CMakeLanguageInformation.cmake
+E:/yjw/CS/Plugin/CMake/share/cmake-3.26/Modules/CMakeRCInformation.cmake
+E:/yjw/CS/Plugin/CMake/share/cmake-3.26/Modules/CMakeSystemSpecificInformation.cmake
+E:/yjw/CS/Plugin/CMake/share/cmake-3.26/Modules/CMakeSystemSpecificInitialize.cmake
+E:/yjw/CS/Plugin/CMake/share/cmake-3.26/Modules/Compiler/CMakeCommonCompilerMacros.cmake
+E:/yjw/CS/Plugin/CMake/share/cmake-3.26/Modules/Compiler/MSVC-C.cmake
+E:/yjw/CS/Plugin/CMake/share/cmake-3.26/Modules/Compiler/MSVC-CXX.cmake
+E:/yjw/CS/Plugin/CMake/share/cmake-3.26/Modules/Compiler/MSVC.cmake
+E:/yjw/CS/Plugin/CMake/share/cmake-3.26/Modules/FindPackageHandleStandardArgs.cmake
+E:/yjw/CS/Plugin/CMake/share/cmake-3.26/Modules/FindPackageMessage.cmake
+E:/yjw/CS/Plugin/CMake/share/cmake-3.26/Modules/FindVulkan.cmake
+E:/yjw/CS/Plugin/CMake/share/cmake-3.26/Modules/Platform/Windows-MSVC-C.cmake
+E:/yjw/CS/Plugin/CMake/share/cmake-3.26/Modules/Platform/Windows-MSVC-CXX.cmake
+E:/yjw/CS/Plugin/CMake/share/cmake-3.26/Modules/Platform/Windows-MSVC.cmake
+E:/yjw/CS/Plugin/CMake/share/cmake-3.26/Modules/Platform/Windows.cmake
+E:/yjw/CS/Plugin/CMake/share/cmake-3.26/Modules/Platform/WindowsPaths.cmake
+E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/CMakeFiles/3.26.0-rc3/CMakeCCompiler.cmake
+E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/CMakeFiles/3.26.0-rc3/CMakeCXXCompiler.cmake
+E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/CMakeFiles/3.26.0-rc3/CMakeRCCompiler.cmake
+E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/CMakeFiles/3.26.0-rc3/CMakeSystem.cmake
+E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/CMakeLists.txt
