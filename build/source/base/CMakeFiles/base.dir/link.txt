@@ -1,2 +1,0 @@
-E:\yjw\CS\mingw64-posix\bin\ar.exe qc libbase.a CMakeFiles/base.dir/VulkanDevice.cpp.obj CMakeFiles/base.dir/vulkanBase.cpp.obj
-E:\yjw\CS\mingw64-posix\bin\ranlib.exe libbase.a

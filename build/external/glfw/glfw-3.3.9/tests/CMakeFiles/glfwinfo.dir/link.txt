@@ -1,3 +1,0 @@
-E:\yjw\CS\Plugin\CMake\bin\cmake.exe -E rm -f CMakeFiles\glfwinfo.dir/objects.a
-E:\yjw\CS\mingw64-posix\bin\ar.exe qc CMakeFiles\glfwinfo.dir/objects.a @CMakeFiles\glfwinfo.dir\objects1.rsp
-E:\yjw\CS\mingw64-posix\bin\gcc.exe -g -Wl,--whole-archive CMakeFiles\glfwinfo.dir/objects.a -Wl,--no-whole-archive -o glfwinfo.exe -Wl,--out-implib,libglfwinfo.dll.a -Wl,--major-image-version,0,--minor-image-version,0 @CMakeFiles\glfwinfo.dir\linkLibs.rsp
