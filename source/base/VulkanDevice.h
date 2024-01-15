@@ -1,32 +1,26 @@
 #pragma once
 
-#include <vulkan/vk_mem_alloc.h>
 #include <exception>
 #include <vector>
+
+#include <VulkanCommon.h>
 
 namespace vki {
 class VulkanDevice {
 private:
-    virtual void getQueueFamilies();
+    void getQueueFamilyIndices(VkQueueFlags requestedQueueTypes);
+    void checkDeviceExtensionSupport(const std::vector<const char *> & enabledExtensions) const;
+
 public:
+    VulkanDevice() = default;
     VulkanDevice(VkPhysicalDevice physicalDevice);
-    VkPhysicalDevice physicalDevice;
-    VkDevice device;
 
-    VkPhysicalDeviceFeatures deviceFeatures;
-    const std::vector<const char*> deviceExtensions = {
-        // Presenting images is NOT a vulkan core function.
-        // We have to check and enable it at the device level.
-        VK_KHR_SWAPCHAIN_EXTENSION_NAME
-    };
+    VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
+    VkDevice logicalDevice = VK_NULL_HANDLE;
+    
+    QueueFamilyIndices queueFamilyIndices;
 
-    struct {
-        uint32_t graphics;
-        uint32_t transfer;
-        uint32_t compute;
-    } queueFamilyIndices;
-
-    // static virtual void createLogicalDevice();
-
+    void createLogicalDevice(VkPhysicalDeviceFeatures enabledFeatures, std::vector<const char *> enabledExtensions, void *pNextChain, bool useSwapChain = true, VkQueueFlags requestedQueueTypes = VK_QUEUE_GRAPHICS_BIT);
+    void cleanUp();
 };
 };

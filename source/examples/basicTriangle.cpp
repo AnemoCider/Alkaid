@@ -14,5 +14,6 @@ int main() {
     app->initVulkan();
     app->prepare();
     app->renderLoop();
+    app->cleanUp();
     std::cout << "Completed!!\n";
 }

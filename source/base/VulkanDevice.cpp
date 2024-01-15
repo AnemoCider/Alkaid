@@ -1,10 +1,15 @@
-#include "VulkanDevice.h"
 #include <vector>
 #include <stdexcept>
+#include <unordered_set>
+
+#include "VulkanDevice.h"
+#include "VulkanInit.h"
 
 using vki::VulkanDevice;
 
-void VulkanDevice::getQueueFamilies() {
+VulkanDevice::VulkanDevice(VkPhysicalDevice physicalDevice) : physicalDevice(physicalDevice) {}
+
+void VulkanDevice::getQueueFamilyIndices(VkQueueFlags requestedQueueTypes) {
     uint32_t queueFamilyCount = 0;
     vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &queueFamilyCount, nullptr);
 
@@ -13,45 +18,81 @@ void VulkanDevice::getQueueFamilies() {
 
     uint32_t i = 0;
     for (const auto& queueFamily : queueFamilies) {
-        if (queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT) {
+        if (requestedQueueTypes & VK_QUEUE_GRAPHICS_BIT & queueFamily.queueFlags) {
             queueFamilyIndices.graphics = i;
         } 
-        if (queueFamily.queueFlags & VK_QUEUE_TRANSFER_BIT) {
+        if (requestedQueueTypes & VK_QUEUE_TRANSFER_BIT & queueFamily.queueFlags) {
             queueFamilyIndices.transfer = i;
         } 
-        if (queueFamily.queueFlags & VK_QUEUE_COMPUTE_BIT) {
+        if (requestedQueueTypes & VK_QUEUE_COMPUTE_BIT& queueFamily.queueFlags) {
             queueFamilyIndices.compute = i;
         }
         i++;
     }
 }
+
+void VulkanDevice::checkDeviceExtensionSupport(const std::vector<const char *> & enabledExtensions) const {
+    // Check for device extensions support
+    uint32_t extensionCount;
+    vkEnumerateDeviceExtensionProperties(physicalDevice, nullptr, &extensionCount, nullptr);
+    std::vector<VkExtensionProperties> availableExtensions(extensionCount);
+    vkEnumerateDeviceExtensionProperties(physicalDevice, nullptr, &extensionCount, availableExtensions.data());
+    std::unordered_set<std::string> requiredExtensions(enabledExtensions.begin(), enabledExtensions.end());
+    for (const auto& extension : availableExtensions) {
+        requiredExtensions.erase(extension.extensionName);
+    }
+    if (!requiredExtensions.empty())
+        throw std::runtime_error("some requested logical device extensions not supported!");
+}
+
+void VulkanDevice::createLogicalDevice(VkPhysicalDeviceFeatures enabledFeatures, 
+    std::vector<const char *> enabledExtensions, void *pNextChain, 
+    bool useSwapChain, VkQueueFlags requestedQueueTypes) {
     
-VulkanDevice::VulkanDevice(VkPhysicalDevice physicalDevice) {
-    getQueueFamilies();
+    getQueueFamilyIndices(requestedQueueTypes);
+
+    std::vector<const char*> deviceExtensions(enabledExtensions);
+    if (useSwapChain)
+    {
+        deviceExtensions.push_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
+    }
+
+    checkDeviceExtensionSupport(enabledExtensions);
 
     std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
 
-    float queuePriority = 1.0f;
-    VkDeviceQueueCreateInfo queueCreateInfo{};
-    queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-    queueCreateInfo.queueFamilyIndex = queueFamilyIndices.graphics;
-    queueCreateInfo.queueCount = 1;
-    queueCreateInfo.pQueuePriorities = &queuePriority;
-    queueCreateInfos.push_back(queueCreateInfo);
+    if (queueFamilyIndices.graphics.has_value()) {
+        auto graphicsQueueInfo = vki::device_queue_create_info(queueFamilyIndices.graphics.value());
+        queueCreateInfos.push_back(graphicsQueueInfo);
+    }
+    if (queueFamilyIndices.transfer.has_value()) {
+        auto transferQueueInfo = vki::device_queue_create_info(queueFamilyIndices.transfer.value());
+        queueCreateInfos.push_back(transferQueueInfo);
+    }
+    if (queueFamilyIndices.compute.has_value()) {
+        auto computeQueueInfo = vki::device_queue_create_info(queueFamilyIndices.compute.value());
+        queueCreateInfos.push_back(computeQueueInfo);
+    }
 
-    deviceFeatures.samplerAnisotropy = VK_TRUE;
+    /* 
+        TODO: support for other queue families
+    */
+
+    enabledFeatures.samplerAnisotropy = VK_TRUE;
     VkDeviceCreateInfo createInfo{};
     createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
     createInfo.queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfos.size());
     createInfo.pQueueCreateInfos = queueCreateInfos.data();
 
-    createInfo.pEnabledFeatures = &deviceFeatures;
+    createInfo.pEnabledFeatures = &enabledFeatures;
 
-    // Enabling device-related extensions
+    // Enable device-level extensions
     createInfo.enabledExtensionCount = static_cast<uint32_t>(deviceExtensions.size());
     createInfo.ppEnabledExtensionNames = deviceExtensions.data();
 
-    if (vkCreateDevice(physicalDevice, &createInfo, nullptr, &device) != VK_SUCCESS) {
-        throw std::runtime_error("failed to create logical device!");
-    }
+    VK_CHECK(vkCreateDevice(physicalDevice, &createInfo, nullptr, &logicalDevice));
+}
+
+void VulkanDevice::cleanUp() {
+    vkDestroyDevice(logicalDevice, nullptr);
 }
