@@ -2,6 +2,7 @@
 
 #include <stdexcept>
 #include <iostream>
+#include <fstream>
 #include <vector>
 #include <array>
 
@@ -12,13 +13,10 @@ void VulkanBase::initVulkan() {
     vulkanDevice = vki::VulkanDevice(physicalDevice);
     vulkanDevice.createLogicalDevice(enabledFeatures, enabledDeviceExtensions, nullptr);
     device = vulkanDevice.logicalDevice;
+    vkGetDeviceQueue(device, vulkanDevice.queueFamilyIndices.graphics.value(), 0, &graphicsQueue);
 
     findDepthFormat();
     createSurface();
-    vulkanSwapchain = vki::VulkanSwapchain(instance, physicalDevice, device, surface);
-    vulkanSwapchain.createSwapchain(windowWidth, windowHeight);
-    createVmaAllocator();
-    createRenderpass();
 }
 
 void VulkanBase::createInstance() {
@@ -141,6 +139,39 @@ void VulkanBase::findDepthFormat() {
     }
 }
 
+void VulkanBase::createDepthStencil() {
+    VkImageCreateInfo imageInfo { VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO };
+
+	imageInfo.imageType = VK_IMAGE_TYPE_2D;
+	imageInfo.format = depthFormat;
+	imageInfo.extent = { windowWidth, windowHeight, 1 };
+	imageInfo.mipLevels = 1;
+	imageInfo.arrayLayers = 1;
+	imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
+	imageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
+	imageInfo.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
+
+    VmaAllocationCreateInfo allocationCreateInfo {};
+    allocationCreateInfo.usage = VMA_MEMORY_USAGE_AUTO;
+
+	VK_CHECK(vmaCreateImage(allocator, &imageInfo, &allocationCreateInfo, &depthStencil.image, &depthStencil.allocation, nullptr));
+
+    VkImageViewCreateInfo depthStencilViewCI{ VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO };
+    depthStencilViewCI.viewType = VK_IMAGE_VIEW_TYPE_2D;
+    depthStencilViewCI.format = depthFormat;
+    depthStencilViewCI.subresourceRange = {};
+    depthStencilViewCI.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
+    if (depthFormat >= VK_FORMAT_D16_UNORM_S8_UINT) {
+        depthStencilViewCI.subresourceRange.aspectMask |= VK_IMAGE_ASPECT_STENCIL_BIT;
+    }
+    depthStencilViewCI.subresourceRange.baseMipLevel = 0;
+    depthStencilViewCI.subresourceRange.levelCount = 1;
+    depthStencilViewCI.subresourceRange.baseArrayLayer = 0;
+    depthStencilViewCI.subresourceRange.layerCount = 1;
+    depthStencilViewCI.image = depthStencil.image;
+    VK_CHECK(vkCreateImageView(device, &depthStencilViewCI, nullptr, &depthStencil.view));
+}
+
 void VulkanBase::createRenderpass() {
     VkAttachmentDescription colorAttachment{};
     colorAttachment.format = vulkanSwapchain.colorFormat;
@@ -232,15 +263,59 @@ void VulkanBase::createFrameBuffers() {
     }
 }
 
-void VulkanBase::prepare() {}
-void VulkanBase::renderLoop() {}
+std::vector<char> VulkanBase::readFile(const std::string& filename) {
+    std::ifstream file(filename, std::ios::ate | std::ios::binary);
+
+    if (!file.is_open()) {
+        throw std::runtime_error("failed to open file!");
+    }
+    size_t fileSize = (size_t)file.tellg();
+    std::vector<char> buffer(fileSize);
+    file.seekg(0);
+    file.read(buffer.data(), fileSize);
+    file.close();
+
+    return buffer;
+}
+
+
+VkShaderModule VulkanBase::createShaderModule(const std::vector<char>& code) {
+    VkShaderModuleCreateInfo createInfo{};
+    createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
+    createInfo.codeSize = code.size();
+    createInfo.pCode = reinterpret_cast<const uint32_t*>(code.data());
+    VkShaderModule shaderModule;
+    if (vkCreateShaderModule(device, &createInfo, nullptr, &shaderModule) != VK_SUCCESS) {
+        throw std::runtime_error("failed to create shader module!");
+    }
+    return shaderModule;
+}
+
+void VulkanBase::prepare() {
+    vulkanSwapchain = vki::VulkanSwapchain(instance, physicalDevice, device, surface);
+    vulkanSwapchain.createSwapchain(windowWidth, windowHeight);
+    createVmaAllocator();
+    createRenderpass();
+    prepared = true;
+}
+void VulkanBase::renderLoop() {
+    while (!glfwWindowShouldClose(window)) {
+        glfwPollEvents();
+        render();
+    }
+    vkDeviceWaitIdle(device);
+}
 void VulkanBase::cleanUp() {
+    vkDestroyImageView(device, depthStencil.view, nullptr);
+    vmaDestroyImage(allocator, depthStencil.image, depthStencil.allocation);
     glfwDestroyWindow(window);
     glfwTerminate();
     vkDestroyRenderPass(device, renderPass, nullptr);
     for (auto i : swapChainFramebuffers) {
         vkDestroyFramebuffer(device, i, nullptr);
     }
+    vkDestroyImageView(device, depthStencil.view, nullptr);
+    vmaDestroyImage(allocator, depthStencil.image, depthStencil.allocation);
     vulkanSwapchain.cleanUp();
     vmaDestroyAllocator(allocator);
     vulkanDevice.cleanUp();

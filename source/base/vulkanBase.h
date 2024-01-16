@@ -2,6 +2,7 @@
 
 #include <memory>
 #include <vector>
+#include <string>
 
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
@@ -14,7 +15,8 @@
 
 class VulkanBase {
 protected:
-    
+    bool prepared = false;
+
     virtual void createInstance();
     virtual void createPhysicalDevice();
     virtual void createVmaAllocator();
@@ -23,6 +25,7 @@ protected:
     
 
 public:
+
     bool enableValidationLayers = true;
     const std::vector<const char*> validationLayers = {
         "VK_LAYER_KHRONOS_validation"
@@ -41,6 +44,7 @@ public:
     VkPhysicalDevice physicalDevice;
     vki::VulkanDevice vulkanDevice;
     VkDevice device;
+    VkQueue graphicsQueue;
 
     VkPhysicalDeviceProperties physicalDeviceProperties;
 	VkPhysicalDeviceFeatures physicalDeviceFeatures;
@@ -57,14 +61,27 @@ public:
         VkImageView view;
     } depthStencil;
 
-    VkRenderPass renderPass;
+    VkRenderPass renderPass { VK_NULL_HANDLE };
+
+    VkCommandPool commandPool { VK_NULL_HANDLE };
+    std::vector<VkCommandBuffer> commandBuffers;
+
+    virtual std::string getShaderPathName() = 0;
+    std::vector<char> readFile(const std::string& filename);
+    VkShaderModule createShaderModule(const std::vector<char>& code);
 
     virtual bool isPhysicalDeviceSuitable(VkPhysicalDevice);
     virtual void findDepthFormat();
 
+    virtual void createDepthStencil();
     /** @brief create a default render pass*/
     virtual void createRenderpass();
     virtual void createFrameBuffers();
+
+    virtual void createCommandBuffers() = 0;
+
+    virtual void render() = 0;
+    virtual void recreateSwapChain() = 0;
 
     virtual void initVulkan();
     virtual void createWindow();
