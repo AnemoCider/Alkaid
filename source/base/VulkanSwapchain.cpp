@@ -135,8 +135,6 @@ void VulkanSwapchain::cleanUp() {
 	if (surface != VK_NULL_HANDLE)
 	{
 		vkDestroySwapchainKHR(device, swapchain, nullptr);
-		vkDestroySurfaceKHR(instance, surface, nullptr);
 	}
-	surface = VK_NULL_HANDLE;
 	swapchain = VK_NULL_HANDLE;
 }

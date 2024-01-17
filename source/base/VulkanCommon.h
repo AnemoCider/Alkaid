@@ -2,7 +2,7 @@
 
 #include <optional>
 #include <iostream>
-
+#define VMA_VULKAN_VERSION 1003000
 #include "vulkan/vk_mem_alloc.h"
 
 struct QueueFamilyIndices{

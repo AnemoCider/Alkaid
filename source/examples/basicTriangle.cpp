@@ -84,7 +84,7 @@ private:
 	};
 
     std::string getShaderPathName() {
-        return "../../shaders/basicTriangle/basicTriangle";
+        return "shaders/basicTriangle/basicTriangle";
     }
 
     void framebufferResizeCallback(GLFWwindow* window, int width, int height) {
@@ -395,6 +395,8 @@ public:
     void prepare() {
 		VulkanBase::prepare();
 		createSyncObjects();
+        createDepthStencil();
+        createFrameBuffers();
 		createCommandBuffers();
 		createVertexBuffer();
         createIndexBuffer();

@@ -89,13 +89,24 @@ void VulkanBase::createVmaAllocator() {
     vulkanFunctions.vkGetDeviceProcAddr = &vkGetDeviceProcAddr;
     
     VmaAllocatorCreateInfo allocatorCreateInfo = {};
-    allocatorCreateInfo.vulkanApiVersion = VK_API_VERSION_1_2;
+    allocatorCreateInfo.vulkanApiVersion = VK_API_VERSION_1_0;
     allocatorCreateInfo.physicalDevice = physicalDevice;
     allocatorCreateInfo.device = device;
     allocatorCreateInfo.instance = instance;
     allocatorCreateInfo.pVulkanFunctions = &vulkanFunctions;
     
     vmaCreateAllocator(&allocatorCreateInfo, &allocator);
+
+    VkBufferCreateInfo bufferInfo = { VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO };
+    bufferInfo.size = 65536;
+    bufferInfo.usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT;
+
+    VmaAllocationCreateInfo allocInfo = {};
+    allocInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
+
+    VkBuffer buffer;
+    VmaAllocation allocation;
+    vmaCreateBuffer(allocator, &bufferInfo, &allocInfo, &buffer, &allocation, nullptr);
 }
 
 
@@ -391,6 +402,7 @@ void VulkanBase::renderLoop() {
 void VulkanBase::cleanUp() {
     vkDestroyImageView(device, depthStencil.view, nullptr);
     vmaDestroyImage(allocator, depthStencil.image, depthStencil.allocation);
+    vkDestroySurfaceKHR(instance, surface, nullptr);
     glfwDestroyWindow(window);
     glfwTerminate();
     vkDestroyRenderPass(device, renderPass, nullptr);
