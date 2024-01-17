@@ -28,7 +28,7 @@ void VulkanBase::createInstance() {
     appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
     appInfo.pEngineName = "No Engine";
     appInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
-    appInfo.apiVersion = VK_API_VERSION_1_0;
+    appInfo.apiVersion = VK_API_VERSION_1_3;
 
     // Required, specify global extensions and validation layers to use
     VkInstanceCreateInfo createInfo{};
@@ -89,7 +89,7 @@ void VulkanBase::createVmaAllocator() {
     vulkanFunctions.vkGetDeviceProcAddr = &vkGetDeviceProcAddr;
     
     VmaAllocatorCreateInfo allocatorCreateInfo = {};
-    allocatorCreateInfo.vulkanApiVersion = VK_API_VERSION_1_0;
+    allocatorCreateInfo.vulkanApiVersion = VK_API_VERSION_1_3;
     allocatorCreateInfo.physicalDevice = physicalDevice;
     allocatorCreateInfo.device = device;
     allocatorCreateInfo.instance = instance;
