@@ -1,4 +1,4 @@
-# Install script for directory: E:/yjw/Graphics/Learning/Project/Renderer/Alkaid
+# Install script for directory: E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/source/base
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
@@ -32,20 +32,3 @@ if(NOT DEFINED CMAKE_CROSSCOMPILING)
   set(CMAKE_CROSSCOMPILING "FALSE")
 endif()
 
-if(NOT CMAKE_INSTALL_LOCAL_ONLY)
-  # Include the install script for each subdirectory.
-  include("E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/source/base/cmake_install.cmake")
-  include("E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/external/glfw/cmake_install.cmake")
-
-endif()
-
-if(CMAKE_INSTALL_COMPONENT)
-  set(CMAKE_INSTALL_MANIFEST "install_manifest_${CMAKE_INSTALL_COMPONENT}.txt")
-else()
-  set(CMAKE_INSTALL_MANIFEST "install_manifest.txt")
-endif()
-
-string(REPLACE ";" "\n" CMAKE_INSTALL_MANIFEST_CONTENT
-       "${CMAKE_INSTALL_MANIFEST_FILES}")
-file(WRITE "E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/${CMAKE_INSTALL_MANIFEST}"
-     "${CMAKE_INSTALL_MANIFEST_CONTENT}")

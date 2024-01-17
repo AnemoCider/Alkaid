@@ -263,6 +263,32 @@ void VulkanBase::createFrameBuffers() {
     }
 }
 
+void VulkanBase::recreateSwapChain() {
+    prepared = false;
+    int width = 0, height = 0;
+    glfwGetFramebufferSize(window, &width, &height);
+    while (width == 0 || height == 0) {
+        glfwGetFramebufferSize(window, &width, &height);
+        glfwWaitEvents();
+    }
+    vkDeviceWaitIdle(device);
+
+    for (auto i : swapChainFramebuffers) {
+        vkDestroyFramebuffer(device, i, nullptr);
+    }
+    vkDestroyImageView(device, depthStencil.view, nullptr);
+    vmaDestroyImage(allocator, depthStencil.image, depthStencil.allocation);
+    vulkanSwapchain.cleanUp();
+
+    windowWidth = (uint32_t)width;
+    windowHeight = (uint32_t)height;
+
+    vulkanSwapchain.createSwapchain(windowWidth, windowHeight);
+    createDepthStencil();
+    createFrameBuffers();
+    prepared = true;
+}
+
 std::vector<char> VulkanBase::readFile(const std::string& filename) {
     std::ifstream file(filename, std::ios::ate | std::ios::binary);
 
@@ -278,6 +304,63 @@ std::vector<char> VulkanBase::readFile(const std::string& filename) {
     return buffer;
 }
 
+void VulkanBase::createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, 
+    VmaAllocationCreateFlags flags, VkBuffer& buffer, VmaAllocation& allocation, VmaAllocationInfo* pAllocInfo) {
+    
+    VkBufferCreateInfo bufferInfo { VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO };
+    bufferInfo.size = size;
+    bufferInfo.usage = usage;
+    // bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+
+    VmaAllocationCreateInfo allocInfo {};
+    allocInfo.usage = VMA_MEMORY_USAGE_AUTO;
+    allocInfo.flags = flags;
+
+    VK_CHECK(vmaCreateBuffer(allocator, &bufferInfo, &allocInfo, &buffer, &allocation, pAllocInfo));
+}
+
+VkCommandBuffer VulkanBase::beginSingleTimeCommands() {
+    VkCommandBufferAllocateInfo allocInfo{};
+    allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+    allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+    allocInfo.commandPool = commandPool;
+    allocInfo.commandBufferCount = 1;
+
+    VkCommandBuffer commandBuffer;
+    vkAllocateCommandBuffers(device, &allocInfo, &commandBuffer);
+
+    VkCommandBufferBeginInfo beginInfo{};
+    beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+    beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+
+    vkBeginCommandBuffer(commandBuffer, &beginInfo);
+
+    return commandBuffer;
+}
+
+void VulkanBase::endSingleTimeCommands(VkCommandBuffer commandBuffer) {
+    vkEndCommandBuffer(commandBuffer);
+
+    VkSubmitInfo submitInfo{};
+    submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+    submitInfo.commandBufferCount = 1;
+    submitInfo.pCommandBuffers = &commandBuffer;
+
+    vkQueueSubmit(graphicsQueue, 1, &submitInfo, VK_NULL_HANDLE);
+    vkQueueWaitIdle(graphicsQueue);
+
+    vkFreeCommandBuffers(device, commandPool, 1, &commandBuffer);
+}
+
+void VulkanBase::copyBuffer(VkBuffer src, VkBuffer dst, VkDeviceSize sz) {
+    VkCommandBuffer commandBuffer = beginSingleTimeCommands();
+
+    VkBufferCopy copyRegion{};
+    copyRegion.size = sz;
+    vkCmdCopyBuffer(commandBuffer, src, dst, 1, &copyRegion);
+
+    endSingleTimeCommands(commandBuffer);
+}
 
 VkShaderModule VulkanBase::createShaderModule(const std::vector<char>& code) {
     VkShaderModuleCreateInfo createInfo{};

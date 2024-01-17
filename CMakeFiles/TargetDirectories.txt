@@ -1,3 +1,13 @@
-E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/CMakeFiles/Renderer.dir
+E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/CMakeFiles/basicTriangle.dir
+E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/CMakeFiles/Shaders.dir
+E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/CMakeFiles/INSTALL.dir
 E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/CMakeFiles/ALL_BUILD.dir
 E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/CMakeFiles/ZERO_CHECK.dir
+E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/source/base/CMakeFiles/base.dir
+E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/source/base/CMakeFiles/INSTALL.dir
+E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/external/glfw/CMakeFiles/uninstall.dir
+E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/external/glfw/CMakeFiles/INSTALL.dir
+E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/external/glfw/CMakeFiles/ALL_BUILD.dir
+E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/external/glfw/src/CMakeFiles/glfw.dir
+E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/external/glfw/src/CMakeFiles/update_mappings.dir
+E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/external/glfw/src/CMakeFiles/INSTALL.dir

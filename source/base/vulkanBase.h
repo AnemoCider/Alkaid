@@ -80,8 +80,14 @@ public:
 
     virtual void createCommandBuffers() = 0;
 
+    virtual void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, 
+    VmaAllocationCreateFlags flags, VkBuffer& buffer, VmaAllocation& allocation, VmaAllocationInfo* pAllocInfo = nullptr);
+    VkCommandBuffer beginSingleTimeCommands();
+    void endSingleTimeCommands(VkCommandBuffer commandBuffer);
+    virtual void copyBuffer(VkBuffer src, VkBuffer dst, VkDeviceSize sz);
+
     virtual void render() = 0;
-    virtual void recreateSwapChain() = 0;
+    virtual void recreateSwapChain();
 
     virtual void initVulkan();
     virtual void createWindow();

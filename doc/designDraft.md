@@ -2,6 +2,21 @@
 
 ## base
 
+### Usage
+
+The following functions may be overriden:
+
+- isPhysicalDeviceSuitable: the first suitable device will be selected as the physical device.
+- createDepthStencil
+- createFrameBuffers: By default use 2 attachments for each framebuffer
+- createRenderPass: By default, use the first attachment as color attachment, and the second as depth buffer.
+
+The following must be overriden (as they are declared pure virtual):
+
+- getShaderPathName: return the path of shader, plus the name without suffix, relative to the main cpp file.
+- createCommandBuffers: because it relies on the maxFrameCount, which is defined as a static constant in each example.
+- render: called in renderLoop.
+
 ### References
 
 Vulkan Guide:

@@ -11,7 +11,9 @@ endif()
 
 include_directories(external)
 include_directories(external/vulkan/include)
+include_directories(external/tinyglTF)
 include_directories(external/glfw/include)
+include_directories(external/glm)
 include_directories(source/base)
 
 add_subdirectory(source/base)
