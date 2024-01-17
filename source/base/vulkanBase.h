@@ -89,6 +89,8 @@ public:
     virtual void render() = 0;
     virtual void recreateSwapChain();
 
+    virtual void addExtensions(const std::vector<const char*>& instanceExt, const std::vector<const char*>& deviceExt);
+
     virtual void initVulkan();
     virtual void createWindow();
     virtual void prepare();

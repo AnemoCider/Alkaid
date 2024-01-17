@@ -14,7 +14,8 @@ private:
 
 public:
     VulkanSwapchain() = default;
-    VulkanSwapchain(VkInstance instance, VkPhysicalDevice physicalDevice, VkDevice device, VkSurfaceKHR surface);
+    VulkanSwapchain(VkInstance instance, VkPhysicalDevice physicalDevice, VkDevice device, VkSurfaceKHR surface, 
+        uint32_t imgCount = 3);
 
     VkFormat colorFormat = VK_FORMAT_B8G8R8A8_SRGB;
 	VkColorSpaceKHR colorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR;

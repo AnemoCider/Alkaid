@@ -96,17 +96,6 @@ void VulkanBase::createVmaAllocator() {
     allocatorCreateInfo.pVulkanFunctions = &vulkanFunctions;
     
     vmaCreateAllocator(&allocatorCreateInfo, &allocator);
-
-    VkBufferCreateInfo bufferInfo = { VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO };
-    bufferInfo.size = 65536;
-    bufferInfo.usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT;
-
-    VmaAllocationCreateInfo allocInfo = {};
-    allocInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
-
-    VkBuffer buffer;
-    VmaAllocation allocation;
-    vmaCreateBuffer(allocator, &bufferInfo, &allocInfo, &buffer, &allocation, nullptr);
 }
 
 
@@ -300,6 +289,11 @@ void VulkanBase::recreateSwapChain() {
     prepared = true;
 }
 
+void VulkanBase::addExtensions(const std::vector<const char*>& instanceExt, const std::vector<const char*>& deviceExt) {
+    enabledDeviceExtensions.insert(enabledDeviceExtensions.end(), deviceExt.begin(), deviceExt.end());
+    enabledInstanceExtensions.insert(enabledInstanceExtensions.end(), instanceExt.begin(), instanceExt.end());
+}
+
 std::vector<char> VulkanBase::readFile(const std::string& filename) {
     std::ifstream file(filename, std::ios::ate | std::ios::binary);
 
@@ -402,16 +396,14 @@ void VulkanBase::renderLoop() {
 void VulkanBase::cleanUp() {
     vkDestroyImageView(device, depthStencil.view, nullptr);
     vmaDestroyImage(allocator, depthStencil.image, depthStencil.allocation);
-    vkDestroySurfaceKHR(instance, surface, nullptr);
     glfwDestroyWindow(window);
     glfwTerminate();
     vkDestroyRenderPass(device, renderPass, nullptr);
     for (auto i : swapChainFramebuffers) {
         vkDestroyFramebuffer(device, i, nullptr);
     }
-    vkDestroyImageView(device, depthStencil.view, nullptr);
-    vmaDestroyImage(allocator, depthStencil.image, depthStencil.allocation);
     vulkanSwapchain.cleanUp();
+    vkDestroySurfaceKHR(instance, surface, nullptr);
     vmaDestroyAllocator(allocator);
     vulkanDevice.cleanUp();
 }

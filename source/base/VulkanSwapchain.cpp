@@ -3,8 +3,9 @@
 
 using vki::VulkanSwapchain;
 
-VulkanSwapchain::VulkanSwapchain(VkInstance instance, VkPhysicalDevice physicalDevice, VkDevice device, VkSurfaceKHR surface) :
-    instance(instance), physicalDevice(physicalDevice), device(device), surface(surface){}
+VulkanSwapchain::VulkanSwapchain(VkInstance instance, VkPhysicalDevice physicalDevice, VkDevice device, VkSurfaceKHR surface, 
+	uint32_t imgCount) :
+    instance(instance), physicalDevice(physicalDevice), device(device), surface(surface), imageCount(imgCount){}
 
 void VulkanSwapchain::createSwapchain(uint32_t& windowWidth, uint32_t& windowHeight) {
     // Store the current swap chain handle so we can use it later on to ease up recreation

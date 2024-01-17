@@ -10,6 +10,8 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <chrono>
 
+#include "VulkanInit.h"
+
 struct Vertex {
     glm::vec3 pos;
     glm::vec3 color;
@@ -108,16 +110,12 @@ private:
     }
 
     void createCommandBuffers() {
-        VkCommandPoolCreateInfo poolCreateInfo {VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO};
-        poolCreateInfo.queueFamilyIndex = vulkanDevice.queueFamilyIndices.graphics.value();
-        poolCreateInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+        auto poolCreateInfo = vki::init_command_pool_create_info(vulkanDevice.queueFamilyIndices.graphics.value(),
+            VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT);
         VK_CHECK(vkCreateCommandPool(device, &poolCreateInfo, nullptr, &commandPool));
 
         commandBuffers.resize(maxFrameCount);
-        VkCommandBufferAllocateInfo bufferAllocInfo {VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO};
-        bufferAllocInfo.commandBufferCount = commandBuffers.size();
-        bufferAllocInfo.commandPool = commandPool;
-        bufferAllocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+        auto bufferAllocInfo = vki::init_command_buffer_allocate_info(commandBuffers.size(), commandPool);
         VK_CHECK(vkAllocateCommandBuffers(device, &bufferAllocInfo, commandBuffers.data()));
     }
     
@@ -132,12 +130,6 @@ private:
         layoutInfo.bindingCount = 1;
         layoutInfo.pBindings = &uboLayoutBinding;
         VK_CHECK(vkCreateDescriptorSetLayout(device, &layoutInfo, nullptr, &descriptorSetLayout));
-
-        VkPipelineLayoutCreateInfo pipelineLayoutCI{};
-		pipelineLayoutCI.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-		pipelineLayoutCI.setLayoutCount = 1;
-		pipelineLayoutCI.pSetLayouts = &descriptorSetLayout;
-		VK_CHECK(vkCreatePipelineLayout(device, &pipelineLayoutCI, nullptr, &pipelineLayout));
     }
 
     void createDescriptorPool() {
@@ -147,23 +139,35 @@ private:
         poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
         poolSizes[1].descriptorCount = static_cast<uint32_t>(maxFrameCount);
 
-        VkDescriptorPoolCreateInfo poolInfo { VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO };
-        poolInfo.poolSizeCount = poolSizes.size();
-        poolInfo.pPoolSizes = poolSizes.data();
-        poolInfo.maxSets = maxFrameCount;
-
+        auto poolInfo = vki::init_descriptor_pool_create_info(poolSizes.size(), poolSizes.data(), maxFrameCount);
         vkCreateDescriptorPool(device, &poolInfo, nullptr, &descriptorPool);
     }
 
     void createDescriptorSets() {
         std::vector<VkDescriptorSetLayout> setLayouts(maxFrameCount, descriptorSetLayout);
 
-        VkDescriptorSetAllocateInfo setAllocInfo { VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO };
-        setAllocInfo.descriptorPool = descriptorPool;
-        setAllocInfo.descriptorSetCount = descriptorSets.size();
-        setAllocInfo.pSetLayouts = setLayouts.data();
-
+        auto setAllocInfo = vki::init_descriptor_set_allocate_info(descriptorPool, descriptorSets.size(), setLayouts.data());
         vkAllocateDescriptorSets(device, &setAllocInfo, descriptorSets.data());
+
+        for (size_t i = 0; i < maxFrameCount; i++) {
+            VkDescriptorBufferInfo bufferInfo{};
+            bufferInfo.buffer = uniformBuffers[i].buffer;
+            bufferInfo.offset = 0;
+            bufferInfo.range = sizeof(UniformBufferObject);
+
+            std::array<VkWriteDescriptorSet, 1> descriptorWrites{};
+            descriptorWrites[0] = vki::init_write_descriptor_set(descriptorSets[i], 0, 0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, &bufferInfo);
+
+            /*descriptorWrites[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+            descriptorWrites[1].dstSet = descriptorSets[i];
+            descriptorWrites[1].dstBinding = 1;
+            descriptorWrites[1].dstArrayElement = 0;
+            descriptorWrites[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+            descriptorWrites[1].descriptorCount = 1;
+            descriptorWrites[1].pImageInfo = &imageInfo;*/
+
+            vkUpdateDescriptorSets(device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
+        }
     }
 
     void createVertexBuffer() {
@@ -260,7 +264,7 @@ private:
         vertexInputAttribs[1].offset = offsetof(Vertex, color);
 
         vertexInputAttribs[2].binding = 0;
-        vertexInputAttribs[2].location = 0;
+        vertexInputAttribs[2].location = 2;
         vertexInputAttribs[2].format = VK_FORMAT_R32G32B32_SFLOAT;
         vertexInputAttribs[2].offset = offsetof(Vertex, texCoord);
 
@@ -338,9 +342,7 @@ private:
         pipelineLayoutInfo.pSetLayouts = &descriptorSetLayout;
         pipelineLayoutInfo.pushConstantRangeCount = 0;
 
-        if (vkCreatePipelineLayout(device, &pipelineLayoutInfo, nullptr, &pipelineLayout) != VK_SUCCESS) {
-            throw std::runtime_error("failed to create pipeline layout!");
-        }
+        VK_CHECK(vkCreatePipelineLayout(device, &pipelineLayoutInfo, nullptr, &pipelineLayout));
 
         VkGraphicsPipelineCreateInfo pipelineInfo{};
         pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
@@ -366,9 +368,7 @@ private:
         pipelineInfo.basePipelineHandle = VK_NULL_HANDLE; // Optional
         pipelineInfo.basePipelineIndex = -1; // Optional
 
-        if (vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &graphicsPipeline) != VK_SUCCESS) {
-            throw std::runtime_error("failed to create graphics pipeline!");
-        }
+        VK_CHECK(vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &graphicsPipeline));
 
         vkDestroyShaderModule(device, fragShaderModule, nullptr);
         vkDestroyShaderModule(device, vertShaderModule, nullptr);
@@ -392,6 +392,12 @@ private:
     
 
 public:
+
+    void initVulkan() {
+        // addExtensions();
+        VulkanBase::initVulkan();
+    }
+
     void prepare() {
 		VulkanBase::prepare();
 		createSyncObjects();
@@ -409,10 +415,12 @@ public:
 	}
 
     void cleanUp() {
-        vkDestroyDescriptorPool(device, descriptorPool, nullptr);
         vkDestroyPipelineLayout(device, pipelineLayout, nullptr);
+        vkDestroyPipeline(device, graphicsPipeline, nullptr);
+        vkDestroyDescriptorPool(device, descriptorPool, nullptr);
         vkDestroyDescriptorSetLayout(device, descriptorSetLayout, nullptr);
         for (auto i = 0; i < uniformBuffers.size(); i++) {
+            vmaUnmapMemory(allocator, uniformBuffers[i].alloc);
             vmaDestroyBuffer(allocator, uniformBuffers[i].buffer, uniformBuffers[i].alloc);
         }
         vmaDestroyBuffer(allocator, indices.buffer, indices.alloc);

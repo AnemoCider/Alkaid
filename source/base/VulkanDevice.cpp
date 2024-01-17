@@ -62,15 +62,15 @@ void VulkanDevice::createLogicalDevice(VkPhysicalDeviceFeatures enabledFeatures,
     std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
 
     if (queueFamilyIndices.graphics.has_value()) {
-        auto graphicsQueueInfo = vki::device_queue_create_info(queueFamilyIndices.graphics.value());
+        auto graphicsQueueInfo = vki::init_device_queue_create_info(queueFamilyIndices.graphics.value());
         queueCreateInfos.push_back(graphicsQueueInfo);
     }
     if (queueFamilyIndices.transfer.has_value()) {
-        auto transferQueueInfo = vki::device_queue_create_info(queueFamilyIndices.transfer.value());
+        auto transferQueueInfo = vki::init_device_queue_create_info(queueFamilyIndices.transfer.value());
         queueCreateInfos.push_back(transferQueueInfo);
     }
     if (queueFamilyIndices.compute.has_value()) {
-        auto computeQueueInfo = vki::device_queue_create_info(queueFamilyIndices.compute.value());
+        auto computeQueueInfo = vki::init_device_queue_create_info(queueFamilyIndices.compute.value());
         queueCreateInfos.push_back(computeQueueInfo);
     }
 
