@@ -1,8 +1,7 @@
 #include "VulkanInit.h"
 
 
-VkDeviceQueueCreateInfo vki::init_device_queue_create_info(const uint32_t queueFamilyIndex) {
-    float queuePriority = 1.0f;
+VkDeviceQueueCreateInfo vki::init_device_queue_create_info(const uint32_t queueFamilyIndex, const float& queuePriority) {
     VkDeviceQueueCreateInfo queueCreateInfo{};
     queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
     queueCreateInfo.queueFamilyIndex = queueFamilyIndex;
@@ -42,7 +41,7 @@ VkDescriptorSetAllocateInfo vki::init_descriptor_set_allocate_info(const VkDescr
     return setAllocInfo;
 }
 
-VkWriteDescriptorSet vki::init_write_descriptor_set(const VkDescriptorSet set, const uint32_t binding, const uint32_t arrOffset, const VkDescriptorType descriptorType, const uint32_t descriptorCount, const VkDescriptorBufferInfo* pBufferInfo) {
+VkWriteDescriptorSet vki::init_write_descriptor_set(const VkDescriptorSet set, const uint32_t binding, const uint32_t arrOffset, const VkDescriptorType descriptorType, const uint32_t descriptorCount, const VkDescriptorBufferInfo* pBufferInfo, const VkDescriptorImageInfo* pImageInfo) {
     VkWriteDescriptorSet write{ VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET };
     write.dstSet = set;
     write.dstBinding = binding;
@@ -50,5 +49,21 @@ VkWriteDescriptorSet vki::init_write_descriptor_set(const VkDescriptorSet set, c
     write.descriptorType = descriptorType;
     write.descriptorCount = descriptorCount;
     write.pBufferInfo = pBufferInfo;
+    write.pImageInfo = pImageInfo;
     return write;
+}
+
+VkImageCreateInfo vki::init_image_create_info(const VkImageType imageType, const VkFormat format, const VkExtent3D extent, const uint32_t mipCount, const VkSampleCountFlagBits sampleCount, const VkImageTiling tiling, const VkImageUsageFlags usage, const VkImageLayout initLayout, const VkSharingMode shareMode) {
+    VkImageCreateInfo imageInfo{ VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO };
+    imageInfo.imageType = VK_IMAGE_TYPE_2D;
+    imageInfo.format = format;
+    imageInfo.extent = extent;
+    imageInfo.mipLevels = mipCount;
+    imageInfo.arrayLayers = 1;
+    imageInfo.samples = sampleCount;
+    imageInfo.tiling = tiling;
+    imageInfo.usage = usage;
+    imageInfo.initialLayout = initLayout;
+    imageInfo.sharingMode = shareMode;
+    return imageInfo;
 }

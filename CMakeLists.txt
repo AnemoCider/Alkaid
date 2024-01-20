@@ -10,11 +10,15 @@ if (NOT CMAKE_VERSION VERSION_LESS 3.7.0)
 endif()
 
 include_directories(external)
+include_directories(external/ktx/include)
+include_directories(external/ktx/other_include)
 include_directories(external/vulkan/include)
 include_directories(external/tinyglTF)
 include_directories(external/glfw/include)
 include_directories(external/glm)
+include_directories(external/tinygltf)
 include_directories(source/base)
+
 
 add_subdirectory(source/base)
 add_subdirectory(external/glfw)

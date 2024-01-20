@@ -367,6 +367,15 @@ void VulkanBase::copyBuffer(VkBuffer src, VkBuffer dst, VkDeviceSize sz) {
     endSingleTimeCommands(commandBuffer);
 }
 
+void VulkanBase::createImage(VkImageCreateInfo imageCreateInfo, VkImage& image, VmaAllocation& alloc) {
+    VmaAllocationCreateInfo allocInfo{};
+    allocInfo.usage = VMA_MEMORY_USAGE_AUTO;
+
+    if (vmaCreateImage(allocator, &imageCreateInfo, &allocInfo, &image, &alloc, nullptr) != VK_SUCCESS) {
+        throw std::runtime_error("failed to create image!");
+    }
+}
+
 VkShaderModule VulkanBase::createShaderModule(const std::vector<char>& code) {
     VkShaderModuleCreateInfo createInfo{};
     createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;

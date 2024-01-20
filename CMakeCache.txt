@@ -14,6 +14,39 @@
 # EXTERNAL cache entries
 ########################
 
+//Enable astcenc builds with address sanitizer
+ASTCENC_ASAN:BOOL=OFF
+
+//Enable astcenc builds for decompression only
+ASTCENC_DECOMPRESSOR:BOOL=OFF
+
+//Enable astcenc builds with diagnostic trace
+ASTCENC_DIAGNOSTICS:BOOL=OFF
+
+//Enable astcenc floating point invariance
+ASTCENC_INVARIANCE:BOOL=ON
+
+//Enable astcenc builds for native SIMD
+ASTCENC_ISA_NATIVE:BOOL=OFF
+
+//Enable astcenc builds for NEON SIMD
+ASTCENC_ISA_NEON:BOOL=OFF
+
+//Enable astcenc builds for no SIMD
+ASTCENC_ISA_NONE:BOOL=OFF
+
+//Enable astcenc builds for SSE2 SIMD
+ASTCENC_ISA_SSE2:BOOL=OFF
+
+//Enable astcenc builds for SSE4.1 SIMD
+ASTCENC_ISA_SSE41:BOOL=OFF
+
+//Enable astcenc builds with core library shared objects
+ASTCENC_SHAREDLIB:BOOL=OFF
+
+//Enable astcenc builds with unit tests
+ASTCENC_UNITTEST:BOOL=OFF
+
 //Value Computed by CMake
 Alkaid_BINARY_DIR:STATIC=E:/yjw/Graphics/Learning/Project/Renderer/Alkaid
 
@@ -23,8 +56,21 @@ Alkaid_IS_TOP_LEVEL:STATIC=ON
 //Value Computed by CMake
 Alkaid_SOURCE_DIR:STATIC=E:/yjw/Graphics/Learning/Project/Renderer/Alkaid
 
+//Path to a program.
+BASH_EXECUTABLE:FILEPATH=C:/Windows/System32/bash.exe
+
+//Compile with OpenCL support so applications can choose to use
+// it.
+BASISU_SUPPORT_OPENCL:BOOL=OFF
+
+//Compile with SSE support so applications can choose to use it.
+BASISU_SUPPORT_SSE:BOOL=ON
+
 //Build shared libraries
 BUILD_SHARED_LIBS:BOOL=OFF
+
+//Build the testing tree.
+BUILD_TESTING:BOOL=ON
 
 //Path to a program.
 CMAKE_AR:FILEPATH=F:/Develop/IDE/Visual Studio/VC/Tools/MSVC/14.38.33130/bin/Hostx64/x64/lib.exe
@@ -260,8 +306,113 @@ CMAKE_STATIC_LINKER_FLAGS_RELWITHDEBINFO:STRING=
 // Studio IDE projects all commands are done without /nologo.
 CMAKE_VERBOSE_MAKEFILE:BOOL=FALSE
 
+//Name of the vault to search for signing certificate. Enables
+// related code signing variables when set.
+CODE_SIGN_KEY_VAULT:STRING=
+
+//Path to the coverage program that CTest uses for performing coverage
+// inspection
+COVERAGE_COMMAND:FILEPATH=E:/yjw/CS/mingw64-posix/bin/gcov.exe
+
+//Extra command line flags to pass to the coverage tool
+COVERAGE_EXTRA_FLAGS:STRING=-l
+
+//Enable to build 7-Zip source packages
+CPACK_SOURCE_7Z:BOOL=ON
+
+//Enable to build ZIP source packages
+CPACK_SOURCE_ZIP:BOOL=ON
+
+//How many times to retry timed-out CTest submissions.
+CTEST_SUBMIT_RETRY_COUNT:STRING=3
+
+//How long to wait between timed-out CTest submissions.
+CTEST_SUBMIT_RETRY_DELAY:STRING=5
+
+//Set to ON to build examples
+CXXOPTS_BUILD_EXAMPLES:BOOL=OFF
+
+//Set to ON to build tests
+CXXOPTS_BUILD_TESTS:BOOL=OFF
+
+//Generate the install target
+CXXOPTS_ENABLE_INSTALL:BOOL=OFF
+
+//Add warnings to CMAKE_CXX_FLAGS
+CXXOPTS_ENABLE_WARNINGS:BOOL=OFF
+
+//Use ICU Unicode library
+CXXOPTS_USE_UNICODE_HELP:BOOL=OFF
+
+//Maximum time allowed before CTest will kill the test.
+DART_TESTING_TIMEOUT:STRING=1500
+
 //Doxygen documentation generation tool (https://www.doxygen.nl)
 DOXYGEN_EXECUTABLE:FILEPATH=DOXYGEN_EXECUTABLE-NOTFOUND
+
+//Value Computed by CMake
+FMT_BINARY_DIR:STATIC=E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/external/ktx/other_projects/fmt
+
+//Installation directory for cmake files, a relative path that
+// will be joined with C:/Program Files (x86)/Project or an absolute
+// path.
+FMT_CMAKE_DIR:STRING=lib/cmake/fmt
+
+//Generate the cuda-test target.
+FMT_CUDA_TEST:BOOL=OFF
+
+//Debug library postfix.
+FMT_DEBUG_POSTFIX:STRING=d
+
+//Generate the doc target.
+FMT_DOC:BOOL=OFF
+
+//Generate the fuzz target.
+FMT_FUZZ:BOOL=OFF
+
+//Installation directory for include files, a relative path that
+// will be joined with C:/Program Files (x86)/Project or an absolute
+// path.
+FMT_INC_DIR:STRING=include
+
+//Generate the install target.
+FMT_INSTALL:BOOL=ON
+
+//Value Computed by CMake
+FMT_IS_TOP_LEVEL:STATIC=OFF
+
+//Installation directory for libraries, a relative path that will
+// be joined to C:/Program Files (x86)/Project or an absolute path.
+FMT_LIB_DIR:STRING=lib
+
+//Build a module instead of a traditional library.
+FMT_MODULE:BOOL=OFF
+
+//Include core requiring OS (Windows/Posix) 
+FMT_OS:BOOL=ON
+
+//Enable extra warnings and expensive tests.
+FMT_PEDANTIC:BOOL=OFF
+
+//Installation directory for pkgconfig (.pc) files, a relative
+// path that will be joined with C:/Program Files (x86)/Project
+// or an absolute path.
+FMT_PKGCONFIG_DIR:STRING=lib/pkgconfig
+
+//Value Computed by CMake
+FMT_SOURCE_DIR:STATIC=E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/external/ktx/other_projects/fmt
+
+//Generate the test target.
+FMT_TEST:BOOL=OFF
+
+//Halt the compilation with an error on compiler warnings.
+FMT_WERROR:BOOL=OFF
+
+//Path to a program.
+GITCOMMAND:FILEPATH=GITCOMMAND-NOTFOUND
+
+//Git command line client
+GIT_EXECUTABLE:FILEPATH=GIT_EXECUTABLE-NOTFOUND
 
 //Value Computed by CMake
 GLFW_BINARY_DIR:STATIC=E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/external/glfw
@@ -295,6 +446,69 @@ GLFW_SOURCE_DIR:STATIC=E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/external
 GLFW_USE_HYBRID_HPG:BOOL=OFF
 
 //Value Computed by CMake
+KTX-Software_BINARY_DIR:STATIC=E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/external/ktx
+
+//Value Computed by CMake
+KTX-Software_IS_TOP_LEVEL:STATIC=OFF
+
+//Value Computed by CMake
+KTX-Software_SOURCE_DIR:STATIC=E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/external/ktx
+
+//Create KTX documentation.
+KTX_FEATURE_DOC:BOOL=OFF
+
+//Enable OpenGL texture upload.
+KTX_FEATURE_GL_UPLOAD:BOOL=ON
+
+//Create Java bindings for libktx.
+KTX_FEATURE_JNI:BOOL=OFF
+
+//Enable KTX 1 support.
+KTX_FEATURE_KTX1:BOOL=ON
+
+//Enable KTX 2 support.
+KTX_FEATURE_KTX2:BOOL=ON
+
+//Load test apps test the upload feature by displaying various
+// KTX textures. Select which to create. "OpenGL" includes OpenGL
+// ES.
+KTX_FEATURE_LOADTEST_APPS:STRING=
+
+//Create Python source distribution.
+KTX_FEATURE_PY:BOOL=OFF
+
+//Create static libraries (shared otherwise).
+KTX_FEATURE_STATIC_LIBRARY:BOOL=OFF
+
+//Create unit tests.
+KTX_FEATURE_TESTS:BOOL=ON
+
+//Create KTX tools
+KTX_FEATURE_TOOLS:BOOL=ON
+
+//Enable KTX CLI Tools CTS tests (requires CTS submodule).
+KTX_FEATURE_TOOLS_CTS:BOOL=OFF
+
+//Enable Vulkan texture upload.
+KTX_FEATURE_VK_UPLOAD:BOOL=ON
+
+//Include targets for generating VkFormat related files. For project
+// developers only.
+KTX_GENERATE_VK_FILES:BOOL=OFF
+
+//Make all warnings in KTX code into errors.
+KTX_WERROR:BOOL=OFF
+
+//Command to build the project
+MAKECOMMAND:STRING=E:\yjw\CS\Plugin\CMake\bin\cmake.exe --build . --config "${CTEST_CONFIGURATION_TYPE}"
+
+//Path to the memory checking command, used for memory error detection.
+MEMORYCHECK_COMMAND:FILEPATH=MEMORYCHECK_COMMAND-NOTFOUND
+
+//File that contains suppressions for the memory checker
+MEMORYCHECK_SUPPRESSIONS_FILE:FILEPATH=
+
+//Value Computed by CMake
 Project_BINARY_DIR:STATIC=E:/yjw/Graphics/Learning/Project/Renderer/Alkaid
 
 //Value Computed by CMake
@@ -302,6 +516,9 @@ Project_IS_TOP_LEVEL:STATIC=ON
 
 //Value Computed by CMake
 Project_SOURCE_DIR:STATIC=E:/yjw/Graphics/Learning/Project/Renderer/Alkaid
+
+//Name of the computer/site where compile is being run
+SITE:STRING=yjw-Amadeus
 
 //Use MSVC runtime library DLL
 USE_MSVC_RUNTIME_LIBRARY_DLL:BOOL=ON
@@ -324,14 +541,43 @@ Vulkan_INCLUDE_DIR:PATH=E:/yjw/Graphics/Environment/VulkanSDK/Include
 //Path to a library.
 Vulkan_LIBRARY:FILEPATH=E:/yjw/Graphics/Environment/VulkanSDK/Lib/vulkan-1.lib
 
+//Value Computed by CMake
+astcenc-avx2_BINARY_DIR:STATIC=E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/external/ktx/lib/astc-encoder/Source
+
+//Value Computed by CMake
+astcenc-avx2_IS_TOP_LEVEL:STATIC=OFF
+
+//Value Computed by CMake
+astcenc-avx2_SOURCE_DIR:STATIC=E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/external/ktx/lib/astc-encoder/Source
+
+//Value Computed by CMake
+astcencoder_BINARY_DIR:STATIC=E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/external/ktx/lib/astc-encoder
+
+//Value Computed by CMake
+astcencoder_IS_TOP_LEVEL:STATIC=OFF
+
+//Value Computed by CMake
+astcencoder_SOURCE_DIR:STATIC=E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/external/ktx/lib/astc-encoder
+
 //Dependencies for the target
 base_LIB_DEPENDS:STATIC=general;E:/yjw/Graphics/Environment/VulkanSDK/Lib/vulkan-1.lib;
+
+//Value Computed by CMake
+cxxopts_BINARY_DIR:STATIC=E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/external/ktx/other_projects/cxxopts
+
+//Value Computed by CMake
+cxxopts_IS_TOP_LEVEL:STATIC=OFF
+
+//Value Computed by CMake
+cxxopts_SOURCE_DIR:STATIC=E:/yjw/Graphics/Learning/Project/Renderer/Alkaid/external/ktx/other_projects/cxxopts
 
 
 ########################
 # INTERNAL cache entries
 ########################
 
+//ADVANCED property for variable: BASH_EXECUTABLE
+BASH_EXECUTABLE-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: CMAKE_AR
 CMAKE_AR-ADVANCED:INTERNAL=1
 //This is the directory where this CMakeCache.txt was created
@@ -496,16 +742,53 @@ CMAKE_STATIC_LINKER_FLAGS_RELEASE-ADVANCED:INTERNAL=1
 CMAKE_STATIC_LINKER_FLAGS_RELWITHDEBINFO-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: CMAKE_VERBOSE_MAKEFILE
 CMAKE_VERBOSE_MAKEFILE-ADVANCED:INTERNAL=1
+//STRINGS property for variable: CODE_SIGN_KEY_VAULT
+CODE_SIGN_KEY_VAULT-STRINGS:INTERNAL=;Azure;Machine;User
+//ADVANCED property for variable: COVERAGE_COMMAND
+COVERAGE_COMMAND-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: COVERAGE_EXTRA_FLAGS
+COVERAGE_EXTRA_FLAGS-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: CPACK_SOURCE_7Z
+CPACK_SOURCE_7Z-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: CPACK_SOURCE_ZIP
+CPACK_SOURCE_ZIP-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: CTEST_SUBMIT_RETRY_COUNT
+CTEST_SUBMIT_RETRY_COUNT-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: CTEST_SUBMIT_RETRY_DELAY
+CTEST_SUBMIT_RETRY_DELAY-ADVANCED:INTERNAL=1
+CXXOPTS__VERSION_MAJOR:INTERNAL=3
+CXXOPTS__VERSION_MINOR:INTERNAL=1
+CXXOPTS__VERSION_PATCH:INTERNAL=1
+//ADVANCED property for variable: DART_TESTING_TIMEOUT
+DART_TESTING_TIMEOUT-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: DOXYGEN_EXECUTABLE
 DOXYGEN_EXECUTABLE-ADVANCED:INTERNAL=1
+//Details about finding Bash
+FIND_PACKAGE_MESSAGE_DETAILS_Bash:INTERNAL=[C:/Windows/System32/bash.exe][v()]
 //Details about finding Threads
 FIND_PACKAGE_MESSAGE_DETAILS_Threads:INTERNAL=[TRUE][v()]
 //Details about finding Vulkan
 FIND_PACKAGE_MESSAGE_DETAILS_Vulkan:INTERNAL=[E:/yjw/Graphics/Environment/VulkanSDK/Lib/vulkan-1.lib][E:/yjw/Graphics/Environment/VulkanSDK/Include][cfound components: glslc glslangValidator ][v1.3.268()]
+//ADVANCED property for variable: GITCOMMAND
+GITCOMMAND-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: GIT_EXECUTABLE
+GIT_EXECUTABLE-ADVANCED:INTERNAL=1
 //GLFW pkg-config Libs.private
 GLFW_PKG_CONFIG_LIBS_PRIVATE:INTERNAL= -lgdi32
 //GLFW pkg-config Requires.private
 GLFW_PKG_CONFIG_REQUIRES_PRIVATE:INTERNAL=
+//STRINGS property for variable: KTX_FEATURE_LOADTEST_APPS
+KTX_FEATURE_LOADTEST_APPS-STRINGS:INTERNAL=OFF;OpenGL;Vulkan;OpenGL+Vulkan
+//ADVANCED property for variable: KTX_GENERATE_VK_FILES
+KTX_GENERATE_VK_FILES-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: MAKECOMMAND
+MAKECOMMAND-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: MEMORYCHECK_COMMAND
+MEMORYCHECK_COMMAND-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: MEMORYCHECK_SUPPRESSIONS_FILE
+MEMORYCHECK_SUPPRESSIONS_FILE-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: SITE
+SITE-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: Vulkan_GLSLANG_VALIDATOR_EXECUTABLE
 Vulkan_GLSLANG_VALIDATOR_EXECUTABLE-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: Vulkan_GLSLC_EXECUTABLE

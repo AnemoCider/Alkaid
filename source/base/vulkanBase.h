@@ -12,6 +12,7 @@
 #include "VulkanCommon.h"
 #include "VulkanDevice.h"
 #include "VulkanSwapchain.h"
+#include "VulkanInit.h"
 
 class VulkanBase {
 protected:
@@ -85,6 +86,8 @@ public:
     VkCommandBuffer beginSingleTimeCommands();
     void endSingleTimeCommands(VkCommandBuffer commandBuffer);
     virtual void copyBuffer(VkBuffer src, VkBuffer dst, VkDeviceSize sz);
+
+    virtual void createImage(VkImageCreateInfo imageCreateInfo, VkImage& image, VmaAllocation& alloc);
 
     virtual void render() = 0;
     virtual void recreateSwapChain();
