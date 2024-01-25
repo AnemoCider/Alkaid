@@ -32,12 +32,12 @@ set(GLSL_COMPILER ${CMAKE_CURRENT_SOURCE_DIR}/shaders/glslc.exe)
 set(SHADER_DIR ${CMAKE_CURRENT_SOURCE_DIR}/shaders)
 
 function(buildExample EXAMPLE_NAME)
-    set(EXAMPLE_FOLDER ${CMAKE_CURRENT_SOURCE_DIR}/source/examples/${EXAMPLE_NAME})
+    set(EXAMPLE_FOLDER ${CMAKE_CURRENT_SOURCE_DIR}/source/examples/${EXAMPLE_NAME}/)
+    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${EXAMPLE_FOLDER})
     message(STATUS "Generating project file for example in ${EXAMPLE_FOLDER}")
-    add_executable(${EXAMPLE_NAME} source/examples/basicTriangle.cpp)
-    target_link_libraries(${EXAMPLE_NAME} base glfw ${Vulkan_LIBRARY})
 
-    file(GLOB SHADER_SOURCES CONFIGURE_DEPENDS "${SHADER_DIR}/${EXAMPLE_NAME}/*.vert" "${SHADER_DIR}/${EXAMPLE_NAME}/*.frag" )
+    file(GLOB SHADER_SOURCES "${SHADER_DIR}/${EXAMPLE_NAME}/*.vert" "${SHADER_DIR}/${EXAMPLE_NAME}/*.frag" )
+    
     # Iterate over each shader file
     foreach(SHADER ${SHADER_SOURCES})
         # Get the shader file name without extension
@@ -54,13 +54,13 @@ function(buildExample EXAMPLE_NAME)
         # Store all the compiled shaders in a list
         list(APPEND SPIRV_BINARY_FILES ${SHADER_SPIRV})
     endforeach()
-    add_custom_target(
-        Shaders 
-        DEPENDS ${SPIRV_BINARY_FILES} 
-        SOURCES ${SHADER_SOURCES}
-    )
-    add_dependencies(${EXAMPLE_NAME} Shaders)
 
+    add_executable(${EXAMPLE_NAME} ${EXAMPLE_FOLDER}/${EXAMPLE_NAME}.cpp ${SHADER_SOURCES})
+    target_link_libraries(${EXAMPLE_NAME} base glfw ${Vulkan_LIBRARY})
+    source_group("Shaders" FILES ${SHADER_SOURCES})
+
+    message(STATUS "Runtime executables written to ${EXAMPLE_FOLDER}")
 endfunction(buildExample)
 
 buildExample(basicTriangle)
+buildExample(pcss)

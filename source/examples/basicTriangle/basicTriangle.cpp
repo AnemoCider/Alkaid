@@ -318,15 +318,8 @@ private:
         subresourceRange.layerCount = 1;
 
         // Transition the texture image layout to transfer target, so we can safely copy our buffer data to it.
-        VkImageMemoryBarrier imageMemoryBarrier{ VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER };
-        imageMemoryBarrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-        imageMemoryBarrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-        imageMemoryBarrier.image = texture.image;
-        imageMemoryBarrier.subresourceRange = subresourceRange;
-        imageMemoryBarrier.srcAccessMask = 0;
-        imageMemoryBarrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-        imageMemoryBarrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-        imageMemoryBarrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+        VkImageMemoryBarrier imageMemoryBarrier = vki::init_image_memory_barrier(texture.image, subresourceRange, 0, VK_ACCESS_TRANSFER_WRITE_BIT, 
+            VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
 
         VkCommandBuffer commandBuffer = beginSingleTimeCommands();
         // Insert a memory dependency at the proper pipeline stages that will execute the image layout transition
@@ -408,9 +401,7 @@ private:
         // Textures are not directly accessed by the shaders and
         // are abstracted by image views containing additional
         // information and sub resource ranges
-        VkImageViewCreateInfo view{ VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO };
-        view.viewType = VK_IMAGE_VIEW_TYPE_2D;
-        view.format = format;
+        VkImageViewCreateInfo view = vki::init_image_view_create_info(VK_IMAGE_VIEW_TYPE_2D, format, texture.image);
         // The subresource range describes the set of mip levels (and array layers) that can be accessed through this image view
         // It's possible to create multiple image views for a single image referring to different (and/or overlapping) ranges of the image
         view.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
@@ -420,8 +411,6 @@ private:
         // Linear tiling usually won't support mip maps
         // Only set mip map count if optimal tiling is used
         view.subresourceRange.levelCount = texture.mipLevels;
-        // The view will be based on the texture's image
-        view.image = texture.image;
         VK_CHECK(vkCreateImageView(device, &view, nullptr, &texture.view));
     }
 
