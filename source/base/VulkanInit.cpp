@@ -89,7 +89,7 @@ VkImageViewCreateInfo vki::init_image_view_create_info(const VkImageViewType vie
     return view;
 }
 
-VkPipelineShaderStageCreateInfo vki::init_pipeline_shader_stage(const VkShaderStageFlagBits stageBits, const VkShaderModule & module, const char* name) {
+VkPipelineShaderStageCreateInfo vki::init_pipeline_shader_stage_create_info(const VkShaderStageFlagBits stageBits, const VkShaderModule & module, const char* name) {
     VkPipelineShaderStageCreateInfo shaderStage{};
     shaderStage.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
     shaderStage.stage = stageBits;
@@ -98,7 +98,7 @@ VkPipelineShaderStageCreateInfo vki::init_pipeline_shader_stage(const VkShaderSt
     return shaderStage;
 }
 
-VkVertexInputBindingDescription vki::init_vertex_input_binding_description(const uint32_t binding, const uint32_t stride, const VkVertexInputRate inputRate = VK_VERTEX_INPUT_RATE_VERTEX) {
+VkVertexInputBindingDescription vki::init_vertex_input_binding_description(const uint32_t binding, const uint32_t stride, const VkVertexInputRate inputRate) {
     VkVertexInputBindingDescription bindingDescription{};
     bindingDescription.binding = binding;
     bindingDescription.stride = stride;
@@ -125,7 +125,7 @@ VkPipelineVertexInputStateCreateInfo vki::init_pipeline_vertex_inputState_create
     return vertexInputCreateInfo;
 }
 
-VkPipelineInputAssemblyStateCreateInfo vki::init_input_assembly_state_create_info(const VkPrimitiveTopology topology, const VkBool32 primitiveRestartEnable) {
+VkPipelineInputAssemblyStateCreateInfo vki::init_pipeline_input_assembly_state_create_info(const VkPrimitiveTopology topology, const VkBool32 primitiveRestartEnable) {
     VkPipelineInputAssemblyStateCreateInfo assemblyState{};
     assemblyState.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
     assemblyState.topology = topology;

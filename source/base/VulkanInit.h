@@ -54,7 +54,7 @@ namespace vki {
         const VkImage& image);
 
     // Pipeline Stuff
-    VkPipelineShaderStageCreateInfo init_pipeline_shader_stage(
+    VkPipelineShaderStageCreateInfo init_pipeline_shader_stage_create_info(
         const VkShaderStageFlagBits stageBits, 
         const VkShaderModule& module, 
         const char* name);
@@ -77,7 +77,7 @@ namespace vki {
         const VkVertexInputBindingDescription* pinputBindingDes, 
         const VkVertexInputAttributeDescription* pInputAttribDes);
 
-    VkPipelineInputAssemblyStateCreateInfo init_input_assembly_state_create_info(
+    VkPipelineInputAssemblyStateCreateInfo init_pipeline_input_assembly_state_create_info(
         const VkPrimitiveTopology topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, 
         const VkBool32 primitiveRestartEnable = false);
 
@@ -101,11 +101,11 @@ namespace vki {
         const VkBool32 depthWriteEnable,
         const VkCompareOp depthCompareOp,
         const VkBool32 depthBoundsTestEnable,
-        const float minDepthBounds,
-        const float maxDepthBounds,
-        const VkBool32 stencilTestEnable,
-        const VkStencilOpState front,
-        const VkStencilOpState back);
+        const float minDepthBounds = 0.0f,
+        const float maxDepthBounds = 1.0f,
+        const VkBool32 stencilTestEnable = VK_FALSE,
+        const VkStencilOpState front = {},
+        const VkStencilOpState back = {});
 
     VkPipelineMultisampleStateCreateInfo init_pipeline_multisample_state_create_info(
         const VkBool32 sampleShadingEnable,
