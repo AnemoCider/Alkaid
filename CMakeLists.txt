@@ -38,6 +38,8 @@ function(buildExample EXAMPLE_NAME)
 
     file(GLOB SHADER_SOURCES "${SHADER_DIR}/${EXAMPLE_NAME}/*.vert" "${SHADER_DIR}/${EXAMPLE_NAME}/*.frag" )
     
+    add_executable(${EXAMPLE_NAME} ${EXAMPLE_FOLDER}/${EXAMPLE_NAME}.cpp ${SHADER_SOURCES})
+
     # Iterate over each shader file
     foreach(SHADER ${SHADER_SOURCES})
         # Get the shader file name without extension
@@ -46,16 +48,17 @@ function(buildExample EXAMPLE_NAME)
         set(SHADER_SPIRV "${SHADER_DIR}/${EXAMPLE_NAME}/${SHADER_NAME}.spv")
         # Define the command to compile the shader into .spv format
         add_custom_command(
-            OUTPUT ${SHADER_SPIRV}
+            TARGET ${EXAMPLE_NAME}
+            PRE_BUILD
             COMMAND ${GLSL_COMPILER} ${SHADER} -o ${SHADER_SPIRV} 
             DEPENDS ${SHADER}
             COMMENT "Compiling ${SHADER}"
         )
+
         # Store all the compiled shaders in a list
         list(APPEND SPIRV_BINARY_FILES ${SHADER_SPIRV})
     endforeach()
 
-    add_executable(${EXAMPLE_NAME} ${EXAMPLE_FOLDER}/${EXAMPLE_NAME}.cpp ${SHADER_SOURCES})
     target_link_libraries(${EXAMPLE_NAME} base glfw ${Vulkan_LIBRARY})
     source_group("Shaders" FILES ${SHADER_SOURCES})
 
