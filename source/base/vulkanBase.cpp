@@ -11,6 +11,9 @@ void VulkanBase::initVulkan() {
     createInstance();
     createPhysicalDevice();
     vulkanDevice = vki::VulkanDevice(physicalDevice);
+    #ifdef __APPLE__
+        enabledDeviceExtensions.push_back("VK_KHR_portability_subset");
+    #endif
     vulkanDevice.createLogicalDevice(enabledFeatures, enabledDeviceExtensions, nullptr);
     device = vulkanDevice.logicalDevice;
     vkGetDeviceQueue(device, vulkanDevice.queueFamilyIndices.graphics.value(), 0, &graphicsQueue);
@@ -46,6 +49,11 @@ void VulkanBase::createInstance() {
     if (!glfwExtensions)
         std::cout << "Error occurred when getting required extensions.\n";
 
+    #ifdef __APPLE__
+        createInfo.flags |= VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR;
+        enabledInstanceExtensions.emplace_back(VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME);
+    #endif
+
     createInfo.enabledExtensionCount = enabledInstanceExtensions.size();
     createInfo.ppEnabledExtensionNames = enabledInstanceExtensions.data(); // use glfw ext.
 
@@ -54,7 +62,7 @@ void VulkanBase::createInstance() {
         createInfo.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
         createInfo.ppEnabledLayerNames = validationLayers.data();
     }
-    VkResult result = vkCreateInstance(&createInfo, nullptr, &instance);
+
     VK_CHECK(vkCreateInstance(&createInfo, nullptr, &instance));
 
 }

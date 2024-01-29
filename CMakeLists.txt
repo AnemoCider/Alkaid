@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.4 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.7 FATAL_ERROR)
 
 project(Alkaid)
 
@@ -24,11 +24,15 @@ add_subdirectory(source/base)
 add_subdirectory(external/glfw)
 
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DVK_USE_PLATFORM_WIN32_KHR")
+if(WIN32)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DVK_USE_PLATFORM_WIN32_MVK")
+elseif(APPLE)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DVK_USE_PLATFORM_MACOS_KHR")
+endif()
 
 # Compile Shaders
 
-set(GLSL_COMPILER ${CMAKE_CURRENT_SOURCE_DIR}/shaders/glslc.exe)
+set(GLSL_COMPILER glslc)
 set(SHADER_DIR ${CMAKE_CURRENT_SOURCE_DIR}/shaders)
 
 function(buildExample EXAMPLE_NAME)
@@ -50,6 +54,7 @@ function(buildExample EXAMPLE_NAME)
         add_custom_command(
             TARGET ${EXAMPLE_NAME}
             PRE_BUILD
+            COMMAND cd ${SHADER_DIR}
             COMMAND ${GLSL_COMPILER} ${SHADER} -o ${SHADER_SPIRV} 
             DEPENDS ${SHADER}
             COMMENT "Compiling ${SHADER}"
@@ -65,5 +70,5 @@ function(buildExample EXAMPLE_NAME)
     message(STATUS "Runtime executables written to ${EXAMPLE_FOLDER}")
 endfunction(buildExample)
 
-buildExample(basicTriangle)
+# buildExample(basicTriangle)
 buildExample(pcss)
