@@ -2,7 +2,8 @@
 [Bb]uild/
 .vs/
 CMakeFiles/
-
+**/CMakeCache.txt
+**/*.cmake
 
 *.filters
 *.vcxproj
