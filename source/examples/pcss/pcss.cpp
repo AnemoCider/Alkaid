@@ -51,7 +51,7 @@ struct UniformBufferObject {
 class PCSS : public VulkanBase {
 
 private:
-    Merak::Camera camera{ 4.0f, -4.0f, 1.5f };
+    Merak::Camera camera{ 4.0f, 1.5f, 0.0f };
 
     bool framebufferResized = false;
 
@@ -180,9 +180,24 @@ private:
         }
     }
 
-    void framebufferResizeCallback(GLFWwindow* window, int width, int height) {
+    static void framebufferResizeCallback(GLFWwindow* window, int width, int height) {
         auto app = reinterpret_cast<PCSS*>(glfwGetWindowUserPointer(window));
         app->framebufferResized = true;
+    }
+    static void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
+        auto app = reinterpret_cast<PCSS*>(glfwGetWindowUserPointer(window));
+        app->camera.zoomIn(yoffset);
+    }
+    static void mouse_button_callback(GLFWwindow* window, int button, int action, int mods) {
+        auto app = reinterpret_cast<PCSS*>(glfwGetWindowUserPointer(window));
+        if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS)
+            app->camera.startDrag();
+        else if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE)
+            app->camera.disableDrag();
+    }
+    static void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
+        auto app = reinterpret_cast<PCSS*>(glfwGetWindowUserPointer(window));
+        app->camera.mouseDrag(xpos, ypos);
     }
 
     void createSyncObjects() {
@@ -562,7 +577,7 @@ private:
     void updateUniformBuffer(uint32_t frame) {
 
         UniformBufferObject ubo{};
-        ubo.model = glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+        ubo.model = glm::mat4(1.0f);
         /*ubo.view = glm::lookAt(glm::vec3(4.0f, -4.0f, 1.5f), glm::vec3(0.0f, 0.0f, 1.5f), glm::vec3(0.0f, 0.0f, 1.0f));
         ubo.proj = glm::perspective(glm::radians(45.0f), windowWidth / (float)windowHeight, 0.1f, 10.0f);*/
         ubo.view = camera.view();
@@ -575,6 +590,14 @@ private:
 
 
 public:
+    
+    void createWindow() override {
+        VulkanBase::createWindow();
+        glfwSetFramebufferSizeCallback(window, framebufferResizeCallback);
+        glfwSetScrollCallback(window, scroll_callback);
+        glfwSetMouseButtonCallback(window, mouse_button_callback);
+        glfwSetCursorPosCallback(window, mouse_callback);
+    }
 
     void initVulkan() {
         // addExtensions();
@@ -748,6 +771,7 @@ public:
 int main() {
     auto app = std::make_unique<PCSS>();
     app->createWindow();
+    glfwSetWindowUserPointer(app->window, app.get());
     app->initVulkan();
     app->prepare();
     app->renderLoop();

@@ -7,9 +7,11 @@
 namespace Merak {
     class Camera {
     public:
+        float deltaTime = 0.0f;	// Time between current frame and last frame
+        float lastFrame = 0.0f; // Time of last frame
         Camera(float xPos, float yPos, float zPos) : viewMatrix(glm::mat4(1.0f)), projectionMatrix(glm::mat4(1.0f)),
-            position(xPos, yPos, zPos), up(0.0f, 0.0f, 1.0f), yaw(180.0f), pitch(45.0f),
-            moveSpeed(0.001f), mouseSensitivity(0.1f), zoom(45.0f) {
+            position(xPos, yPos, zPos), up(0.0f, 1.0f, 0.0f), yaw(180.0f), pitch(0.0f),
+            moveSpeed(2.5f), sensitivity(0.1f), zoom(45.0f) {
             right = glm::cross(front, up);
         }
 
@@ -20,10 +22,15 @@ namespace Merak {
         float yaw;
         float pitch;
         float moveSpeed;
-        float mouseSensitivity;
+        float sensitivity;
         float zoom;
         glm::mat4 viewMatrix;
         glm::mat4 projectionMatrix;
+
+        // User is dragging the cursor
+        bool inDrag = false;
+        float lastX = 400, lastY = 300;
+        bool firstMouse = true;
 
         decltype(auto) view() {
             viewMatrix = glm::lookAt(position, position + front, up);
@@ -37,6 +44,9 @@ namespace Merak {
         }
 
         void move(GLFWwindow* window) {
+            float currentFrame = glfwGetTime();
+            deltaTime = currentFrame - lastFrame;
+            lastFrame = currentFrame;
             glm::vec3 moveDir{ 0.0f, 0.0f, 0.0f };
             bool moved = false;
             if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
@@ -59,12 +69,12 @@ namespace Merak {
                 moveDir += up;
                 moved = true;
             }
-            else if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) {
+            else if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS) {
                 moveDir -= up;
                 moved = true;
             }
             if (moved)
-                position += glm::normalize(moveDir) * moveSpeed;
+                position += glm::normalize(moveDir) * moveSpeed * deltaTime;
         }
 
         decltype(auto) update(GLFWwindow* window) {
@@ -75,6 +85,48 @@ namespace Merak {
             front = glm::normalize(front);
             right = glm::cross(front, up);
             move(window);
+        }
+
+        void zoomIn(double scrollOffset) {
+            zoom -= scrollOffset * 5.0f;
+            if (zoom < 20.0f) zoom = 20.0f;
+            if (zoom > 90.0f) zoom = 90.0f;
+        }
+
+        void startDrag() {
+            inDrag = true;
+        }
+
+        void disableDrag() {
+            inDrag = false;
+            firstMouse = true;
+        }
+
+        void mouseDrag(double xpos, double ypos) {
+            if (!inDrag) return;
+            if (firstMouse) // initially set to true
+            {
+                lastX = xpos;
+                lastY = ypos;
+                firstMouse = false;
+            }
+
+            float xoffset = xpos - lastX;
+            float yoffset = lastY - ypos; // reversed since y-coordinates range from bottom to top
+
+            lastX = xpos;
+            lastY = ypos;
+
+            
+            xoffset *= sensitivity;
+            yoffset *= sensitivity;
+
+            yaw += xoffset;
+            pitch += yoffset;
+            if (pitch > 89.0f)
+                pitch = 89.0f;
+            if (pitch < -89.0f)
+                pitch = -89.0f;
         }
     };
 };
