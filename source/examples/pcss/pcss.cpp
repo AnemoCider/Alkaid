@@ -233,19 +233,19 @@ private:
     void createDescriptorPool() {
         std::array<VkDescriptorPoolSize, 2> poolSizes{};
         poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        poolSizes[0].descriptorCount = 1;
+        poolSizes[0].descriptorCount = (uint32_t)(maxFrameCount);
         poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        poolSizes[1].descriptorCount = 1;
+        poolSizes[1].descriptorCount = (uint32_t)(maxFrameCount);
 
         auto poolInfo = vki::init_descriptor_pool_create_info(poolSizes.size(), poolSizes.data(), maxFrameCount);
-        vkCreateDescriptorPool(device, &poolInfo, nullptr, &descriptorPool);
+        VK_CHECK(vkCreateDescriptorPool(device, &poolInfo, nullptr, &descriptorPool));
     }
 
     void createDescriptorSets() {
         std::vector<VkDescriptorSetLayout> setLayouts(maxFrameCount, descriptorSetLayout);
 
         auto setAllocInfo = vki::init_descriptor_set_allocate_info(descriptorPool, descriptorSets.size(), setLayouts.data());
-        vkAllocateDescriptorSets(device, &setAllocInfo, descriptorSets.data());
+        VK_CHECK(vkAllocateDescriptorSets(device, &setAllocInfo, descriptorSets.data()));
 
         for (size_t i = 0; i < maxFrameCount; i++) {
             VkDescriptorBufferInfo bufferInfo{};
