@@ -1,5 +1,6 @@
 #include <vulkan/vk_mem_alloc.h>
 #include "VulkanBase.h"
+#include "VulkanCamera.h"
 
 #include <ktx.h>
 #include <ktxvulkan.h>
@@ -50,6 +51,8 @@ struct UniformBufferObject {
 class PCSS : public VulkanBase {
 
 private:
+    Merak::Camera camera{ 4.0f, -4.0f, 1.5f };
+
     bool framebufferResized = false;
 
     static constexpr uint32_t maxFrameCount = 2;
@@ -320,17 +323,6 @@ private:
 
     void createTextureImage() {
         std::string filename = getAssetPath() + "marry/MC003_Kozakura_Mari.png";
-        /*VkFormat format = VK_FORMAT_R8G8B8A8_UNORM;
-
-        ktxResult result;
-        ktxTexture* ktxTexture;
-        result = ktxTexture_CreateFromNamedFile(filename.c_str(), KTX_TEXTURE_CREATE_LOAD_IMAGE_DATA_BIT, &ktxTexture);
-        assert(result == KTX_SUCCESS);
-        texture.width = ktxTexture->baseWidth;
-        texture.height = ktxTexture->baseHeight;
-        texture.mipLevels = ktxTexture->numLevels;
-        ktx_uint8_t* ktxTextureData = ktxTexture_GetData(ktxTexture);
-        ktx_size_t ktxTextureSize = ktxTexture_GetSize(ktxTexture);*/
         int width, height, nrChannels;
         unsigned char* textureData = stbi_load(filename.c_str(), &width, &height, &nrChannels, STBI_rgb_alpha);
         // 4 bytes a pixel: R8G8B8A8
@@ -571,8 +563,10 @@ private:
 
         UniformBufferObject ubo{};
         ubo.model = glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-        ubo.view = glm::lookAt(glm::vec3(4.0f, -4.0f, 1.5f), glm::vec3(0.0f, 0.0f, 1.5f), glm::vec3(0.0f, 0.0f, 1.0f));
-        ubo.proj = glm::perspective(glm::radians(45.0f), windowWidth / (float)windowHeight, 0.1f, 10.0f);
+        /*ubo.view = glm::lookAt(glm::vec3(4.0f, -4.0f, 1.5f), glm::vec3(0.0f, 0.0f, 1.5f), glm::vec3(0.0f, 0.0f, 1.0f));
+        ubo.proj = glm::perspective(glm::radians(45.0f), windowWidth / (float)windowHeight, 0.1f, 10.0f);*/
+        ubo.view = camera.view();
+        ubo.proj = camera.projection((float)windowWidth, (float)windowHeight);
         // glm is originally for OpenGL, whose y coord of the clip space is inverted
         ubo.proj[1][1] *= -1;
         memcpy(uniformBuffers[frame].mapped, &ubo, sizeof(ubo));
@@ -701,6 +695,7 @@ public:
             throw std::runtime_error("failed to record command buffer!");
         }
 
+        camera.update(window);
         updateUniformBuffer(currentFrame);
 
         VkSubmitInfo submitInfo{};
