@@ -38,6 +38,7 @@ x86/
 bld/
 [Bb]in/
 [Oo]bj/
+!assets/**/*.obj
 [Ll]og/
 [Ll]ogs/
 
