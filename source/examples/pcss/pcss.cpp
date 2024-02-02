@@ -104,6 +104,21 @@ private:
         uint32_t mipLevels;
     } texture;
 
+    struct FrameBufferAttachment{
+        VkImage image;
+        VmaAllocation allocation;
+        VkImageView view;
+    };
+
+    struct {
+        uint32_t width, height;
+        VkRenderPass renderPass;
+        FrameBufferAttachment attachment;
+        VkSampler sampler;
+        VkFramebuffer frameBuffer;
+        VkDescriptorImageInfo descriptor;
+    } offscreenPass;
+
     std::string getShaderPathName() {
         return "shaders/pcss/screen";
     }
@@ -198,6 +213,121 @@ private:
     static void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
         auto app = reinterpret_cast<PCSS*>(glfwGetWindowUserPointer(window));
         app->camera.mouseDrag(xpos, ypos);
+    }
+
+    void createOffscreenPass() {
+        VkAttachmentDescription attachmentDescription{};
+		attachmentDescription.format = depthFormat;
+		attachmentDescription.samples = VK_SAMPLE_COUNT_1_BIT;
+		attachmentDescription.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;							// Clear depth at beginning of the render pass
+		attachmentDescription.storeOp = VK_ATTACHMENT_STORE_OP_STORE;						// We will read from depth, so it's important to store the depth attachment results
+		attachmentDescription.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+		attachmentDescription.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+		attachmentDescription.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;					// We don't care about initial layout of the attachment
+		attachmentDescription.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;// Attachment will be transitioned to shader read at render pass end
+
+		VkAttachmentReference depthReference = {};
+		depthReference.attachment = 0;
+		depthReference.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;			// Attachment will be used as depth/stencil during render pass
+
+		VkSubpassDescription subpass = {};
+		subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+		subpass.colorAttachmentCount = 0;													// No color attachments
+		subpass.pDepthStencilAttachment = &depthReference;									// Reference to our depth attachment
+
+		// Use subpass dependencies for layout transitions
+		std::array<VkSubpassDependency, 2> dependencies;
+
+		dependencies[0].srcSubpass = VK_SUBPASS_EXTERNAL;
+		dependencies[0].dstSubpass = 0;
+		dependencies[0].srcStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+		dependencies[0].dstStageMask = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+		dependencies[0].srcAccessMask = VK_ACCESS_SHADER_READ_BIT;
+		dependencies[0].dstAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+		dependencies[0].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
+
+		dependencies[1].srcSubpass = 0;
+		dependencies[1].dstSubpass = VK_SUBPASS_EXTERNAL;
+		dependencies[1].srcStageMask = VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
+		dependencies[1].dstStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+		dependencies[1].srcAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+		dependencies[1].dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+		dependencies[1].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
+
+		VkRenderPassCreateInfo renderPassCreateInfo { VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO };
+		renderPassCreateInfo.attachmentCount = 1;
+		renderPassCreateInfo.pAttachments = &attachmentDescription;
+		renderPassCreateInfo.subpassCount = 1;
+		renderPassCreateInfo.pSubpasses = &subpass;
+		renderPassCreateInfo.dependencyCount = static_cast<uint32_t>(dependencies.size());
+		renderPassCreateInfo.pDependencies = dependencies.data();
+
+		VK_CHECK(vkCreateRenderPass(device, &renderPassCreateInfo, nullptr, &offscreenPass.renderPass));
+    }
+
+    void createOffscreenFrameBuffer() {
+        offscreenPass.width = 2048;
+        offscreenPass.height = 2048;
+        auto imageInfo = vki::init_image_create_info(
+            VK_IMAGE_TYPE_2D, depthFormat, 
+            {offscreenPass.width, offscreenPass.height, 1}, 1, 
+            VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_TILING_OPTIMAL, 
+            VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT
+        );
+
+        createImage(imageInfo, offscreenPass.attachment.image, offscreenPass.attachment.allocation);
+        auto imageViewInfo = vki::init_image_view_create_info(
+            VK_IMAGE_VIEW_TYPE_2D, depthFormat, offscreenPass.attachment.image
+        );
+        imageViewInfo.subresourceRange = {};
+        imageViewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
+        if (depthFormat >= VK_FORMAT_D16_UNORM_S8_UINT) {
+            imageViewInfo.subresourceRange.aspectMask |= VK_IMAGE_ASPECT_STENCIL_BIT;
+        }
+        imageViewInfo.subresourceRange.baseMipLevel = 0;
+        imageViewInfo.subresourceRange.levelCount = 1;
+        imageViewInfo.subresourceRange.baseArrayLayer = 0;
+        imageViewInfo.subresourceRange.layerCount = 1;
+        VK_CHECK(vkCreateImageView(device, &imageViewInfo, nullptr, &offscreenPass.attachment.view));
+        VkSamplerCreateInfo sampler{ VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO };
+        sampler.magFilter = VK_FILTER_LINEAR;
+        sampler.minFilter = VK_FILTER_LINEAR;
+        sampler.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+        sampler.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+        sampler.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+        sampler.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+        sampler.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
+        sampler.mipLodBias = 0.0f;
+        sampler.minLod = 0.0f;
+        // Set max level-of-detail to mip level count of the texture
+        sampler.maxLod = (float)texture.mipLevels;
+        // Enable anisotropic filtering
+        // This feature is optional, so we must check if it's supported on the device
+        // TODO: Check it
+        // Use max. level of anisotropy for this example
+        sampler.maxAnisotropy = physicalDeviceProperties.limits.maxSamplerAnisotropy;
+        sampler.anisotropyEnable = VK_TRUE;
+        VK_CHECK(vkCreateSampler(device, &sampler, nullptr, &offscreenPass.sampler));
+
+        createOffscreenPass();
+
+        VkFramebufferCreateInfo fbufCreateInfo { VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO };
+		fbufCreateInfo.renderPass = offscreenPass.renderPass;
+		fbufCreateInfo.attachmentCount = 1;
+		fbufCreateInfo.pAttachments = &offscreenPass.attachment.view;
+		fbufCreateInfo.width = offscreenPass.width;
+		fbufCreateInfo.height = offscreenPass.height;
+		fbufCreateInfo.layers = 1;
+
+		VK_CHECK(vkCreateFramebuffer(device, &fbufCreateInfo, nullptr, &offscreenPass.frameBuffer));
+    }
+
+    void clearOffscreen() {
+        vkDestroyFramebuffer(device, offscreenPass.frameBuffer, nullptr);
+        vkDestroyRenderPass(device, offscreenPass.renderPass, nullptr);
+        vkDestroySampler(device, offscreenPass.sampler, nullptr);
+        vkDestroyImageView(device, offscreenPass.attachment.view, nullptr);
+        vmaDestroyImage(allocator, offscreenPass.attachment.image, offscreenPass.attachment.allocation);
     }
 
     void createSyncObjects() {
@@ -302,28 +432,6 @@ private:
 
         vmaDestroyBuffer(allocator, stagingBuffer.buffer, stagingBuffer.alloc);
     }
-
-    /*void createIndexBuffer() {
-        VkDeviceSize bufferSize = sizeof(indicesData[0]) * indicesData.size();
-
-        Staging stagingBuffer{};
-
-        createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT |
-            VMA_ALLOCATION_CREATE_MAPPED_BIT, stagingBuffer.buffer, stagingBuffer.alloc);
-
-        void* data;
-
-        vmaMapMemory(allocator, stagingBuffer.alloc, &data);
-        memcpy(data, indicesData.data(), (size_t)bufferSize);
-        vmaUnmapMemory(allocator, stagingBuffer.alloc);
-
-        createBuffer(bufferSize,
-            VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
-            0, indices.buffer, indices.alloc);
-        copyBuffer(stagingBuffer.buffer, indices.buffer, bufferSize);
-
-        vmaDestroyBuffer(allocator, stagingBuffer.buffer, stagingBuffer.alloc);
-    }*/
 
     void createUniformBuffers() {
         VkDeviceSize bufferSize = sizeof(UniformBufferObject);
@@ -587,8 +695,6 @@ private:
         memcpy(uniformBuffers[frame].mapped, &ubo, sizeof(ubo));
     }
 
-
-
 public:
     
     void createWindow() override {
@@ -614,6 +720,7 @@ public:
         createVertexBuffer();
         // createIndexBuffer();
         createUniformBuffers();
+        createOffscreenFrameBuffer();
         createDescriptorSetLayout();
         createDescriptorPool();
         createTextureImage();
@@ -630,6 +737,7 @@ public:
         vkDestroySampler(device, texture.sampler, nullptr);
         vmaDestroyImage(allocator, texture.image, texture.alloc);
         vkDestroyDescriptorSetLayout(device, descriptorSetLayout, nullptr);
+        clearOffscreen();
         for (auto i = 0; i < uniformBuffers.size(); i++) {
             vmaUnmapMemory(allocator, uniformBuffers[i].alloc);
             vmaDestroyBuffer(allocator, uniformBuffers[i].buffer, uniformBuffers[i].alloc);
