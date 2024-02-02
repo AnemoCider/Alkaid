@@ -46,6 +46,7 @@ struct UniformBufferObject {
     alignas(16) glm::mat4 model;
     alignas(16) glm::mat4 view;
     alignas(16) glm::mat4 proj;
+    alignas(16) glm::mat3 normalRot;
 };
 
 struct DepthUBO {
@@ -120,6 +121,7 @@ private:
         VkImage image;
         VmaAllocation allocation;
         VkImageView view;
+        VkImageLayout layout;
     };
 
     struct {
@@ -140,7 +142,7 @@ private:
         return "assets/pcss/";
     }
 
-    void loadObjFile(const std::string file = "marry/marry.obj", const std::string matPath = "marry") {
+    void loadObjFile(const std::string file = "marry/Marry.obj", const std::string matPath = "marry") {
         std::string inputfile = getAssetPath() + file;
         tinyobj::ObjReaderConfig reader_config;
         reader_config.mtl_search_path = getAssetPath() + matPath; // Path to material files
@@ -240,6 +242,8 @@ private:
 		attachmentDescription.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;					// We don't care about initial layout of the attachment
 		attachmentDescription.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;// Attachment will be transitioned to shader read at render pass end
 
+        offscreenPass.attachment.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL; 
+
 		VkAttachmentReference depthReference = {};
 		depthReference.attachment = 0;
 		depthReference.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;			// Attachment will be used as depth/stencil during render pass
@@ -295,9 +299,10 @@ private:
         );
         imageViewInfo.subresourceRange = {};
         imageViewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
-        if (depthFormat >= VK_FORMAT_D16_UNORM_S8_UINT) {
-            imageViewInfo.subresourceRange.aspectMask |= VK_IMAGE_ASPECT_STENCIL_BIT;
-        }
+        // if (depthFormat >= VK_FORMAT_D16_UNORM_S8_UINT) {
+        //     imageViewInfo.subresourceRange.aspectMask |= VK_IMAGE_ASPECT_STENCIL_BIT;
+        // }
+        
         imageViewInfo.subresourceRange.baseMipLevel = 0;
         imageViewInfo.subresourceRange.levelCount = 1;
         imageViewInfo.subresourceRange.baseArrayLayer = 0;
@@ -402,7 +407,13 @@ private:
         textureLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
         textureLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 
-        std::vector<VkDescriptorSetLayoutBinding> setLayoutBindings{ uboLayoutBinding , textureLayoutBinding };
+        VkDescriptorSetLayoutBinding shadowMapLayoutBinding{};
+        shadowMapLayoutBinding.binding = 2;
+        shadowMapLayoutBinding.descriptorCount = 1;
+        shadowMapLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        shadowMapLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+        std::vector<VkDescriptorSetLayoutBinding> setLayoutBindings{ uboLayoutBinding , textureLayoutBinding, shadowMapLayoutBinding };
         VkDescriptorSetLayoutCreateInfo layoutInfo{ VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO };
         layoutInfo.bindingCount = setLayoutBindings.size();
         layoutInfo.pBindings = setLayoutBindings.data();
@@ -421,14 +432,20 @@ private:
             bufferInfo.offset = 0;
             bufferInfo.range = sizeof(UniformBufferObject);
 
-            VkDescriptorImageInfo imageInfo{};
-            imageInfo.imageLayout = texture.imageLayout;
-            imageInfo.imageView = texture.view;
-            imageInfo.sampler = texture.sampler;
+            VkDescriptorImageInfo textImageInfo{};
+            textImageInfo.imageLayout = texture.imageLayout;
+            textImageInfo.imageView = texture.view;
+            textImageInfo.sampler = texture.sampler;
 
-            std::array<VkWriteDescriptorSet, 2> descriptorWrites{};
+            VkDescriptorImageInfo shadowMapInfo{};
+            shadowMapInfo.imageLayout = offscreenPass.attachment.layout;
+            shadowMapInfo.imageView = offscreenPass.attachment.view;
+            shadowMapInfo.sampler = offscreenPass.sampler;
+
+            std::array<VkWriteDescriptorSet, 3> descriptorWrites{};
             descriptorWrites[0] = vki::init_write_descriptor_set(descriptorSets[i], 0, 0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, &bufferInfo, nullptr);
-            descriptorWrites[1] = vki::init_write_descriptor_set(descriptorSets[i], 1, 0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, nullptr, &imageInfo);
+            descriptorWrites[1] = vki::init_write_descriptor_set(descriptorSets[i], 1, 0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, nullptr, &textImageInfo);
+            descriptorWrites[2] = vki::init_write_descriptor_set(descriptorSets[i], 2, 0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, nullptr, &shadowMapInfo);
 
             vkUpdateDescriptorSets(device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
         }
@@ -737,11 +754,12 @@ private:
         vkDestroyShaderModule(device, fragShaderModule, nullptr);
         vkDestroyShaderModule(device, vertShaderModule, nullptr);
     }
-
+    
     void updateUniformBuffer(uint32_t frame) {
 
         UniformBufferObject ubo{};
         ubo.model = glm::mat4(1.0f);
+        ubo.normalRot = glm::mat3(glm::transpose(glm::inverse(ubo.model)));
         /*ubo.view = glm::lookAt(glm::vec3(4.0f, -4.0f, 1.5f), glm::vec3(0.0f, 0.0f, 1.5f), glm::vec3(0.0f, 0.0f, 1.0f));
         ubo.proj = glm::perspective(glm::radians(45.0f), windowWidth / (float)windowHeight, 0.1f, 10.0f);*/
         ubo.view = camera.view();
