@@ -27,6 +27,15 @@
 //    std::vector <tinyobj::material_t> materials;
 //};
 
+struct{
+    glm::vec3 lightPos = { -2.0f, 5.0f, 2.0f };
+    float dimension;
+    glm::vec3 lightTarget = { 0.0f, 0.0f, 0.0f };
+    float lightFOV = 45.0f;
+    float zNear = 1.0f;
+    float zFar = 96.0f;
+} light;
+
 struct Vertex {
     glm::vec3 pos;
     glm::vec3 normal;
@@ -42,11 +51,14 @@ std::vector<Vertex> verticesData = {};
 
 // const std::vector<uint16_t> indicesData = {};
 
+glm::mat4 lightSpace;
+
 struct UniformBufferObject {
     alignas(16) glm::mat4 model;
     alignas(16) glm::mat4 view;
     alignas(16) glm::mat4 proj;
     alignas(16) glm::mat3 normalRot;
+    alignas(16) glm::mat4 lightSpace;
 };
 
 struct DepthUBO {
@@ -58,7 +70,7 @@ struct DepthUBO {
 class PCSS : public VulkanBase {
 
 private:
-    Merak::Camera camera{ 4.0f, 1.5f, 0.0f };
+    Merak::Camera camera{ -5.0f, 1.5f, 0.0f };
 
     bool framebufferResized = false;
 
@@ -75,6 +87,8 @@ private:
 
     VkPipelineLayout pipelineLayout;
     VkPipeline graphicsPipeline;
+    VkPipelineLayout shadowMapPipelineLayout;
+    VkPipeline shadowMapPipeline;
 
     struct {
         VmaAllocation alloc;
@@ -284,8 +298,8 @@ private:
     }
 
     void createOffscreenFrameBuffer() {
-        offscreenPass.width = 2048;
-        offscreenPass.height = 2048;
+        offscreenPass.width = 1024;
+        offscreenPass.height = 1024;
         auto imageInfo = vki::init_image_create_info(
             VK_IMAGE_TYPE_2D, depthFormat, 
             {offscreenPass.width, offscreenPass.height, 1}, 1, 
@@ -299,9 +313,9 @@ private:
         );
         imageViewInfo.subresourceRange = {};
         imageViewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
-        // if (depthFormat >= VK_FORMAT_D16_UNORM_S8_UINT) {
-        //     imageViewInfo.subresourceRange.aspectMask |= VK_IMAGE_ASPECT_STENCIL_BIT;
-        // }
+         /*if (depthFormat >= VK_FORMAT_D16_UNORM_S8_UINT) {
+             imageViewInfo.subresourceRange.aspectMask |= VK_IMAGE_ASPECT_STENCIL_BIT;
+         }*/
         
         imageViewInfo.subresourceRange.baseMipLevel = 0;
         imageViewInfo.subresourceRange.levelCount = 1;
@@ -378,7 +392,7 @@ private:
         screen shader: each frame has its own descriptor set, descriptorSets[i]
             it has 3 bindings, 1 ubo + 2 texture samplers
             during renderLoop, each frame binds its own descriptorSet
-        offscreen: shared. 1 ubo (for light MVP)
+        offscreen: shared 1 ubo (for light MVP)
     */
 
     void createDescriptorPool() {
@@ -386,11 +400,11 @@ private:
         // shared 
         std::array<VkDescriptorPoolSize, 2> poolSizes{};
         poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        poolSizes[0].descriptorCount = (uint32_t)(maxFrameCount + 1);
+        poolSizes[0].descriptorCount = (uint32_t)(maxFrameCount * 2);
         poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
         poolSizes[1].descriptorCount = (uint32_t)(maxFrameCount * 2);
 
-        auto poolInfo = vki::init_descriptor_pool_create_info(poolSizes.size(), poolSizes.data(), maxFrameCount + 1);
+        auto poolInfo = vki::init_descriptor_pool_create_info(poolSizes.size(), poolSizes.data(), maxFrameCount * 2);
         VK_CHECK(vkCreateDescriptorPool(device, &poolInfo, nullptr, &descriptorPool));
     }
 
@@ -751,23 +765,65 @@ private:
 
         VK_CHECK(vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &graphicsPipeline));
 
+
+        VkShaderModule depthVertShaderModule = createShaderModule(readFile("shaders/pcss/offscreen.vert.spv"));
+        auto depthVertShaderStageInfo = vki::init_pipeline_shader_stage_create_info(
+            VK_SHADER_STAGE_VERTEX_BIT,
+            depthVertShaderModule,
+            "main");
+
+        shaderStages[0] = depthVertShaderStageInfo;
+        pipelineInfo.stageCount = 1;
+        pipelineInfo.pStages = &shaderStages[0];
+
+        rasterizer.cullMode = VK_CULL_MODE_NONE;
+
+        pipelineInfo.renderPass = offscreenPass.renderPass;
+        pipelineInfo.pRasterizationState = &rasterizer;
+
+        auto shadowMapPipelineLayoutInfo = vki::init_pipeline_layout_create_info(1, &offscreenPass.depthLayout, 0);
+
+        VK_CHECK(vkCreatePipelineLayout(device, &shadowMapPipelineLayoutInfo, nullptr, &shadowMapPipelineLayout));
+        pipelineInfo.layout = shadowMapPipelineLayout;
+        VK_CHECK(vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &shadowMapPipeline));
+
+        vkDestroyShaderModule(device, depthVertShaderModule, nullptr);
         vkDestroyShaderModule(device, fragShaderModule, nullptr);
         vkDestroyShaderModule(device, vertShaderModule, nullptr);
     }
     
+    void updateLight() {
+        light.lightPos = camera.position;
+    }
+
+    void updateOffscreenUbo() {
+        updateLight();
+        //UniformBufferObject ubo{};
+        //ubo.model = glm::mat4(1.0f);
+        //ubo.view = glm::lookAt(light.lightPos, light.lightTarget, glm::vec3(0, 1, 0));
+        //ubo.proj = glm::perspective(glm::radians(light.lightFOV), 1.0f, light.zNear, light.zFar);
+        //// glm is originally for OpenGL, whose y coord of the clip space is inverted
+        //ubo.proj[1][1] *= -1;
+        //lightSpace = ubo.proj * ubo.view * ubo.model;
+        // memcpy(offscreenPass.depthUniformBuffer.mapped, &ubo, sizeof(ubo));
+    }
+
     void updateUniformBuffer(uint32_t frame) {
 
         UniformBufferObject ubo{};
         ubo.model = glm::mat4(1.0f);
         ubo.normalRot = glm::mat3(glm::transpose(glm::inverse(ubo.model)));
-        /*ubo.view = glm::lookAt(glm::vec3(4.0f, -4.0f, 1.5f), glm::vec3(0.0f, 0.0f, 1.5f), glm::vec3(0.0f, 0.0f, 1.0f));
-        ubo.proj = glm::perspective(glm::radians(45.0f), windowWidth / (float)windowHeight, 0.1f, 10.0f);*/
         ubo.view = camera.view();
         ubo.proj = camera.projection((float)windowWidth, (float)windowHeight);
+        ubo.lightSpace = lightSpace;
         // glm is originally for OpenGL, whose y coord of the clip space is inverted
         ubo.proj[1][1] *= -1;
         memcpy(uniformBuffers[frame].mapped, &ubo, sizeof(ubo));
+        ubo.proj = camera.projection((float)offscreenPass.width, (float)offscreenPass.height);
+        ubo.proj[1][1] *= -1;
+        memcpy(offscreenPass.depthUniformBuffer.mapped, &ubo, sizeof(ubo));
     }
+
 
 public:
     
@@ -793,8 +849,8 @@ public:
         loadObjFile();
         createVertexBuffer();
         // createIndexBuffer();
-        createUniformBuffers();
         createDepthUbo();
+        createUniformBuffers();
         createOffscreenFrameBuffer();
         createDescriptorSetLayout();
         createDescriptorPool();
@@ -806,6 +862,8 @@ public:
     }
 
     void cleanUp() {
+        vkDestroyPipelineLayout(device, shadowMapPipelineLayout, nullptr);
+        vkDestroyPipeline(device, shadowMapPipeline, nullptr);
         vkDestroyPipelineLayout(device, pipelineLayout, nullptr);
         vkDestroyPipeline(device, graphicsPipeline, nullptr);
         vkDestroyDescriptorPool(device, descriptorPool, nullptr);
@@ -859,11 +917,11 @@ public:
         VK_CHECK(vkBeginCommandBuffer(commandBuffer, &cmdBufBeginInfo));
 
         VkRenderPassBeginInfo renderPassBeginInfo{ VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO };
-        renderPassBeginInfo.renderPass = renderPass;
-        renderPassBeginInfo.framebuffer = swapChainFramebuffers[imageIndex];
+        renderPassBeginInfo.renderPass = offscreenPass.renderPass;
+        renderPassBeginInfo.framebuffer = offscreenPass.frameBuffer;
 
         renderPassBeginInfo.renderArea.offset = { 0, 0 };
-        renderPassBeginInfo.renderArea.extent = { windowWidth, windowHeight };
+        renderPassBeginInfo.renderArea.extent = { offscreenPass.width, offscreenPass.height };
 
         std::array<VkClearValue, 2> clearValues{};
         clearValues[0].color = { {0.0f, 0.0f, 0.0f, 1.0f} };
@@ -871,10 +929,10 @@ public:
 
         renderPassBeginInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
         renderPassBeginInfo.pClearValues = clearValues.data();
+        
+        //vkCmdBeginRenderPass(commandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
 
-        vkCmdBeginRenderPass(commandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
-
-        vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline);
+        //vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, shadowMapPipeline);
 
         VkViewport viewport{};
         viewport.x = 0.0f;
@@ -895,6 +953,24 @@ public:
         vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
         // vkCmdBindIndexBuffer(commandBuffer, indices.buffer, 0, VK_INDEX_TYPE_UINT16);
 
+        //vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, shadowMapPipelineLayout, 0, 1, &offscreenPass.depthDescriptorSet, 0, nullptr);
+
+        //vkCmdDraw(commandBuffer, verticesData.size(), 1, 0, 0);
+
+        //vkCmdEndRenderPass(commandBuffer);
+
+
+        renderPassBeginInfo.renderPass = renderPass;
+        renderPassBeginInfo.framebuffer = swapChainFramebuffers[imageIndex];
+
+        renderPassBeginInfo.renderArea.offset = { 0, 0 };
+        renderPassBeginInfo.renderArea.extent = { windowWidth, windowHeight };
+
+
+        vkCmdBeginRenderPass(commandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
+
+        vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline);
+
         vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &descriptorSets[currentFrame], 0, nullptr);
 
         vkCmdDraw(commandBuffer, verticesData.size(), 1, 0, 0);
@@ -906,8 +982,9 @@ public:
         }
 
         camera.update(window);
+        // updateOffscreenUbo();
         updateUniformBuffer(currentFrame);
-
+       
         VkSubmitInfo submitInfo{};
         submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
         // Which semaphores to wait
