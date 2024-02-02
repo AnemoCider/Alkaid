@@ -65,10 +65,11 @@ function(buildExample EXAMPLE_NAME)
     endforeach()
 
     target_link_libraries(${EXAMPLE_NAME} base glfw ${Vulkan_LIBRARY})
-    source_group("Shaders" FILES ${SHADER_SOURCES})
 
     message(STATUS "Runtime executables written to ${EXAMPLE_FOLDER}")
 endfunction(buildExample)
+
+source_group("Shaders" FILES ${SHADER_SOURCES})
 
 # buildExample(basicTriangle)
 buildExample(pcss)

@@ -48,6 +48,12 @@ struct UniformBufferObject {
     alignas(16) glm::mat4 proj;
 };
 
+struct DepthUBO {
+    alignas(16) glm::mat4 model;
+    alignas(16) glm::mat4 view;
+    alignas(16) glm::mat4 proj;
+};
+
 class PCSS : public VulkanBase {
 
 private:
@@ -79,6 +85,12 @@ private:
         VkBuffer buffer;
         uint32_t count{ 0 };
     } indices;
+
+    struct DepthUniformBuffer {
+        VmaAllocation alloc;
+        VkBuffer buffer;
+        void* mapped{ nullptr };
+    };
 
     struct UniformBuffer {
         VmaAllocation alloc;
@@ -116,7 +128,9 @@ private:
         FrameBufferAttachment attachment;
         VkSampler sampler;
         VkFramebuffer frameBuffer;
-        VkDescriptorImageInfo descriptor;
+        VkDescriptorSetLayout depthLayout;
+        VkDescriptorSet depthDescriptorSet;
+        DepthUniformBuffer depthUniformBuffer;
     } offscreenPass;
 
     std::string getShaderPathName() {
@@ -355,6 +369,26 @@ private:
         VK_CHECK(vkAllocateCommandBuffers(device, &bufferAllocInfo, commandBuffers.data()));
     }
 
+    /*
+        screen shader: each frame has its own descriptor set, descriptorSets[i]
+            it has 3 bindings, 1 ubo + 2 texture samplers
+            during renderLoop, each frame binds its own descriptorSet
+        offscreen: shared. 1 ubo (for light MVP)
+    */
+
+    void createDescriptorPool() {
+        // separate descriptor sets for each frame: 2 uniform, 2 sampler
+        // shared 
+        std::array<VkDescriptorPoolSize, 2> poolSizes{};
+        poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        poolSizes[0].descriptorCount = (uint32_t)(maxFrameCount + 1);
+        poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        poolSizes[1].descriptorCount = (uint32_t)(maxFrameCount * 2);
+
+        auto poolInfo = vki::init_descriptor_pool_create_info(poolSizes.size(), poolSizes.data(), maxFrameCount + 1);
+        VK_CHECK(vkCreateDescriptorPool(device, &poolInfo, nullptr, &descriptorPool));
+    }
+
     void createDescriptorSetLayout() {
         VkDescriptorSetLayoutBinding uboLayoutBinding{};
         uboLayoutBinding.binding = 0;
@@ -373,17 +407,6 @@ private:
         layoutInfo.bindingCount = setLayoutBindings.size();
         layoutInfo.pBindings = setLayoutBindings.data();
         VK_CHECK(vkCreateDescriptorSetLayout(device, &layoutInfo, nullptr, &descriptorSetLayout));
-    }
-
-    void createDescriptorPool() {
-        std::array<VkDescriptorPoolSize, 2> poolSizes{};
-        poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        poolSizes[0].descriptorCount = (uint32_t)(maxFrameCount);
-        poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        poolSizes[1].descriptorCount = (uint32_t)(maxFrameCount);
-
-        auto poolInfo = vki::init_descriptor_pool_create_info(poolSizes.size(), poolSizes.data(), maxFrameCount);
-        VK_CHECK(vkCreateDescriptorPool(device, &poolInfo, nullptr, &descriptorPool));
     }
 
     void createDescriptorSets() {
@@ -409,6 +432,30 @@ private:
 
             vkUpdateDescriptorSets(device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
         }
+    }
+
+    void createOffscreenDescriptor() {
+        VkDescriptorSetLayoutBinding uboLayoutBinding{};
+        uboLayoutBinding.binding = 0;
+        uboLayoutBinding.descriptorCount = 1;
+        uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+
+        VkDescriptorSetLayoutCreateInfo layoutInfo{ VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO };
+        layoutInfo.bindingCount = 1;
+        layoutInfo.pBindings = &uboLayoutBinding;
+        VK_CHECK(vkCreateDescriptorSetLayout(device, &layoutInfo, nullptr, &offscreenPass.depthLayout));
+
+        auto setAllocInfo = vki::init_descriptor_set_allocate_info(descriptorPool, 1, &offscreenPass.depthLayout);
+        VK_CHECK(vkAllocateDescriptorSets(device, &setAllocInfo, &offscreenPass.depthDescriptorSet));
+
+        VkDescriptorBufferInfo bufferInfo{};
+        bufferInfo.buffer = offscreenPass.depthUniformBuffer.buffer;
+        bufferInfo.offset = 0;
+        bufferInfo.range = sizeof(DepthUBO);
+        
+        auto write = vki::init_write_descriptor_set(offscreenPass.depthDescriptorSet, 0, 0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, &bufferInfo, nullptr);
+        vkUpdateDescriptorSets(device, 1, &write, 0, nullptr);
     }
 
     void createVertexBuffer() {
@@ -442,6 +489,15 @@ private:
                 uniformBuffers[i].buffer, uniformBuffers[i].alloc);
             vmaMapMemory(allocator, uniformBuffers[i].alloc, &uniformBuffers[i].mapped);
         }
+    }
+
+    void createDepthUbo() {
+        VkDeviceSize bufferSize = sizeof(DepthUBO);
+
+        createBuffer(bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+            VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT | VMA_ALLOCATION_CREATE_MAPPED_BIT,
+            offscreenPass.depthUniformBuffer.buffer, offscreenPass.depthUniformBuffer.alloc);
+        vmaMapMemory(allocator, offscreenPass.depthUniformBuffer.alloc, &offscreenPass.depthUniformBuffer.mapped);
     }
 
     void createTextureImage() {
@@ -720,9 +776,11 @@ public:
         createVertexBuffer();
         // createIndexBuffer();
         createUniformBuffers();
+        createDepthUbo();
         createOffscreenFrameBuffer();
         createDescriptorSetLayout();
         createDescriptorPool();
+        createOffscreenDescriptor();
         createTextureImage();
         createDescriptorSets();
         createPipeline();
@@ -736,8 +794,11 @@ public:
         vkDestroyImageView(device, texture.view, nullptr);
         vkDestroySampler(device, texture.sampler, nullptr);
         vmaDestroyImage(allocator, texture.image, texture.alloc);
+        vkDestroyDescriptorSetLayout(device, offscreenPass.depthLayout, nullptr);
         vkDestroyDescriptorSetLayout(device, descriptorSetLayout, nullptr);
         clearOffscreen();
+        vmaUnmapMemory(allocator, offscreenPass.depthUniformBuffer.alloc);
+        vmaDestroyBuffer(allocator, offscreenPass.depthUniformBuffer.buffer, offscreenPass.depthUniformBuffer.alloc);
         for (auto i = 0; i < uniformBuffers.size(); i++) {
             vmaUnmapMemory(allocator, uniformBuffers[i].alloc);
             vmaDestroyBuffer(allocator, uniformBuffers[i].buffer, uniformBuffers[i].alloc);
