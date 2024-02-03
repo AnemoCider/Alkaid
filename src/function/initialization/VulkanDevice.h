@@ -20,6 +20,7 @@ private:
 public:
     
     void setInstance(vki::Instance* inst);
+    
 
     /*
         Initialize logical device.
@@ -30,6 +31,10 @@ public:
     void clear();
 
     void addExtension(const char* ext);
+
+    void getGraphicsQueue(vk::Queue& queue);
+
+    vk::Device& getDevice();
 
 };
 };

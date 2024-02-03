@@ -49,3 +49,11 @@ void vki::Device::clear() {
 void vki::Device::addExtension(const char* ext) {
     deviceExtensions.push_back(ext);
 }
+
+void vki::Device::getGraphicsQueue(vk::Queue& queue) {
+    queue = device.getQueue(instance->grqFamilyIndex, 0);
+}
+
+vk::Device& vki::Device::getDevice() {
+    return device;
+}
