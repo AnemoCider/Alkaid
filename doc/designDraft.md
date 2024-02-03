@@ -1,113 +1,124 @@
 # Design Draft
 
-## base
+## High Level Abstraction
 
-### Usage
+## Low Level Abstraction
 
-The following functions may be overriden:
+### Data preparation
 
-- isPhysicalDeviceSuitable: the first suitable device will be selected as the physical device.
-- createDepthStencil
-- createFrameBuffers: By default use 2 attachments for each framebuffer
-- createRenderPass: By default, use the first attachment as color attachment, and the second as depth buffer.
+### Core Rendering Process
 
-The following must be overriden (as they are declared pure virtual):
+- Acquire next image
+- Begin command buffer
+- Begin render pass
+- Set states: viewport, scissor
+- Bind pipeline
+- Bind descriptor sets
+- Bind vertex & index buffers
+- Draw
+- End render pass
+- End command buffer
+- Queue present
 
-- getShaderPathName: return the path of shader, plus the name without suffix, relative to the main cpp file.
-- createCommandBuffers: because it relies on the maxFrameCount, which is defined as a static constant in each example.
-- render: called in renderLoop.
+## Program Initialization
 
-### References
+### Create Instance
 
-Vulkan Guide:
+Requires:
 
-```Cpp
-void init_vulkan();
-void init_swapchain();
-void init_default_renderpass();
-void init_framebuffers();
-void init_commands();
-void init_sync_structures();
-void init_pipelines();
-void init_scene();
-void init_descriptors();
-```
+- Vulkan version
+- instanceExtensions
+- layer
 
-Vulkan Examples:
+Produces:
 
-```Cpp
-uint32_t destWidth;
-uint32_t destHeight;
-bool resizing = false;
-void nextFrame();
-void createPipelineCache();
-void createCommandPool();
-void createSynchronizationPrimitives();
-void initSwapchain();
-void setupSwapChain();
-void createCommandBuffers();
-void destroyCommandBuffers();
+- instance
 
-virtual VkResult createInstance(bool enableValidation);
-virtual void render() = 0;
-virtual void viewChanged();
-/** @brief (Virtual) Called when the window has been resized, can be used by the sample application to recreate resources */
-virtual void windowResized();
-/** @brief (Virtual) Called when resources have been recreated that require a rebuild of the command buffers (e.g. frame buffer), to be implemented by the sample application */
-virtual void buildCommandBuffers();
-/** @brief (Virtual) Setup default depth and stencil views */
-virtual void setupDepthStencil();
-/** @brief (Virtual) Setup default framebuffers for all requested swapchain images */
-virtual void setupFrameBuffer();
-/** @brief (Virtual) Setup a default renderpass */
-virtual void setupRenderPass();
-/** @brief (Virtual) Called after the physical device features have been read, can be used to set features to enable on the device */
-virtual void getEnabledFeatures();
-/** @brief (Virtual) Called after the physical device extensions have been read, can be used to enable extensions based on the supported extension listing*/
-virtual void getEnabledExtensions();
-/** @brief Prepares all Vulkan resources and functions required to run the sample */
-virtual void prepare();
-/** @brief Loads a SPIR-V shader file for the given shader stage */
-VkPipelineShaderStageCreateInfo loadShader(std::string fileName, VkShaderStageFlagBits stage);
-void windowResize();
-/** @brief Entry point for the main render loop */
-void renderLoop();
-/** Prepare the next frame for workload submission by acquiring the next swap chain image */
-void prepareFrame();
-/** @brief Presents the current image to the swap chain */
-void submitFrame();
-/** @brief (Virtual) Default image acquire + submission and command buffer submission function */
-virtual void renderFrame();
-```
+### Pick Physical Device
 
-## Device
+Requires:
 
-Logical device related stuff
+null
 
-Input:
+Produces:
 
-- Physical Device
-- Enabled Device Features
-- Enabled Layers
-- Enabled Extensions
-- Queue families to use
+- Physical Device Properties
+  - deviceName
+  - limits
+- Physical Device Features
+- Physical Device Memory Properties
+- Formats
 
-Interfaces:
+### Create Logical Device
 
-- Check device extension support
-- Get queue family indices
-- Create logical device
+Requires:
 
-## Swapchain
+- Features to enable
+- Device Extensions to enable
+- Queue families to enable
 
-Input:
+Produces:
 
-- Instance (to manage surface)
-- Physical device
-- Logical device
-- Surface
+- handle to the queue
 
-Interfaces:
+### Create Window and surface
 
-- Create swap chain
-- Cleanup (surface, image views, and swap chain)
+Requires:
+
+- Dimensions of the window
+
+Produces:
+
+- window
+- Registered class pointer
+- surface
+
+## Preparation
+
+### Swap Chain
+
+Requires:
+
+- surface
+
+Produces:
+
+- swap chain images
+- swap chain image views
+
+### Command Pool
+
+Requires:
+
+- queue family index
+
+### Command Buffer
+
+One for each frame
+
+### Synchronization Objects
+
+### Depth Stencil
+
+Requires:
+
+- format, from physical device
+- mipmap levels
+- sampling count
+
+Provides:
+
+- depthStencilImageView
+
+### Frame buffer
+
+Very flexible
+
+## Assets
+
+- loadShader
+- loadObjModel
+
+## Control
+
+- camera class
