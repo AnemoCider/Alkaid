@@ -11,7 +11,9 @@ void Base::init() {
 
 	device.init();
 	device.getGraphicsQueue(graphicsQueue);
+}
 
+void Base::prepare() {
 	swapChain.setDevice(&device);
 	swapChain.setInstance(&instance);
 	swapChain.init();

@@ -92,12 +92,19 @@ void vki::Instance::createWindow(void* ptr) {
     
     vki::checkResult(glfwCreateWindowSurface(instance, window, nullptr, &_surface));
     surface = vk::SurfaceKHR(_surface);
+    getSurfaceSupports();
 }
 
 void vki::Instance::destroyWindow() {
     glfwTerminate();
     instance.destroySurfaceKHR(surface);
     glfwDestroyWindow(window);
+}
+
+void vki::Instance::getSurfaceSupports() {
+    supports.capabilities = phyDevice.getSurfaceCapabilitiesKHR(surface);
+    supports.formats = phyDevice.getSurfaceFormatsKHR(surface);
+    supports.presentModes = phyDevice.getSurfacePresentModesKHR(surface);
 }
 
 

@@ -18,6 +18,8 @@ public:
 
 	void init();
 
+	void prepare();
+
 	void clear();
 
 };

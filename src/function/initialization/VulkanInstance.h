@@ -31,6 +31,13 @@ namespace vki {
 
 		uint32_t grqFamilyIndex;
 
+		struct SupportDetails {
+			vk::SurfaceCapabilitiesKHR capabilities;
+			std::vector<vk::SurfaceFormatKHR> formats;
+			std::vector<vk::PresentModeKHR> presentModes;
+		} supports;
+		
+
 		Instance() = default;
 		~Instance() = default;
 
@@ -72,6 +79,7 @@ namespace vki {
 
 		void destroyWindow();
 
+		void getSurfaceSupports();
 	};
 
 };

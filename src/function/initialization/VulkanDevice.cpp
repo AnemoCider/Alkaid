@@ -51,9 +51,13 @@ void vki::Device::addExtension(const char* ext) {
 }
 
 void vki::Device::getGraphicsQueue(vk::Queue& queue) {
-    queue = device.getQueue(instance->grqFamilyIndex, 0);
+    queue = device.getQueue(getGrqFamilyIndex(), 0);
 }
 
 vk::Device& vki::Device::getDevice() {
     return device;
+}
+
+uint32_t vki::Device::getGrqFamilyIndex() {
+    return instance->grqFamilyIndex;
 }

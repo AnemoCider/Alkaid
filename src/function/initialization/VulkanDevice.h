@@ -34,6 +34,7 @@ public:
     void getGraphicsQueue(vk::Queue& queue);
 
     vk::Device& getDevice();
+    uint32_t getGrqFamilyIndex();
 
 };
 };
