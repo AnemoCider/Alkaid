@@ -5,6 +5,8 @@ bool vki::Instance::isPhyDeviceSuitable(const vk::PhysicalDevice& device) {
 }
 
 void vki::Instance::init() {
+    glfwInit();
+    glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
     vk::ApplicationInfo appInfo{
         .pApplicationName = "Example",
         .applicationVersion = 1,
@@ -23,6 +25,10 @@ void vki::Instance::init() {
         extensions.push_back(pglfwExts[i]);
     }
 
+#ifdef __APPLE__
+    extensions.emplace_back(VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME);
+#endif
+
     vk::InstanceCreateInfo insInfo{
         .pApplicationInfo = &appInfo,
         .enabledLayerCount = static_cast<uint32_t>(layers.size()),
@@ -32,10 +38,8 @@ void vki::Instance::init() {
     };
 
 #ifdef __APPLE__
-    insInfo.flags |= VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR;
-    extensions.emplace_back(VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME);
+    insInfo.flags |= vk::InstanceCreateFlagBits::eEnumeratePortabilityKHR;
 #endif
-
     instance = vk::createInstance(insInfo);
 
     pickPhysicalDevice();
@@ -79,15 +83,15 @@ void vki::Instance::getGraphicsQueue() {
 }
 
 void vki::Instance::createWindow(void* ptr) {
-    glfwInit();
-    glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-
     window = glfwCreateWindow(width, height, "Vulkan", nullptr, nullptr);
     glfwSetWindowUserPointer(window, ptr);
     if (!window) {
         throw std::runtime_error("Failed to create glfw window!\n");
     }
-    glfwCreateWindowSurface(instance, window, nullptr, reinterpret_cast<VkSurfaceKHR*>(&surface));
+    VkSurfaceKHR _surface;
+    
+    vki::checkResult(glfwCreateWindowSurface(instance, window, nullptr, &_surface));
+    surface = vk::SurfaceKHR(_surface);
 }
 
 void vki::Instance::destroyWindow() {

@@ -8,6 +8,7 @@ void Base::init() {
 #ifdef __APPLE__
 	device.addExtension("VK_KHR_portability_subset");
 #endif
+
 	device.init();
 	device.getGraphicsQueue(graphicsQueue);
 

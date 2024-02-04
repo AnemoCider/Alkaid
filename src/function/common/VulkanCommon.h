@@ -11,3 +11,12 @@
 #define GLFW_EXPOSE_NATIVE_COCOA
 #endif
 #include <GLFW/glfw3native.h>
+#include <iostream>
+
+namespace vki {
+    inline void checkResult(VkResult result) {
+        if (result != VK_SUCCESS) {
+            std::cerr << "Vulan error: " << result << '\n';
+        }
+    }
+}

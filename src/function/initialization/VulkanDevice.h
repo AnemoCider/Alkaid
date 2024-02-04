@@ -10,8 +10,7 @@ private:
     
     vk::Device device;
     vki::Instance* instance;
-    std::vector<const char*> deviceExtensions =
-    {
+    std::vector<const char*> deviceExtensions = {
         VK_KHR_SWAPCHAIN_EXTENSION_NAME,
     };
 

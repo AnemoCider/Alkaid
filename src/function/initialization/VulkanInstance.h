@@ -18,9 +18,7 @@ namespace vki {
 
 
 		vk::Instance instance;
-		std::vector<const char*> extensions = {
-			VK_KHR_SURFACE_EXTENSION_NAME
-		};
+		std::vector<const char*> extensions;
 		std::vector<const char*> phyExtensions;
 		std::vector<const char*> layers;
 
