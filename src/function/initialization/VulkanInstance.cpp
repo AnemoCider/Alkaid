@@ -4,6 +4,31 @@ bool vki::Instance::isPhyDeviceSuitable(const vk::PhysicalDevice& device) {
     return true;
 }
 
+void vki::Instance::selectDepthFormat() {
+    std::vector<vk::Format> formatList = {
+        vk::Format::eD32SfloatS8Uint,
+        vk::Format::eD32Sfloat,
+        vk::Format::eD24UnormS8Uint,
+        vk::Format::eD16UnormS8Uint,
+        vk::Format::eD16Unorm
+    };
+
+    for (vk::Format format : formatList) {
+        vk::FormatProperties props;
+        props = phyDevice.getFormatProperties(format);
+
+        if (props.optimalTilingFeatures & vk::FormatFeatureFlagBits::eDepthStencilAttachment) {
+            depthFormat = format;
+            break;
+        }
+    }
+
+    // Log an error if no suitable format is found
+    if (depthFormat == vk::Format::eUndefined) {
+        throw std::runtime_error("No suitable depth stencil format available.\n");
+    }
+}
+
 void vki::Instance::init() {
     glfwInit();
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
@@ -43,6 +68,7 @@ void vki::Instance::init() {
     instance = vk::createInstance(insInfo);
 
     pickPhysicalDevice();
+    selectDepthFormat();
     getGraphicsQueue();
 
 };
@@ -92,7 +118,7 @@ void vki::Instance::createWindow(void* ptr) {
     
     vki::checkResult(glfwCreateWindowSurface(instance, window, nullptr, &_surface));
     surface = vk::SurfaceKHR(_surface);
-    getSurfaceSupports();
+    getSupports();
 }
 
 void vki::Instance::destroyWindow() {
@@ -101,10 +127,11 @@ void vki::Instance::destroyWindow() {
     glfwDestroyWindow(window);
 }
 
-void vki::Instance::getSurfaceSupports() {
+void vki::Instance::getSupports() {
     supports.capabilities = phyDevice.getSurfaceCapabilitiesKHR(surface);
     supports.formats = phyDevice.getSurfaceFormatsKHR(surface);
     supports.presentModes = phyDevice.getSurfacePresentModesKHR(surface);
+    supports.memProperties = phyDevice.getMemoryProperties();
 }
 
 

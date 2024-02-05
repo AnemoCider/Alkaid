@@ -13,6 +13,22 @@ private:
 	vki::Device device;
 	vk::Queue graphicsQueue;
 	vki::SwapChain swapChain;
+	vk::Pipeline pipeline;
+
+	// Command buffers used for rendering
+	std::vector<vk::CommandBuffer> drawCmdBuffers;
+	// Global render pass for frame buffer writes
+	vk::RenderPass renderPass{ nullptr };
+	// List of available frame buffers (same as number of swap chain images)
+	std::vector<vk::Framebuffer>frameBuffers;
+	// Active frame buffer index, updated by acquireNextImage
+	uint32_t currentBuffer = 0;
+	struct {
+		// Swap chain image presentation
+		vk::Semaphore presentComplete;
+		// Command buffer submission and execution
+		vk::Semaphore renderComplete;
+	} semaphores;
 
 public:
 
@@ -21,5 +37,36 @@ public:
 	void prepare();
 
 	void clear();
+
+	virtual void preparePipeline() = 0;
+
+	virtual void createVertexBuffer() = 0;
+
+	/*
+		Create a default renderpass
+	*/
+	void createRenderPass();
+
+	void createCommandBuffers();
+
+	virtual void buildCommandBuffers();
+
+	virtual void createDepthStencil();
+
+	/** @brief (Virtual) Setup default framebuffers for all requested swapchain images */
+	virtual void setupFrameBuffer();	
+
+	/** @brief Prepares all Vulkan resources and functions required to run the sample */
+	virtual void prepare();
+
+	/** @brief Entry point for the main render loop */
+	void renderLoop();
+
+	/** Prepare the next frame for workload submission by acquiring the next swap chain image */
+	void prepareFrame();
+	/** @brief Presents the current image to the swap chain */
+	void submitFrame();
+	/** @brief (Virtual) Default image acquire + submission and command buffer submission function */
+	virtual void renderFrame();
 
 };

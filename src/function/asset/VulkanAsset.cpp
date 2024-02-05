@@ -1,4 +1,6 @@
 #include "asset/VulkanAsset.h"
+#include <fstream>
+#include <sstream>  
 
 std::string vki::readFile(const std::string& filename) {
 	std::ifstream file(filename, std::ios::binary);
@@ -7,7 +9,8 @@ std::string vki::readFile(const std::string& filename) {
 		throw std::runtime_error("failed to open file!");
 	}
 
-	std::stringstream buffer;
+	std::stringstream buffer{};
 	buffer << file.rdbuf();
+	file.close();
 	return buffer.str();
 }

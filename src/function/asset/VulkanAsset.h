@@ -2,7 +2,7 @@
 
 #include "common/VulkanCommon.h"
 #include <string>
-#include <fstream>
+
 
 namespace vki {
 	/*

@@ -13,6 +13,7 @@ namespace vki {
 
 		bool enableValidationLayer = true;
 		bool isPhyDeviceSuitable(const vk::PhysicalDevice& device);
+		void selectDepthFormat();
 
 	public:
 
@@ -35,8 +36,10 @@ namespace vki {
 			vk::SurfaceCapabilitiesKHR capabilities;
 			std::vector<vk::SurfaceFormatKHR> formats;
 			std::vector<vk::PresentModeKHR> presentModes;
+			vk::PhysicalDeviceMemoryProperties memProperties;
 		} supports;
-		
+
+		vk::Format depthFormat = vk::Format::eUndefined;
 
 		Instance() = default;
 		~Instance() = default;
@@ -79,7 +82,7 @@ namespace vki {
 
 		void destroyWindow();
 
-		void getSurfaceSupports();
+		void getSupports();
 	};
 
 };

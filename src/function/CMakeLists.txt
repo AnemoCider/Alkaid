@@ -9,4 +9,4 @@ set(KTX_SOURCES
     ${KTX_DIR}/lib/memstream.c
     ${KTX_DIR}/lib/filestream.c )
 
-target_sources(myTest PRIVATE ${FUNC_SRC})
+target_sources(triangle PRIVATE ${FUNC_SRC})

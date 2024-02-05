@@ -50,8 +50,10 @@ namespace vki {
 			Set these through getPipelineCI, before calling this function.
 			TODO: implement pipeline cache to make pipeline recreation faster.
 		*/
-		void init();
-		void clear();
+		/*void init();
+		void clear();*/
+
+		/**/
 		void clearShaderModule(vk::ShaderModule& module);
 	};
 	

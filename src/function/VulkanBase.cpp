@@ -13,14 +13,18 @@ void Base::init() {
 	device.getGraphicsQueue(graphicsQueue);
 }
 
+
 void Base::prepare() {
 	swapChain.setDevice(&device);
 	swapChain.setInstance(&instance);
 	swapChain.init();
+
+	preparePipeline();
 }
 
 
 void Base::clear() {
+	device.getDevice().destroyPipeline(pipeline);
 	swapChain.clear();
 	device.clear();
 	instance.destroyWindow();

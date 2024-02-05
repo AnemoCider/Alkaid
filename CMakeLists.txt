@@ -20,7 +20,7 @@ include_directories(external/tinygltf)
 
 include_directories(src/function)
 
-add_executable(myTest src/main.cpp)
+add_executable(triangle src/triangle.cpp)
 
 add_subdirectory(external/glfw)
 add_subdirectory(src/function)
@@ -31,4 +31,4 @@ elseif(APPLE)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DVK_USE_PLATFORM_MACOS_KHR")
 endif()
 
-target_link_libraries(myTest glfw ${Vulkan_LIBRARY})
+target_link_libraries(triangle glfw ${Vulkan_LIBRARY})
