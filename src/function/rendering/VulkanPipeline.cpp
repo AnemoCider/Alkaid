@@ -1,3 +1,4 @@
+#include "rendering/VulkanPipeline.h"
 #include "VulkanPipeline.h"
 
 void vki::Pipeline::setDevice(vki::Device* device) {
@@ -16,21 +17,51 @@ std::string vki::Pipeline::readShader(const std::string& suffix) {
 	return readFile(shaderPath + shaderName + suffix);
 }
 
-void vki::Pipeline::setVertShader(const std::string& code) {
+vk::ShaderModule vki::Pipeline::createVertShader(const std::string& code) {
 	vk::ShaderModuleCreateInfo shaderCI{
 		.codeSize = code.size(),
 		.pCode = reinterpret_cast<const uint32_t*>(code.data())
 	};
 
-	vertexShader = device->getDevice().createShaderModule(shaderCI, nullptr);
+	return device->getDevice().createShaderModule(shaderCI, nullptr);
 }
 
-void vki::Pipeline::setFragShader(const std::string& code) {
+vk::ShaderModule vki::Pipeline::createFragShader(const std::string& code) {
 	vk::ShaderModuleCreateInfo shaderCI{
 		.codeSize = code.size(),
 		.pCode = reinterpret_cast<const uint32_t*>(code.data())
 	};
 
-	fragmentShader = device->getDevice().createShaderModule(shaderCI, nullptr);
+	return device->getDevice().createShaderModule(shaderCI, nullptr);
 }
 
+void vki::Pipeline::initCreateInfo()
+{
+	pipelineInfo = {
+		.pVertexInputState = &vertexInputCI,
+		.pInputAssemblyState = &inputAssemblyCI,
+		.pViewportState = &viewportCI,
+		.pRasterizationState = &rasterizerCI,
+		.pMultisampleState = &multisamplingCI,
+		.pDepthStencilState = &depthStateCI,
+		.pColorBlendState = &colorBlendingCI,
+		.pDynamicState = &dynamicCI,
+	};
+	
+}
+
+vk::GraphicsPipelineCreateInfo& vki::Pipeline::getPipelineCI() {
+	return pipelineInfo;
+}
+
+void vki::Pipeline::init() {
+	pipeline = device->getDevice().createGraphicsPipeline(nullptr, pipelineInfo).value;
+}
+
+void vki::Pipeline::clear() {
+	device->getDevice().destroyPipeline(pipeline);
+}
+
+void vki::Pipeline::clearShaderModule(vk::ShaderModule& module) {
+	device->getDevice().destroyShaderModule();
+}

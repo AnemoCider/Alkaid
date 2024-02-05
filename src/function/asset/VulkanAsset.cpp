@@ -1,4 +1,4 @@
-#include "VulkanAsset.h"
+#include "asset/VulkanAsset.h"
 
 std::string vki::readFile(const std::string& filename) {
 	std::ifstream file(filename, std::ios::binary);

@@ -110,6 +110,10 @@ Provides:
 
 - depthStencilImageView
 
+### RenderPass
+
+Very flexible, should not be provided by the base class
+
 ### Frame buffer
 
 Very flexible
