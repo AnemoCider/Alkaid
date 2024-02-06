@@ -102,3 +102,7 @@ void vki::SwapChain::createViews() {
         views[i] = device->getDevice().createImageView(viewCI, nullptr);
     }
 }
+
+vk::Format vki::SwapChain::getColorFormat() const {
+    return setting.surfaceFormat.format;
+}
