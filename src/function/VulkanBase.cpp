@@ -23,6 +23,22 @@ void Base::prepare() {
 	preparePipeline();
 }
 
+void Base::renderLoop() {
+	while (!glfwWindowShouldClose(instance.window)) {
+		nextFrame();
+	}
+}
+
+void Base::prepareFrame() {
+	device.getDevice().acquireNextImageKHR(swapChain.getSwapChain(), UINT64_MAX,
+		semaphores.presentComplete, nullptr, &currentBuffer);
+	
+}
+
+void Base::nextFrame() {
+	render();
+}
+
 
 void Base::clear() {
 	device.getDevice().destroyPipeline(pipeline);

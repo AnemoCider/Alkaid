@@ -41,6 +41,9 @@ public:
 	virtual void preparePipeline() = 0;
 
 	virtual void createVertexBuffer() = 0;
+	
+	/** prepare frame; submit to queue; presentFrame; updateUniformBuffers*/
+	virtual void render() = 0;
 
 	/*
 		Create a default renderpass
@@ -49,12 +52,13 @@ public:
 
 	void createCommandBuffers();
 
-	virtual void buildCommandBuffers();
-
 	virtual void createDepthStencil();
 
 	/** @brief (Virtual) Setup default framebuffers for all requested swapchain images */
-	virtual void setupFrameBuffer();	
+	virtual void setupFrameBuffer();
+
+	/** begin command buffer, begin renderPass, bind pipeline, set dynamic states */
+	virtual void buildCommandBuffers() = 0;
 
 	/** @brief Prepares all Vulkan resources and functions required to run the sample */
 	virtual void prepare();
@@ -64,9 +68,9 @@ public:
 
 	/** Prepare the next frame for workload submission by acquiring the next swap chain image */
 	void prepareFrame();
-	/** @brief Presents the current image to the swap chain */
-	void submitFrame();
-	/** @brief (Virtual) Default image acquire + submission and command buffer submission function */
-	virtual void renderFrame();
+	/** @brief Presents the current image to the swap chain, recreate if surface resized; then waitIdle*/
+	void presentFrame();
+	/** call the render function, frameCounter++ (fps counter)*/
+	void nextFrame();
 
 };

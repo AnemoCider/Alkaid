@@ -28,5 +28,6 @@ namespace vki {
 		void clear();
 		void createViews();
 		vk::Format getColorFormat() const;
+		vk::SwapchainKHR& getSwapChain();
 	};
 }

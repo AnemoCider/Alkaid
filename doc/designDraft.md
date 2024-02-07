@@ -42,6 +42,11 @@ null
 
 Produces:
 
+- Physical Device Properties
+  - deviceName
+  - limits
+- Physical Device Features
+- Physical Device Memory Properties
 - Formats
 
 ### Create Logical Device
@@ -80,11 +85,6 @@ Produces:
 
 - swap chain images
 - swap chain image views
-- Physical Device Properties
-  - deviceName
-  - limits
-- Physical Device Features
-- Physical Device Memory Properties
 
 ### Command Pool
 
@@ -109,10 +109,6 @@ Requires:
 Provides:
 
 - depthStencilImageView
-
-### RenderPass
-
-Very flexible, should not be provided by the base class
 
 ### Frame buffer
 

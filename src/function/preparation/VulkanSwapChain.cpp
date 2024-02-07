@@ -106,3 +106,7 @@ void vki::SwapChain::createViews() {
 vk::Format vki::SwapChain::getColorFormat() const {
     return setting.surfaceFormat.format;
 }
+
+vk::SwapchainKHR& vki::SwapChain::getSwapChain(){
+    return this->swapChain;
+}
