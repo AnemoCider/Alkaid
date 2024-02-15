@@ -17,6 +17,10 @@ struct Staging {
     vk::DeviceMemory memory;
 };
 
+struct {
+    vk::Pipeline graphics;
+} pipelines;
+
 const std::vector<Vertex> verticesData = {
     {{-0.5f, -0.5f, 0.0f}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f}},
     {{0.5f, -0.5f, 0.0f}, {0.0f, 1.0f, 0.0f}, {1.0f, 0.0f}},
@@ -42,9 +46,9 @@ struct UniformBufferObject {
 
 class Triangle : public Base {
 private:
-	void preparePipeline() override {
-
-	};
+	void preparePipelines() {
+        
+    }
 };
 
 int main() {

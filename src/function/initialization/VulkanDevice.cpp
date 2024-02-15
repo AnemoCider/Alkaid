@@ -61,3 +61,15 @@ vk::Device& vki::Device::getDevice() {
 uint32_t vki::Device::getGrqFamilyIndex() {
     return instance->grqFamilyIndex;
 }
+
+uint32_t vki::Device::getMemoryType(uint32_t typeBits, vk::MemoryPropertyFlags props) {
+    for (uint32_t i = 0; i < instance->supports.memProperties.memoryTypeCount; i++) {
+        if ((typeBits & 1) == 1) {
+            if ((instance->supports.memProperties.memoryTypes[i].propertyFlags & props) == props) {
+                return i;
+            }
+        }
+        typeBits >>= 1;
+    }
+    std::runtime_error("No proper memory type found.\n");
+}

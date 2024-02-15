@@ -10,7 +10,6 @@ namespace vki {
 		vki::Instance* instance;
 		vki::Device* device;
 		vk::SwapchainKHR swapChain{ nullptr };
-		std::vector<vk::ImageView> views;
 
 		struct Setting {
 			vk::SurfaceFormatKHR surfaceFormat;
@@ -18,15 +17,15 @@ namespace vki {
 			vk::Extent2D extent;
 			uint32_t imageCount;
 		} setting;
-
 		
 		void setUp();
+		void createViews();
 	public:
+		std::vector<vk::ImageView> views;
 		void setInstance(vki::Instance* inst);
 		void setDevice(vki::Device* device);
 		void init();
 		void clear();
-		void createViews();
 		vk::Format getColorFormat() const;
 		vk::SwapchainKHR& getSwapChain();
 	};

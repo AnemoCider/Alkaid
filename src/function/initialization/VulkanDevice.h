@@ -35,6 +35,6 @@ public:
 
     vk::Device& getDevice();
     uint32_t getGrqFamilyIndex();
-
+    uint32_t getMemoryType(uint32_t typeBits, vk::MemoryPropertyFlags props);
 };
 };

@@ -8,5 +8,3 @@ set(KTX_SOURCES
     ${KTX_DIR}/lib/swap.c
     ${KTX_DIR}/lib/memstream.c
     ${KTX_DIR}/lib/filestream.c )
-
-target_sources(triangle PRIVATE ${FUNC_SRC})

@@ -20,8 +20,6 @@ include_directories(external/tinygltf)
 
 include_directories(src/function)
 
-add_executable(triangle src/triangle.cpp)
-
 add_subdirectory(external/glfw)
 add_subdirectory(src/function)
 
@@ -31,4 +29,44 @@ elseif(APPLE)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DVK_USE_PLATFORM_MACOS_KHR")
 endif()
 
-target_link_libraries(triangle glfw ${Vulkan_LIBRARY})
+set(${SHADER_DIR} "${CMAKE_CURRENT_SOURCE_DIR}/shaders")
+
+function(buildExample EXAMPLE_NAME)
+    set(EXAMPLE_FOLDER ${CMAKE_CURRENT_SOURCE_DIR}/src/examples/${EXAMPLE_NAME}/)
+    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${EXAMPLE_FOLDER})
+    message(STATUS "Generating project file for example in ${EXAMPLE_FOLDER}")
+
+    file(GLOB SHADER_SOURCES "${SHADER_DIR}/${EXAMPLE_NAME}/*.vert" "${SHADER_DIR}/${EXAMPLE_NAME}/*.frag" )
+
+    add_executable(${EXAMPLE_NAME} ${EXAMPLE_FOLDER}/${EXAMPLE_NAME}.cpp ${SHADER_SOURCES})
+
+    # Iterate over each shader file
+    foreach(SHADER ${SHADER_SOURCES})
+        # Get the shader file name without extension
+        get_filename_component(SHADER_NAME ${SHADER} NAME)
+        # Define the compiled shader file name with .spv extension
+        set(SHADER_SPIRV "${SHADER_DIR}/${EXAMPLE_NAME}/${SHADER_NAME}.spv")
+        # Define the command to compile the shader into .spv format
+        add_custom_command(
+            TARGET ${EXAMPLE_NAME}
+            PRE_BUILD
+            COMMAND cd ${SHADER_DIR}
+            COMMAND ${GLSL_COMPILER} ${SHADER} -o ${SHADER_SPIRV} 
+            DEPENDS ${SHADER}
+            COMMENT "Compiling ${SHADER}"
+        )
+
+        # Store all the compiled shaders in a list
+        list(APPEND SPIRV_BINARY_FILES ${SHADER_SPIRV})
+    endforeach()
+
+    target_sources(${EXAMPLE_NAME} PRIVATE ${FUNC_SRC})
+    target_link_libraries(${EXAMPLE_NAME} base glfw ${Vulkan_LIBRARY})
+
+    message(STATUS "Runtime executables written to ${EXAMPLE_FOLDER}")
+endfunction(buildExample)
+
+source_group("Shaders" FILES ${SHADER_SOURCES})
+
+buildExample(basicTriangle)
+# buildExample(pcss)

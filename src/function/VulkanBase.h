@@ -7,7 +7,7 @@
 
 class Base {
 
-private:
+protected:
 
 	vki::Instance instance;
 	vki::Device device;
@@ -15,10 +15,18 @@ private:
 	vki::SwapChain swapChain;
 	vk::Pipeline pipeline;
 
+	vk::CommandPool commandPool;
 	// Command buffers used for rendering
 	std::vector<vk::CommandBuffer> drawCmdBuffers;
 	// Global render pass for frame buffer writes
 	vk::RenderPass renderPass{ nullptr };
+	struct ImageData{
+		vk::Image image;
+		vk::DeviceMemory mem;
+		vk::ImageView view;
+	};
+	// By default, usage = depthStencil attachment, no mip
+	ImageData depthStencil;
 	// List of available frame buffers (same as number of swap chain images)
 	std::vector<vk::Framebuffer>frameBuffers;
 	// Active frame buffer index, updated by acquireNextImage
@@ -29,6 +37,16 @@ private:
 		// Command buffer submission and execution
 		vk::Semaphore renderComplete;
 	} semaphores;
+	std::vector<vk::Fence> fences;
+	vk::Pipeline graphicsPipeline;
+
+	vk::DescriptorPool descriptorPool {nullptr};
+
+	void createSyncObjects();
+
+	void destroySyncObjects();
+
+	void createDescriptorPool();
 
 public:
 
@@ -37,8 +55,6 @@ public:
 	void prepare();
 
 	void clear();
-
-	virtual void preparePipeline() = 0;
 
 	virtual void createVertexBuffer() = 0;
 	
@@ -49,6 +65,8 @@ public:
 		Create a default renderpass
 	*/
 	void createRenderPass();
+
+	void createCommandPool();
 
 	void createCommandBuffers();
 
