@@ -4,6 +4,7 @@
 #include "initialization/VulkanDevice.h"
 #include "initialization/VulkanInstance.h"
 #include "preparation/VulkanSwapChain.h"
+#include "utils/VulkanBuffer.h"
 
 class Base {
 
@@ -11,6 +12,7 @@ protected:
 
 	vki::Instance instance;
 	vki::Device device;
+	// Handle to the graphics queue, should be obtained during Base::Init
 	vk::Queue graphicsQueue;
 	vki::SwapChain swapChain;
 	vk::Pipeline pipeline;
@@ -77,6 +79,20 @@ protected:
 	/** @brief Prepares all Vulkan resources and functions required to run the sample */
 	virtual void prepare();
 
+	/* Util functions*/
+
+	void destroyImageData(ImageData& img);
+
+	vk::CommandBuffer beginSingleTimeCommands();
+
+	// Submit to graphics queue and end the buffer
+	void endSingleTimeCommands(vk::CommandBuffer commandBuffer);
+
+	/*
+	* @brief copy srcBuffer to dstBuffer
+	*/
+	void copyBuffer(vk::Buffer srcBuffer, vk::Buffer dstBuffer, vk::DeviceSize size);
+
 public:
 	/*
 	*	Initialize instance and device. Get graphics queue handle as well.
@@ -110,3 +126,31 @@ public:
 	void clear();
 
 };
+
+//template<typename T>
+//vki::Buffer Base::createBufferThroughStaging(const std::vector<T>& data, const vk::BufferUsageFlagBits usage) {
+//	vki::Buffer dstBuffer{};
+//	vk::DeviceSize bufferSize = sizeof(data[0]) * data.size();
+//
+//	vki::StagingBuffer staging(device, bufferSize);
+//
+//	void* mappedData;
+//
+//	mappedData = device.getDevice().mapMemory(staging.mem, 0, bufferSize);
+//	memcpy(mappedData, data.data(), (size_t)bufferSize);
+//	device.getDevice().unmapMemory(staging.mem);
+//
+//	dstBuffer.buffer = device.getDevice().createBuffer(
+//		bufferCI.setUsage(usage | vk::BufferUsageFlagBits::eTransferDst)
+//	);
+//	memReq = device.getDevice().getBufferMemoryRequirements(dstBuffer.buffer);
+//	memAI.setAllocationSize(memReq.size);
+//	memAI.setMemoryTypeIndex(device.getMemoryType(memReq.memoryTypeBits, vk::MemoryPropertyFlagBits::eDeviceLocal));
+//	device.getDevice().bindBufferMemory(dstBuffer.buffer, dstBuffer.mem);
+//
+//	copyBuffer(staging.buffer, dstBuffer.buffer, bufferSize);
+//
+//	staging.clear(device);
+//
+//	return dstBuffer;
+//}

@@ -15,7 +15,7 @@ void Base::init() {
 
 void Base::setupFrameBuffer() {
 	std::vector<vk::ImageView> attachments(2);
-	frameBuffers.resize(swapChain.getSetting().imageCount);
+	frameBuffers.resize(swapChain.getImageCount());
 	vk::FramebufferCreateInfo frameBufferCI {
 		.renderPass = renderPass,
 		.attachmentCount = static_cast<uint32_t>(attachments.size()),
@@ -47,6 +47,58 @@ void Base::prepare()
 	createDescriptorPool();
 }
 
+void Base::destroyImageData(ImageData& img) {
+	device.getDevice().destroyImageView(img.view);
+	device.getDevice().freeMemory(img.mem);
+	device.getDevice().destroyImage(img.image);
+}
+
+vk::CommandBuffer Base::beginSingleTimeCommands() {
+	vk::CommandBufferAllocateInfo allocInfo{
+		.commandPool = commandPool,
+		.level = vk::CommandBufferLevel::ePrimary,
+		.commandBufferCount = 1
+	};
+
+	vk::CommandBuffer commandBuffer;
+	device.getDevice().allocateCommandBuffers(allocInfo, commandBuffer);
+
+	vk::CommandBufferBeginInfo beginInfo{
+		.flags = vk::CommandBufferUsageFlagBits::eOneTimeSubmit
+	};
+
+	commandBuffer.begin(beginInfo);
+
+	return commandBuffer;
+}
+
+void Base::endSingleTimeCommands(vk::CommandBuffer commandBuffer) {
+	commandBuffer.end();
+
+	vk::SubmitInfo submitInfo{
+		.commandBufferCount = 1,
+		.pCommandBuffers = &commandBuffer
+	};
+
+	graphicsQueue.submit(submitInfo);
+
+	graphicsQueue.waitIdle();
+
+	device.getDevice().freeCommandBuffers(commandPool, commandBuffer);
+}
+
+void Base::copyBuffer(vk::Buffer srcBuffer, vk::Buffer dstBuffer, vk::DeviceSize size) {
+	auto commandBuffer = beginSingleTimeCommands();
+
+	vk::BufferCopy copyRegion{
+		.size = size
+	};
+
+	commandBuffer.copyBuffer(srcBuffer, dstBuffer, copyRegion);
+
+	endSingleTimeCommands(commandBuffer);
+}
+
 void Base::renderLoop() {
 	while (!glfwWindowShouldClose(instance.window)) {
 		nextFrame();
@@ -63,22 +115,6 @@ void Base::prepareFrame() {
 		// Compatible, but may not exactly match
 		assert (result == vk::Result::eSuccess || result == vk::Result::eSuboptimalKHR);
 	}
-	
-}
-
-void Base::nextFrame() {
-	render();
-}
-
-void Base::renderLoop() {
-	while (!glfwWindowShouldClose(instance.window)) {
-		nextFrame();
-	}
-}
-
-void Base::prepareFrame() {
-	device.getDevice().acquireNextImageKHR(swapChain.getSwapChain(), UINT64_MAX,
-		semaphores.presentComplete, nullptr, &currentBuffer);
 	
 }
 
@@ -124,9 +160,9 @@ void Base::createDescriptorPool() {
 	poolSizes[1].descriptorCount = 1;
 
 	vk::DescriptorPoolCreateInfo poolInfo {
+		.maxSets = static_cast<uint32_t>(drawCmdBuffers.size()),
 		.poolSizeCount = static_cast<uint32_t>(poolSizes.size()),
-		.pPoolSizes = poolSizes.data(),
-		.maxSets = static_cast<uint32_t>(drawCmdBuffers.size())
+		.pPoolSizes = poolSizes.data()
 	};
 	descriptorPool = device.getDevice().createDescriptorPool(poolInfo);
 }
@@ -165,14 +201,14 @@ void Base::createRenderPass() {
 	};
 	vk::SubpassDescription subPass {
 		.pipelineBindPoint = vk::PipelineBindPoint::eGraphics,
-		.colorAttachmentCount = 1,
-		.pColorAttachments = &colorRef,
-		.pDepthStencilAttachment = &depthRef,
 		.inputAttachmentCount = 0,
 		.pInputAttachments = nullptr,
+		.colorAttachmentCount = 1,
+		.pColorAttachments = &colorRef,
+		.pResolveAttachments = nullptr,
+		.pDepthStencilAttachment = &depthRef,
 		.preserveAttachmentCount = 0,
 		.pPreserveAttachments = nullptr,
-		.pResolveAttachments = nullptr
 	};
 
 	std::array<vk::SubpassDependency, 2> dependencies;
@@ -213,14 +249,14 @@ void Base::createRenderPass() {
 
 void Base::createCommandPool() {
 	vk::CommandPoolCreateInfo poolCI {
-		.queueFamilyIndex = instance.grqFamilyIndex,
-		.flags = vk::CommandPoolCreateFlagBits::eResetCommandBuffer
+		.flags = vk::CommandPoolCreateFlagBits::eResetCommandBuffer,
+		.queueFamilyIndex = instance.grqFamilyIndex
 	};
 	commandPool = device.getDevice().createCommandPool(poolCI);
 }
 
 void Base::createCommandBuffers() {
-	drawCmdBuffers.resize(swapChain.getSetting().imageCount);
+	drawCmdBuffers.resize(swapChain.getImageCount());
 	vk::CommandBufferAllocateInfo cmdBufferAI {
 		.commandPool = commandPool,
 		.level = vk::CommandBufferLevel::ePrimary,
@@ -252,15 +288,19 @@ void Base::createDepthStencil() {
 	depthStencil.mem = device.getDevice().allocateMemory(memAI);
 	device.getDevice().bindImageMemory(depthStencil.image, depthStencil.mem, 0);
 
+	vk::ImageSubresourceRange range{
+		.aspectMask = vk::ImageAspectFlagBits::eDepth,
+		.baseMipLevel = 0,
+		.levelCount = 1,
+		.baseArrayLayer = 0,
+		.layerCount = 1,
+	};
+
 	vk::ImageViewCreateInfo imageViewCI{
-		.viewType = vk::ImageViewType::e2D,
 		.image = depthStencil.image,
+		.viewType = vk::ImageViewType::e2D,
 		.format = instance.depthFormat,
-		.subresourceRange.baseMipLevel = 0,
-		.subresourceRange.levelCount = 1,
-		.subresourceRange.baseArrayLayer = 0,
-		.subresourceRange.layerCount = 1,
-		.subresourceRange.aspectMask = vk::ImageAspectFlagBits::eDepth
+		.subresourceRange = range
 	};
 	// Stencil aspect should only be set on depth + stencil formats (VK_FORMAT_D16_UNORM_S8_UINT..VK_FORMAT_D32_SFLOAT_S8_UINT
 	if (instance.depthFormat >= vk::Format::eD16UnormS8Uint) {
@@ -268,10 +308,3 @@ void Base::createDepthStencil() {
 	}
 	depthStencil.view = device.getDevice().createImageView(imageViewCI);
 }
-
-void Base::destroyImageData(ImageData& data) { 
-	device.getDevice().destroyImageView(data.view);
-	device.getDevice().freeMemory(data.mem);
-	device.getDevice().destroyImage(data.image);
-}
-

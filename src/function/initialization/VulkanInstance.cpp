@@ -132,6 +132,7 @@ void vki::Instance::getSupports() {
     supports.formats = phyDevice.getSurfaceFormatsKHR(surface);
     supports.presentModes = phyDevice.getSurfacePresentModesKHR(surface);
     supports.memProperties = phyDevice.getMemoryProperties();
+    supports.properties = phyDevice.getProperties();
 }
 
 

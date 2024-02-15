@@ -81,6 +81,10 @@ void vki::SwapChain::clear() {
     device->getDevice().destroySwapchainKHR(swapChain);
 }
 
+uint32_t vki::SwapChain::getImageCount() const {
+    return setting.imageCount;
+}
+
 void vki::SwapChain::createViews() {
     std::vector<vk::Image> swapChainImages = device->getDevice().getSwapchainImagesKHR(swapChain);
     views.resize(swapChainImages.size());

@@ -26,6 +26,7 @@ namespace vki {
 		void setDevice(vki::Device* device);
 		void init();
 		void clear();
+		uint32_t getImageCount() const;
 		vk::Format getColorFormat() const;
 		vk::SwapchainKHR& getSwapChain();
 	};

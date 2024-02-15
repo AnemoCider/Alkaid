@@ -37,6 +37,7 @@ namespace vki {
 			std::vector<vk::SurfaceFormatKHR> formats;
 			std::vector<vk::PresentModeKHR> presentModes;
 			vk::PhysicalDeviceMemoryProperties memProperties;
+			vk::PhysicalDeviceProperties properties;
 		} supports;
 
 		vk::Format depthFormat = vk::Format::eUndefined;
