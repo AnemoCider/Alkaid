@@ -9,6 +9,9 @@ if (NOT CMAKE_VERSION VERSION_LESS 3.7.0)
 	find_package(Vulkan)
 endif()
 
+# Set an empty list for subdirs to add source files
+set(FUNC_SRC)
+
 include_directories(external)
 include_directories(external/vulkan/include)
 include_directories(external/ktx/include)
@@ -38,7 +41,7 @@ function(buildExample EXAMPLE_NAME)
 
     file(GLOB SHADER_SOURCES "${SHADER_DIR}/${EXAMPLE_NAME}/*.vert" "${SHADER_DIR}/${EXAMPLE_NAME}/*.frag" )
 
-    add_executable(${EXAMPLE_NAME} ${EXAMPLE_FOLDER}/${EXAMPLE_NAME}.cpp ${SHADER_SOURCES})
+    add_executable(${EXAMPLE_NAME} ${EXAMPLE_FOLDER}/${EXAMPLE_NAME}.cpp)
 
     # Iterate over each shader file
     foreach(SHADER ${SHADER_SOURCES})
@@ -70,3 +73,4 @@ source_group("Shaders" FILES ${SHADER_SOURCES})
 
 buildExample(basicTriangle)
 # buildExample(pcss)
+

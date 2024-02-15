@@ -54,7 +54,7 @@ void vki::Device::getGraphicsQueue(vk::Queue& queue) {
     queue = device.getQueue(getGrqFamilyIndex(), 0);
 }
 
-vk::Device& vki::Device::getDevice() {
+vk::Device vki::Device::getDevice() {
     return device;
 }
 
@@ -72,4 +72,5 @@ uint32_t vki::Device::getMemoryType(uint32_t typeBits, vk::MemoryPropertyFlags p
         typeBits >>= 1;
     }
     std::runtime_error("No proper memory type found.\n");
+    return 0;
 }

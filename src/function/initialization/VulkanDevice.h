@@ -33,8 +33,14 @@ public:
 
     void getGraphicsQueue(vk::Queue& queue);
 
-    vk::Device& getDevice();
+    vk::Device getDevice();
     uint32_t getGrqFamilyIndex();
+    /**
+     * @brief find a proper memory type index
+     * @param typeBits memory type bits, typically obtained from memoryRequirements
+     * @param props properties of the memory type requested, e.g., device local
+     * @return index of the memory type from memoryTypes array of the physical device memory properties
+    */
     uint32_t getMemoryType(uint32_t typeBits, vk::MemoryPropertyFlags props);
 };
 };

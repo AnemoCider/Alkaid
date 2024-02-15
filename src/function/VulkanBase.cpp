@@ -18,7 +18,7 @@ void Base::setupFrameBuffer() {
 	frameBuffers.resize(swapChain.getSetting().imageCount);
 	vk::FramebufferCreateInfo frameBufferCI {
 		.renderPass = renderPass,
-		.attachmentCount = attachments.size(),
+		.attachmentCount = static_cast<uint32_t>(attachments.size()),
 		.pAttachments = attachments.data(),
 		.width = instance.width,
 		.height = instance.height,
@@ -54,8 +54,15 @@ void Base::renderLoop() {
 }
 
 void Base::prepareFrame() {
-	device.getDevice().acquireNextImageKHR(swapChain.getSwapChain(), UINT64_MAX,
+	auto result = device.getDevice().acquireNextImageKHR(swapChain.getSwapChain(), UINT64_MAX,
 		semaphores.presentComplete, nullptr, &currentBuffer);
+	// Incompatible
+	if (result == vk::Result::eErrorOutOfDateKHR) {
+		// TODO: recreate the swap chain
+	} else {
+		// Compatible, but may not exactly match
+		assert (result == vk::Result::eSuccess || result == vk::Result::eSuboptimalKHR);
+	}
 	
 }
 
@@ -117,9 +124,9 @@ void Base::createDescriptorPool() {
 	poolSizes[1].descriptorCount = 1;
 
 	vk::DescriptorPoolCreateInfo poolInfo {
-		.poolSizeCount = poolSizes.size(),
+		.poolSizeCount = static_cast<uint32_t>(poolSizes.size()),
 		.pPoolSizes = poolSizes.data(),
-		.maxSets = drawCmdBuffers.size()
+		.maxSets = static_cast<uint32_t>(drawCmdBuffers.size())
 	};
 	descriptorPool = device.getDevice().createDescriptorPool(poolInfo);
 }
@@ -217,7 +224,7 @@ void Base::createCommandBuffers() {
 	vk::CommandBufferAllocateInfo cmdBufferAI {
 		.commandPool = commandPool,
 		.level = vk::CommandBufferLevel::ePrimary,
-		.commandBufferCount = drawCmdBuffers.size()
+		.commandBufferCount = static_cast<uint32_t>(drawCmdBuffers.size())
 	};
 	drawCmdBuffers = device.getDevice().allocateCommandBuffers(cmdBufferAI);
 }

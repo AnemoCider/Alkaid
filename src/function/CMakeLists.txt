@@ -1,4 +1,5 @@
-file(GLOB_RECURSE FUNC_SRC "*.cpp" "*.hpp" "*.h")
+file(GLOB_RECURSE CUR_FUNC_SRC "*.cpp")
+set(FUNC_SRC ${CUR_FUNC_SRC} PARENT_SCOPE)
 
 set(KTX_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../external/ktx)
 set(KTX_SOURCES

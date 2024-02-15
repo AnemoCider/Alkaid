@@ -47,29 +47,25 @@ protected:
 	void destroySyncObjects();
 
 	void createDescriptorPool();
-
-public:
-
-	void init();
-
-	void prepare();
-
-	void clear();
-
-	virtual void createVertexBuffer() = 0;
 	
-	/** prepare frame; submit to queue; presentFrame; updateUniformBuffers*/
-	virtual void render() = 0;
-
 	/*
 		Create a default renderpass
 	*/
 	void createRenderPass();
 
+	/*
+	* Create a vertex buffer.
+	*/
+	virtual void createVertexBuffer() = 0;
+	
+	/** @brief prepare frame; submit to queue; presentFrame; updateUniformBuffers*/
+	virtual void render() = 0;
+
+	/** @brief create a command pool that supports graphics family */
 	void createCommandPool();
-
+	/** @brief create command buffers for swap chains, stored in drawCmdBuffers*/
 	void createCommandBuffers();
-
+	/** @brief set up depthStencil member*/
 	virtual void createDepthStencil();
 
 	/** @brief (Virtual) Setup default framebuffers for all requested swapchain images */
@@ -81,14 +77,36 @@ public:
 	/** @brief Prepares all Vulkan resources and functions required to run the sample */
 	virtual void prepare();
 
+public:
+	/*
+	*	Initialize instance and device. Get graphics queue handle as well.
+	*/
+	void init();
+
 	/** @brief Entry point for the main render loop */
 	void renderLoop();
 
-	/** Prepare the next frame for workload submission by acquiring the next swap chain image */
+	/** 
+	 * Prepare the next frame for workload submission by acquiring the next swap chain image
+	 * Should be called at the beginning of user's render()
+	 * TODO: Recreate the swapChain if presentation is about to be incompatible
+	 */
 	void prepareFrame();
-	/** @brief Presents the current image to the swap chain, recreate if surface resized; then waitIdle*/
+
+	/** 
+	 * Presents the current image to the swap chain, recreate if surface resized; then waitIdle
+	 * Should be called after queueSubmit in user's render()
+	*/
 	void presentFrame();
-	/** call the render function, frameCounter++ (fps counter)*/
+
+	/** call the render function
+	 * TODO: manage frameCounter (fps counter)
+	*/
 	void nextFrame();
+
+	/*
+	* 	Clear all the stuff allocated in init(), prepare(), etc.
+	*/
+	void clear();
 
 };

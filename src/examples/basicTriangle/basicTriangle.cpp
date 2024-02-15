@@ -1,4 +1,5 @@
 #include "VulkanBase.h"
+#include "utils/VulkanBuffer.h"
 
 #include <ktx.h>
 #include <ktxvulkan.h>
@@ -16,11 +17,6 @@ struct Vertex {
     glm::vec3 pos;
     glm::vec3 color;
     glm::vec2 texCoord;
-};
-
-struct Staging {
-    vk::Buffer buffer;
-    vk::DeviceMemory mem;
 };
 
 const std::vector<Vertex> verticesData = {
@@ -57,10 +53,7 @@ private:
     vk::PipelineLayout pipelineLayout;
     vk::Pipeline graphicsPipeline;
 
-    struct {
-		vk::DeviceMemory mem;
-		vk::Buffer buffer;
-	} vertices;
+    vki::Buffer vertexBuffer;
 
     struct {
 		vk::DeviceMemory mem;
@@ -68,13 +61,7 @@ private:
 		uint32_t count{ 0 };
 	} indices;
 
-    struct UniformBuffer {
-		vk::DeviceMemory mem;
-		vk::Buffer buffer;
-		void* mapped{ nullptr };
-	};
-
-    std::vector<UniformBuffer> uniformBuffers {drawCmdBuffers.size()};
+    std::vector<vki::UniformBuffer> uniformBuffers {drawCmdBuffers.size()};
 
     struct ShaderData {
 		glm::mat4 projectionMatrix;
@@ -119,7 +106,7 @@ private:
 
         std::vector<vk::DescriptorSetLayoutBinding> setLayoutBindings{ uboLayoutBinding , textureLayoutBinding };
         vk::DescriptorSetLayoutCreateInfo layoutInfo { 
-            .bindingCount = setLayoutBindings.size(),
+            .bindingCount = static_cast<uint32_t>(setLayoutBindings.size()),
             .pBindings = setLayoutBindings.data()
         };
         
@@ -130,10 +117,10 @@ private:
         std::vector<vk::DescriptorSetLayout> setLayouts(drawCmdBuffers.size(), descriptorSetLayout);
         vk::DescriptorSetAllocateInfo descriptorSetAI {
             .descriptorPool = descriptorPool,
-            .descriptorSetCount = descriptorSets.size(),
+            .descriptorSetCount = static_cast<uint32_t>(descriptorSets.size()),
             .pSetLayouts = setLayouts.data()
         };
-        device.getDevice().allocateDescriptorSets(descriptorSetAI, descriptorSets.data());
+        descriptorSets = device.getDevice().allocateDescriptorSets(descriptorSetAI);
 
         for (size_t i = 0; i < drawCmdBuffers.size(); i++) {
             vk::DescriptorBufferInfo bufferInfo{};
@@ -173,20 +160,34 @@ private:
     void createVertexBuffer() {
         vk::DeviceSize bufferSize = sizeof(verticesData[0]) * verticesData.size();
 
-        auto stagingBuffer =  device.getDevice().createBuffer();
+        struct {
+            vki::StagingBuffer vertices;
+            vki::StagingBuffer indices;
+        } stagingBuffers;
 
-        createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT |
-    VMA_ALLOCATION_CREATE_MAPPED_BIT, stagingBuffer.buffer, stagingBuffer.alloc, nullptr);
-
+        stagingBuffers.vertices.buffer =  device.getDevice().createBuffer(vki::StagingBuffer::getCI(bufferSize));
+        auto memReq = device.getDevice().getBufferMemoryRequirements(stagingBuffers.vertices.buffer);
+        vk::MemoryAllocateInfo memAI {
+            .allocationSize = memReq.size,
+            .memoryTypeIndex =  device.getMemoryType(memReq.memoryTypeBits, vk::MemoryPropertyFlagBits::eDeviceLocal)
+        };
+        stagingBuffers.vertices.mem = device.getDevice().allocateMemory(
+            &memAI
+        );
         void* data;
 
-        vmaMapMemory(allocator, stagingBuffer.alloc, &data);
+        data = device.getDevice().mapMemory(stagingBuffers.vertices.mem, 0, bufferSize);
         memcpy(data, verticesData.data(), (size_t)bufferSize);
-        vmaUnmapMemory(allocator, stagingBuffer.alloc);
+        device.getDevice().unmapMemory(stagingBuffers.vertices.mem);
 
-        createBuffer(bufferSize, 
-            VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, 
-            0, vertices.buffer, vertices.alloc);
+        // createBuffer(bufferSize, 
+        //     VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, 
+        //     0, vertices.buffer, vertices.alloc);
+        vk::BufferCreateInfo bufferCI {
+            
+        };
+        device.getDevice().createBuffer()
+
         copyBuffer(stagingBuffer.buffer, vertices.buffer, bufferSize);
 
         vmaDestroyBuffer(allocator, stagingBuffer.buffer, stagingBuffer.alloc);
