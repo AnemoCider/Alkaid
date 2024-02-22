@@ -594,7 +594,56 @@ private:
         memcpy(uniformBuffers[frame].mapped, &ubo, sizeof(ubo));
     }
 
-    
+    void buildCommandBuffers() override {
+        const auto& commandBuffer = drawCmdBuffers[currentBuffer];
+
+        commandBuffer.reset();
+
+        vk::CommandBufferBeginInfo cmdBufBeginInfo{};
+        commandBuffer.begin(cmdBufBeginInfo);
+
+        vk::RenderPassBeginInfo renderPassBeginInfo{
+            .renderPass = renderPass,
+            .framebuffer = frameBuffers[currentBuffer],
+            .renderArea {.offset = { 0, 0 }, .extent = {instance.width, instance.height}}
+        };
+
+        std::array<vk::ClearValue, 2> clearValues{};
+        clearValues[0].color.setFloat32({ 0.0f, 0.0f, 0.0f, 1.0f });
+        clearValues[1].depthStencil = { 1.0f, 0 };
+
+        renderPassBeginInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
+        renderPassBeginInfo.pClearValues = clearValues.data();
+
+        commandBuffer.beginRenderPass(renderPassBeginInfo, vk::SubpassContents::eInline);
+
+        commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, graphicsPipeline);
+
+        vk::Viewport viewport{};
+        viewport.x = 0.0f;
+        viewport.y = 0.0f;
+        viewport.width = static_cast<float>(instance.width);
+        viewport.height = static_cast<float>(instance.height);
+        viewport.minDepth = 0.0f;
+        viewport.maxDepth = 1.0f;
+        commandBuffer.setViewport(0, viewport);
+
+        vk::Rect2D scissor{};
+        scissor.offset = { 0, 0 };
+        scissor.extent = { instance.width, instance.height };
+        commandBuffer.setScissor(0, scissor);
+
+        vk::Buffer vertexBuffers[] = { vertexBuffer.buffer };
+        vk::DeviceSize offsets[] = { 0 };
+        commandBuffer.bindVertexBuffers(0, vertexBuffers, offsets);
+
+        commandBuffer.bindIndexBuffer(indexBuffer.buffer, 0, vk::IndexType::eUint16);
+        commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 0, 1, &descriptorSets[currentBuffer], 0, nullptr);
+        commandBuffer.drawIndexed(static_cast<uint32_t>(indicesData.size()), 1, 0, 0, 0);
+
+        commandBuffer.endRenderPass();
+        commandBuffer.end();
+    }
 
 public:
 
@@ -638,54 +687,7 @@ public:
         // Must delay this to after recreateSwapChain to avoid deadlock
         device.getDevice().resetFences(1, &fences[currentBuffer]);
 
-        const auto& commandBuffer = drawCmdBuffers[currentBuffer];
-
-        commandBuffer.reset();
-
-        vk::CommandBufferBeginInfo cmdBufBeginInfo{};
-        commandBuffer.begin(cmdBufBeginInfo);
-
-        vk::RenderPassBeginInfo renderPassBeginInfo { 
-            .renderPass = renderPass,
-            .framebuffer = frameBuffers[currentBuffer],
-            .renderArea {.offset = { 0, 0 }, .extent = {instance.width, instance.height}}
-        };
-
-        std::array<vk::ClearValue, 2> clearValues{};
-        clearValues[0].color.setFloat32({ 0.0f, 0.0f, 0.0f, 1.0f });
-        clearValues[1].depthStencil = { 1.0f, 0 };
-
-        renderPassBeginInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
-        renderPassBeginInfo.pClearValues = clearValues.data();
-
-        commandBuffer.beginRenderPass(renderPassBeginInfo, vk::SubpassContents::eInline);
-
-        commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, graphicsPipeline);
-
-        vk::Viewport viewport{};
-        viewport.x = 0.0f;
-        viewport.y = 0.0f;
-        viewport.width = static_cast<float>(instance.width);
-        viewport.height = static_cast<float>(instance.height);
-        viewport.minDepth = 0.0f;
-        viewport.maxDepth = 1.0f;
-        commandBuffer.setViewport(0, viewport);
-
-        vk::Rect2D scissor{};
-        scissor.offset = { 0, 0 };
-        scissor.extent = { instance.width, instance.height };
-        commandBuffer.setScissor(0, scissor);
-
-        vk::Buffer vertexBuffers[] = { vertexBuffer.buffer };
-        vk::DeviceSize offsets[] = { 0 };
-        commandBuffer.bindVertexBuffers(0, vertexBuffers, offsets);
-
-        commandBuffer.bindIndexBuffer(indexBuffer.buffer, 0, vk::IndexType::eUint16);
-        commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 0, 1, &descriptorSets[currentBuffer], 0, nullptr);
-        commandBuffer.drawIndexed(static_cast<uint32_t>(indicesData.size()), 1, 0, 0, 0);
-
-        commandBuffer.endRenderPass();
-        commandBuffer.end();
+        buildCommandBuffers();
 
         updateUniformBuffer(currentBuffer);
 
@@ -695,7 +697,7 @@ public:
             .pWaitSemaphores = &semaphores.presentComplete,
             .pWaitDstStageMask = waitStages,
             .commandBufferCount = 1,
-            .pCommandBuffers = &commandBuffer,
+            .pCommandBuffers = &drawCmdBuffers[currentBuffer],
             .signalSemaphoreCount = 1,
             .pSignalSemaphores = &semaphores.renderComplete
         };
@@ -706,15 +708,7 @@ public:
 
         // Which semaphores to signal once the command buffer(s) has finished execution
         graphicsQueue.submit(submitInfo, fences[currentBuffer]);
-
-        vk::PresentInfoKHR presentInfo{
-            .waitSemaphoreCount = 1,
-            .pWaitSemaphores = &semaphores.renderComplete,
-            .swapchainCount = 1,
-            .pSwapchains = &swapChain.getSwapChain(),
-            .pImageIndices = &currentBuffer
-        };
-        graphicsQueue.presentKHR(presentInfo);
+        Base::presentFrame();
 
         /*if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || framebufferResized) {
             framebufferResized = false;

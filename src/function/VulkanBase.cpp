@@ -61,7 +61,7 @@ vk::CommandBuffer Base::beginSingleTimeCommands() {
 	};
 
 	vk::CommandBuffer commandBuffer;
-	device.getDevice().allocateCommandBuffers(allocInfo, commandBuffer);
+	commandBuffer = device.getDevice().allocateCommandBuffers(allocInfo).front();
 
 	vk::CommandBufferBeginInfo beginInfo{
 		.flags = vk::CommandBufferUsageFlagBits::eOneTimeSubmit
@@ -118,6 +118,17 @@ void Base::prepareFrame() {
 	
 }
 
+void Base::presentFrame() {
+	vk::PresentInfoKHR presentInfo{
+		.waitSemaphoreCount = 1,
+		.pWaitSemaphores = &semaphores.renderComplete,
+		.swapchainCount = 1,
+		.pSwapchains = &swapChain.getSwapChain(),
+		.pImageIndices = &currentBuffer
+	};
+	graphicsQueue.presentKHR(presentInfo);
+}
+
 void Base::nextFrame() {
 	render();
 }
@@ -158,7 +169,7 @@ void Base::destroySyncObjects() {
 }
 
 void Base::createDescriptorPool() {
-	std::vector<vk::DescriptorPoolSize> poolSizes{drawCmdBuffers.size()};
+	std::vector<vk::DescriptorPoolSize> poolSizes(2);
 	poolSizes[0].type = vk::DescriptorType::eUniformBuffer;
 	poolSizes[0].descriptorCount = 1;
 	poolSizes[1].type = vk::DescriptorType::eCombinedImageSampler;
