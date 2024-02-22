@@ -1,5 +1,6 @@
 #include "VulkanBase.h"
 #include "utils/VulkanBuffer.h"
+#include "asset/VulkanAsset.h"
 
 #include <ktx.h>
 #include <ktxvulkan.h>
@@ -12,6 +13,8 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <chrono>
+
+const std::string shaderPathNoSuffix = "../shaders/basicTriangle/basicTriangle";
 
 struct Vertex {
     glm::vec3 pos;
@@ -441,92 +444,139 @@ private:
     }
 
     void createPipeline() {
-        vk::ShaderModule vertShaderModule = createShaderModule(readFile(getShaderPathName() + ".vert.spv"));
-        vk::ShaderModule fragShaderModule = createShaderModule(readFile(getShaderPathName() + ".frag.spv"));
-        auto vertShaderStageInfo = vki::init_pipeline_shader_stage_create_info(
-            VK_SHADER_STAGE_VERTEX_BIT,
-            vertShaderModule,
-            "main");
-        auto fragShaderStageInfo = vki::init_pipeline_shader_stage_create_info(
-            VK_SHADER_STAGE_FRAGMENT_BIT,
-            fragShaderModule,
-            "main");
+        auto shaderCode = vki::readFile(shaderPathNoSuffix + ".vert.spv");
+        vk::ShaderModuleCreateInfo shaderCI{
+            .codeSize = shaderCode.size(),
+            .pCode = reinterpret_cast<const uint32_t*>(shaderCode.data())
+        };
+
+        vk::ShaderModule vertShaderModule = device.getDevice().createShaderModule(
+            shaderCI
+        );
+        
+        shaderCode = vki::readFile(shaderPathNoSuffix + ".frag.spv");
+        shaderCI.pCode = reinterpret_cast<const uint32_t*>(shaderCode.data());
+        vk::ShaderModule fragShaderModule = device.getDevice().createShaderModule(
+            shaderCI
+        );
+        
+        vk::PipelineShaderStageCreateInfo vertShaderStageInfo{
+            .stage = vk::ShaderStageFlagBits::eVertex,
+            .module = vertShaderModule,
+            .pName = "name"
+        };
+            
+        vk::PipelineShaderStageCreateInfo fragShaderStageInfo{
+            .stage = vk::ShaderStageFlagBits::eFragment,
+            .module = fragShaderModule,
+            .pName = "name"
+        };
 
         vk::PipelineShaderStageCreateInfo shaderStages[] = { vertShaderStageInfo, fragShaderStageInfo };
 
-
-        auto vertexInputBinding = vki::init_vertex_input_binding_description(0, sizeof(Vertex), VK_VERTEX_INPUT_RATE_VERTEX);
-
-        std::array<vk::VertexInputAttributeDescription, 3> vertexInputAttribs{
-               vki::init_vertex_input_attribute_description(0, 0, VK_FORMAT_R32G32B32_SFLOAT, offsetof(Vertex, pos)), 
-               vki::init_vertex_input_attribute_description(0, 1, VK_FORMAT_R32G32B32_SFLOAT, offsetof(Vertex, color)),
-               vki::init_vertex_input_attribute_description(0, 2, VK_FORMAT_R32G32_SFLOAT, offsetof(Vertex, texCoord))
+        vk::VertexInputBindingDescription vertexInputBinding {
+            .binding = 0,
+            .stride = sizeof(Vertex),
+            .inputRate = vk::VertexInputRate::eVertex
         };
 
-        auto vertexInputInfo = vki::init_pipeline_vertex_inputState_create_info(
-            1, static_cast<uint32_t>(vertexInputAttribs.size()),
-            &vertexInputBinding, vertexInputAttribs.data());
+        std::array<vk::VertexInputAttributeDescription, 3> vertexInputAttribs {
+            vk::VertexInputAttributeDescription {
+                .location = 0, .binding = 0, .format = vk::Format::eR32G32B32Sfloat, .offset = offsetof(Vertex, pos)
+            }, 
+            vk::VertexInputAttributeDescription {
+                .location = 1, .binding = 0, .format = vk::Format::eR32G32B32Sfloat, .offset = offsetof(Vertex, color)
+            },
+            vk::VertexInputAttributeDescription {
+                .location = 2, .binding = 0, .format = vk::Format::eR32G32Sfloat, .offset = offsetof(Vertex, texCoord)
+            }
+        };
 
-        auto inputAssembly = vki::init_pipeline_input_assembly_state_create_info();
+        vk::PipelineVertexInputStateCreateInfo vertexInputInfo{
+            .vertexBindingDescriptionCount = 1,
+            .pVertexBindingDescriptions = &vertexInputBinding,
+            .vertexAttributeDescriptionCount = static_cast<uint32_t>(vertexInputAttribs.size()),
+            .pVertexAttributeDescriptions = vertexInputAttribs.data()
+        };
 
-        auto viewportState = vki::init_pipeline_viewport_state_create_info();
+        vk::PipelineInputAssemblyStateCreateInfo inputAssembly{
+            .topology = vk::PrimitiveTopology::eTriangleList,
+            .primitiveRestartEnable = vk::False
+        };
 
-        auto rasterizer = vki::init_pipeline_rasterization_state_create_info(
-            VK_FALSE, VK_FALSE, VK_POLYGON_MODE_FILL, 1.0f, VK_CULL_MODE_BACK_BIT,
-            VK_FRONT_FACE_COUNTER_CLOCKWISE, VK_FALSE);
+        vk::PipelineViewportStateCreateInfo viewportState{
+            .viewportCount = 1,
+            .scissorCount = 1
+        };
 
-        auto depthStencil = vki::init_pipeline_depth_stencil_state_create_info(
-            VK_TRUE, VK_TRUE, VK_COMPARE_OP_LESS, VK_FALSE);
+        vk::PipelineRasterizationStateCreateInfo rasterizer{
+            .depthClampEnable = vk::False,
+            .rasterizerDiscardEnable = vk::False,
+            .polygonMode = vk::PolygonMode::eFill,
+            .cullMode = vk::CullModeFlagBits::eBack,
+            .frontFace = vk::FrontFace::eCounterClockwise,
+            .depthBiasEnable = vk::False,
+            .lineWidth = 1.0f,
+        };
 
-        auto multisampling = vki::init_pipeline_multisample_state_create_info(VK_FALSE, VK_SAMPLE_COUNT_1_BIT);
+        vk::PipelineDepthStencilStateCreateInfo depthStencil{
+            .depthTestEnable = vk::True,
+            .depthWriteEnable = vk::True,
+            .depthCompareOp = vk::CompareOp::eLess,
+            .stencilTestEnable = vk::False
+        };
+        
+        vk::PipelineMultisampleStateCreateInfo multisampling{
+            .rasterizationSamples = vk::SampleCountFlagBits::e1,
+            .sampleShadingEnable = vk::False
+        };
 
-        auto colorBlendAttachment = vki::init_pipeline_color_blend_attachment_state(
-            VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT,
-            VK_FALSE);
+        vk::PipelineColorBlendAttachmentState colorBlendAttachment{
+            .blendEnable = vk::False
+        };
 
-        auto colorBlending = vki::init_pipeline_color_blend_state_create_info(
-            VK_FALSE, VK_LOGIC_OP_COPY, 1, &colorBlendAttachment, { 0.0f, 0.0f, 0.0f, 0.0f });
-
+        vk::PipelineColorBlendStateCreateInfo colorBlending{
+            .logicOpEnable = vk::False
+        };
 
         std::vector<vk::DynamicState> dynamicStates = {
-            VK_DYNAMIC_STATE_VIEWPORT,
-            VK_DYNAMIC_STATE_SCISSOR
+            vk::DynamicState::eViewport,
+            vk::DynamicState::eScissor
         };
-        auto dynamicState = vki::init_pipeline_dynamic_state_create_info(
-            static_cast<uint32_t>(dynamicStates.size()), dynamicStates.data());
 
-        auto pipelineLayoutInfo = vki::init_pipeline_layout_create_info(1, &descriptorSetLayout, 0);
+        vk::PipelineDynamicStateCreateInfo dynamicState{
+            .dynamicStateCount = static_cast<uint32_t>(dynamicStates.size()),
+            .pDynamicStates = dynamicStates.data()
+        };
 
-        VK_CHECK(vkCreatePipelineLayout(device, &pipelineLayoutInfo, nullptr, &pipelineLayout));
+        vk::PipelineLayoutCreateInfo pipelineLayoutCI {
+            .setLayoutCount = 1,
+            .pSetLayouts = &descriptorSetLayout,
+            .pushConstantRangeCount = 0
+        };
 
-        vk::GraphicsPipelineCreateInfo pipelineInfo{};
-        pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
-        pipelineInfo.stageCount = 2;
-        pipelineInfo.pStages = shaderStages;
+        pipelineLayout = device.getDevice().createPipelineLayout(pipelineLayoutCI);
 
-        pipelineInfo.pVertexInputState = &vertexInputInfo;
-        pipelineInfo.pInputAssemblyState = &inputAssembly;
-        pipelineInfo.pViewportState = &viewportState;
-        pipelineInfo.pRasterizationState = &rasterizer;
-        pipelineInfo.pMultisampleState = &multisampling;
-        pipelineInfo.pDepthStencilState = nullptr; // Optional
-        pipelineInfo.pColorBlendState = &colorBlending;
-        pipelineInfo.pDynamicState = &dynamicState;
+        vk::GraphicsPipelineCreateInfo pipelineCI {
+            .stageCount = 2,
+            .pStages = shaderStages,
+            .pVertexInputState = &vertexInputInfo,
+            .pInputAssemblyState = &inputAssembly,
+            .pViewportState = &viewportState,
+            .pRasterizationState = &rasterizer,
+            .pMultisampleState = &multisampling,
+            .pDepthStencilState = &depthStencil,
+            .pColorBlendState = &colorBlending,
+            .pDynamicState = &dynamicState,
+            .layout = pipelineLayout,
+            .renderPass = renderPass,
+            .subpass = 0
+        };
 
-        pipelineInfo.layout = pipelineLayout;
+        graphicsPipeline = device.getDevice().createGraphicsPipeline(nullptr, pipelineCI).value;
 
-        pipelineInfo.renderPass = renderPass;
-        pipelineInfo.subpass = 0;
-
-        pipelineInfo.pDepthStencilState = &depthStencil;
-
-        pipelineInfo.basePipelineHandle = VK_NULL_HANDLE; // Optional
-        pipelineInfo.basePipelineIndex = -1; // Optional
-
-        VK_CHECK(vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &graphicsPipeline));
-
-        vkDestroyShaderModule(device, fragShaderModule, nullptr);
-        vkDestroyShaderModule(device, vertShaderModule, nullptr);
+        device.getDevice().destroyShaderModule(fragShaderModule);
+        device.getDevice().destroyShaderModule(vertShaderModule);
     }    
 
     void updateUniformBuffer(uint32_t frame) {
@@ -538,7 +588,7 @@ private:
         UniformBufferObject ubo{};
         ubo.model = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
         ubo.view = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-        ubo.proj = glm::perspective(glm::radians(45.0f), windowWidth / (float)windowHeight, 0.1f, 10.0f);
+        ubo.proj = glm::perspective(glm::radians(45.0f), instance.width / (float)instance.height, 0.1f, 10.0f);
         // glm is originally for OpenGL, whose y coord of the clip space is inverted
         ubo.proj[1][1] *= -1;
         memcpy(uniformBuffers[frame].mapped, &ubo, sizeof(ubo));
@@ -550,7 +600,7 @@ public:
 
     void initVulkan() {
         // addExtensions();
-        VulkanBase::initVulkan();
+        Base::init();
     }
 
     void prepare() {
@@ -565,150 +615,122 @@ public:
 	}
 
     void clear() {
-        vkDestroyPipelineLayout(device, pipelineLayout, nullptr);
-        vkDestroyPipeline(device, graphicsPipeline, nullptr);
-        vkDestroyImageView(device, texture.view, nullptr);
-        vkDestroySampler(device, texture.sampler, nullptr);
-        vmaDestroyImage(allocator, texture.image, texture.alloc);
-        vkDestroyDescriptorSetLayout(device, descriptorSetLayout, nullptr);
+        device.getDevice().destroyPipelineLayout(pipelineLayout);
+        device.getDevice().destroyPipeline(graphicsPipeline);
+        device.getDevice().destroyImageView(texture.view);
+        device.getDevice().destroySampler(texture.sampler);
+        device.getDevice().destroyImage(texture.image);
+        device.getDevice().destroyDescriptorSetLayout(descriptorSetLayout);
         for (auto i = 0; i < uniformBuffers.size(); i++) {
-            vmaUnmapMemory(allocator, uniformBuffers[i].alloc);
-            vmaDestroyBuffer(allocator, uniformBuffers[i].buffer, uniformBuffers[i].alloc);
+            uniformBuffers[i].clear(device);
         }
-        vmaDestroyBuffer(allocator, indices.buffer, indices.alloc);
-        vmaDestroyBuffer(allocator, vertices.buffer, vertices.alloc);
-        vkDestroyCommandPool(device, commandPool, nullptr);
+        indexBuffer.clear(device);
+        vertexBuffer.clear(device);
+        device.getDevice().destroyCommandPool(commandPool);
         Base::clear();
-        
     }
 
     void render() {
-        if (!prepared)
-            return;
-        vkWaitForFences(device, 1, &waitFences[currentFrame], VK_TRUE, UINT64_MAX);
-
-        uint32_t imageIndex;
-        vk::Result result = vkAcquireNextImageKHR(device, vulkanSwapchain.swapchain, UINT64_MAX, presentCompleteSemaphores[currentFrame], VK_NULL_HANDLE, &imageIndex);
-        
-        if (result == VK_ERROR_OUT_OF_DATE_KHR) {
-            recreateSwapChain();
-            return;
-        } else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
-            throw std::runtime_error("failed to acquire swap chain image!");
-        }
+        device.getDevice().waitForFences(1, &fences[currentBuffer], VK_TRUE, UINT64_MAX);
+        Base::prepareFrame();
 
         // Set fence to unsignaled
         // Must delay this to after recreateSwapChain to avoid deadlock
-        vkResetFences(device, 1, &waitFences[currentFrame]);
+        device.getDevice().resetFences(1, &fences[currentBuffer]);
 
-        const vk::CommandBuffer commandBuffer = commandBuffers[currentFrame];
+        const auto& commandBuffer = drawCmdBuffers[currentBuffer];
 
-        vkResetCommandBuffer(commandBuffer, 0);
-        vk::CommandBufferBeginInfo cmdBufBeginInfo { VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
-        VK_CHECK(vkBeginCommandBuffer(commandBuffer, &cmdBufBeginInfo));
+        commandBuffer.reset();
 
-        vk::RenderPassBeginInfo renderPassBeginInfo { VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO };
-        renderPassBeginInfo.renderPass = renderPass;
-        renderPassBeginInfo.framebuffer = swapChainFramebuffers[imageIndex];
+        vk::CommandBufferBeginInfo cmdBufBeginInfo{};
+        commandBuffer.begin(cmdBufBeginInfo);
 
-        renderPassBeginInfo.renderArea.offset = { 0, 0 };
-        renderPassBeginInfo.renderArea.extent = {windowWidth, windowHeight};
+        vk::RenderPassBeginInfo renderPassBeginInfo { 
+            .renderPass = renderPass,
+            .framebuffer = frameBuffers[currentBuffer],
+            .renderArea {.offset = { 0, 0 }, .extent = {instance.width, instance.height}}
+        };
 
         std::array<vk::ClearValue, 2> clearValues{};
-        clearValues[0].color = { {0.0f, 0.0f, 0.0f, 1.0f} };
+        clearValues[0].color.setFloat32({ 0.0f, 0.0f, 0.0f, 1.0f });
         clearValues[1].depthStencil = { 1.0f, 0 };
 
         renderPassBeginInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
         renderPassBeginInfo.pClearValues = clearValues.data();
 
-        vkCmdBeginRenderPass(commandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
+        commandBuffer.beginRenderPass(renderPassBeginInfo, vk::SubpassContents::eInline);
 
-        vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline);
+        commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, graphicsPipeline);
 
         vk::Viewport viewport{};
         viewport.x = 0.0f;
         viewport.y = 0.0f;
-        viewport.width = static_cast<float>(windowWidth);
-        viewport.height = static_cast<float>(windowHeight);
+        viewport.width = static_cast<float>(instance.width);
+        viewport.height = static_cast<float>(instance.height);
         viewport.minDepth = 0.0f;
         viewport.maxDepth = 1.0f;
-        vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
+        commandBuffer.setViewport(0, viewport);
 
         vk::Rect2D scissor{};
         scissor.offset = { 0, 0 };
-        scissor.extent = {windowWidth, windowHeight};
-        vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
+        scissor.extent = { instance.width, instance.height };
+        commandBuffer.setScissor(0, scissor);
 
-        vk::Buffer vertexBuffers[] = { vertices.buffer };
+        vk::Buffer vertexBuffers[] = { vertexBuffer.buffer };
         vk::DeviceSize offsets[] = { 0 };
-        vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
-        vkCmdBindIndexBuffer(commandBuffer, indices.buffer, 0, VK_INDEX_TYPE_UINT16);
+        commandBuffer.bindVertexBuffers(0, vertexBuffers, offsets);
 
-        vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &descriptorSets[currentFrame], 0, nullptr);
+        commandBuffer.bindIndexBuffer(indexBuffer.buffer, 0, vk::IndexType::eUint16);
+        commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 0, 1, &descriptorSets[currentBuffer], 0, nullptr);
+        commandBuffer.drawIndexed(static_cast<uint32_t>(indicesData.size()), 1, 0, 0, 0);
 
-        vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(indicesData.size()), 1, 0, 0, 0);
+        commandBuffer.endRenderPass();
+        commandBuffer.end();
+
+        updateUniformBuffer(currentBuffer);
+
+        vk::PipelineStageFlags waitStages[] = { vk::PipelineStageFlagBits::eColorAttachmentOutput };
+        vk::SubmitInfo submitInfo{
+            .waitSemaphoreCount = 1,
+            .pWaitSemaphores = &semaphores.presentComplete,
+            .pWaitDstStageMask = waitStages,
+            .commandBufferCount = 1,
+            .pCommandBuffers = &commandBuffer,
+            .signalSemaphoreCount = 1,
+            .pSignalSemaphores = &semaphores.renderComplete
+        };
         
-        vkCmdEndRenderPass(commandBuffer);
-
-        if (vkEndCommandBuffer(commandBuffer) != VK_SUCCESS) {
-            throw std::runtime_error("failed to record command buffer!");
-        }
-
-        updateUniformBuffer(currentFrame);
-
-        vk::SubmitInfo submitInfo{};
-        submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-        // Which semaphores to wait
-        vk::Semaphore waitSemaphores[] = { presentCompleteSemaphores[currentFrame] };
         // On which stage to wait
         // Here we want to wait with writing colors to the image until it's available
-        vk::PipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
-        submitInfo.waitSemaphoreCount = 1;
-        submitInfo.pWaitSemaphores = waitSemaphores;
-        submitInfo.pWaitDstStageMask = waitStages;
-
-        submitInfo.commandBufferCount = 1;
-        submitInfo.pCommandBuffers = &commandBuffers[currentFrame];
+       
 
         // Which semaphores to signal once the command buffer(s) has finished execution
-        vk::Semaphore signalSemaphores[] = { renderCompleteSemaphores[currentFrame] };
-        submitInfo.signalSemaphoreCount = 1;
-        submitInfo.pSignalSemaphores = signalSemaphores;
+        graphicsQueue.submit(submitInfo, fences[currentBuffer]);
 
-        if (vkQueueSubmit(graphicsQueue, 1, &submitInfo, waitFences[currentFrame]) != VK_SUCCESS) {
-            throw std::runtime_error("failed to submit draw command buffer!");
-        }
+        vk::PresentInfoKHR presentInfo{
+            .waitSemaphoreCount = 1,
+            .pWaitSemaphores = &semaphores.renderComplete,
+            .swapchainCount = 1,
+            .pSwapchains = &swapChain.getSwapChain(),
+            .pImageIndices = &currentBuffer
+        };
+        graphicsQueue.presentKHR(presentInfo);
 
-        vk::PresentInfoKHR presentInfo{};
-        presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
-
-        presentInfo.waitSemaphoreCount = 1;
-        presentInfo.pWaitSemaphores = signalSemaphores;
-
-        vk::SwapchainKHR swapChains[] = { vulkanSwapchain.swapchain };
-        presentInfo.swapchainCount = 1;
-        presentInfo.pSwapchains = swapChains;
-        presentInfo.pImageIndices = &imageIndex;
-
-        presentInfo.pResults = nullptr; // Optional
-
-        result = vkQueuePresentKHR(graphicsQueue, &presentInfo);
-        if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || framebufferResized) {
+        /*if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || framebufferResized) {
             framebufferResized = false;
             recreateSwapChain();
         } else if (result != VK_SUCCESS) {
             throw std::runtime_error("failed to present swap chain image!");
-        }
-        currentFrame = (currentFrame + 1) % maxFrameCount;
+        }*/
+        /*currentFrame = (currentFrame + 1) % maxFrameCount;*/
     }
 };
 
 int main() {
-    auto app = std::make_unique<VulkanTriangle>();
-    app->createWindow();
-    app->initVulkan();
+    std::unique_ptr<Base> app = std::make_unique<VulkanTriangle>();
+    app->init();
     app->prepare();
     app->renderLoop();
-    app->cleanUp();
+    app->clear();
     std::cout << "Completed!!\n";
 }

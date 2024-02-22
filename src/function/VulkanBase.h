@@ -76,9 +76,6 @@ protected:
 	/** begin command buffer, begin renderPass, bind pipeline, set dynamic states */
 	virtual void buildCommandBuffers() = 0;
 
-	/** @brief Prepares all Vulkan resources and functions required to run the sample */
-	virtual void prepare();
-
 	/* Util functions*/
 
 	void destroyImageData(ImageData& img);
@@ -98,6 +95,9 @@ public:
 	*	Initialize instance and device. Get graphics queue handle as well.
 	*/
 	void init();
+
+	/** @brief Prepares all Vulkan resources and functions required to run the sample */
+	virtual void prepare();
 
 	/** @brief Entry point for the main render loop */
 	void renderLoop();

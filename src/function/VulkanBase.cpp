@@ -144,12 +144,17 @@ void Base::createSyncObjects() {
 	for (auto& f : fences) {
 		f = device.getDevice().createFence(fenceCI);
 	}
+	vk::SemaphoreCreateInfo semaphoreCI{};
+	semaphores.presentComplete = device.getDevice().createSemaphore(semaphoreCI);
+	semaphores.renderComplete = device.getDevice().createSemaphore(semaphoreCI);
 }
 
 void Base::destroySyncObjects() {
+	device.getDevice().destroySemaphore(semaphores.renderComplete);
+	device.getDevice().destroySemaphore(semaphores.presentComplete);
 	for (auto& f : fences) {
 		device.getDevice().destroyFence(f);
-	}	
+	}
 }
 
 void Base::createDescriptorPool() {
