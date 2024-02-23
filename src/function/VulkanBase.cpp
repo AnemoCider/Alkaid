@@ -150,7 +150,9 @@ void Base::clear() {
 }
 
 void Base::createSyncObjects() {
-	vk::FenceCreateInfo fenceCI {};
+	vk::FenceCreateInfo fenceCI {
+		.flags = vk::FenceCreateFlagBits::eSignaled
+	};
 	fences.resize(drawCmdBuffers.size());
 	for (auto& f : fences) {
 		f = device.getDevice().createFence(fenceCI);

@@ -17,7 +17,7 @@ vki::Buffer::Buffer(vki::Device& device, vk::DeviceSize sz, const vk::Flags<vk::
 		.memoryTypeIndex = device.getMemoryType(memReq.memoryTypeBits, memoryProps)
 	};
 	mem = device.getDevice().allocateMemory(memAI);
-	device.getDevice().bindBufferMemory(buffer, mem, sz);
+	device.getDevice().bindBufferMemory(buffer, mem, 0);
 }
 
 void vki::Buffer::clear(vki::Device& device) {
@@ -27,5 +27,7 @@ void vki::Buffer::clear(vki::Device& device) {
 
 vki::UniformBuffer::UniformBuffer(vki::Device& device, vk::DeviceSize sz) :
 	Buffer(device, sz, vk::BufferUsageFlagBits::eUniformBuffer,
-		vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent) {}
+		vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent) {
+	mapped = device.getDevice().mapMemory(mem, 0, sz);
+}
 	

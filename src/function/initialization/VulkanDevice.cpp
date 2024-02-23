@@ -31,12 +31,17 @@ void Device::init() {
         .pQueuePriorities = &queuePriority
     };
 
+    // enable sampler anisotropy for image sampler
+    vk::PhysicalDeviceFeatures deviceFeatures{};
+    deviceFeatures.samplerAnisotropy = vk::True;
+
     auto createInfo = vk::DeviceCreateInfo{
         .flags = vk::DeviceCreateFlags(),
         .queueCreateInfoCount = 1,
         .pQueueCreateInfos = &queueCreateInfo,
         .enabledExtensionCount = static_cast<uint32_t>(deviceExtensions.size()),
         .ppEnabledExtensionNames = deviceExtensions.data(),
+        .pEnabledFeatures = &deviceFeatures
     };
 
     device = instance->phyDevice.createDevice(createInfo);

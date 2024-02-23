@@ -14,7 +14,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <chrono>
 
-const std::string shaderPathNoSuffix = "../shaders/basicTriangle/basicTriangle";
+const std::string shaderPathNoSuffix = "shaders/basicTriangle/basicTriangle";
 
 struct Vertex {
     glm::vec3 pos;
@@ -121,7 +121,7 @@ private:
         std::vector<vk::DescriptorSetLayout> setLayouts(drawCmdBuffers.size(), descriptorSetLayout);
         vk::DescriptorSetAllocateInfo descriptorSetAI {
             .descriptorPool = descriptorPool,
-            .descriptorSetCount = static_cast<uint32_t>(descriptorSets.size()),
+            .descriptorSetCount = static_cast<uint32_t>(setLayouts.size()),
             .pSetLayouts = setLayouts.data()
         };
         descriptorSets = device.getDevice().allocateDescriptorSets(descriptorSetAI);
@@ -150,7 +150,7 @@ private:
             descriptorWrites[1] = {
                 .dstSet = descriptorSets[i],
                 .dstBinding = 1,
-                .dstArrayElement = 1,
+                .dstArrayElement = 0,
                 .descriptorCount = 1,
                 .descriptorType = vk::DescriptorType::eCombinedImageSampler, 
                 .pImageInfo = &imageInfo,
@@ -307,6 +307,7 @@ private:
             .format = format,
             .extent = { texture.width, texture.height, 1 },
             .mipLevels = texture.mipLevels,
+            .arrayLayers = 1,
             .samples = vk::SampleCountFlagBits::e1,
             .tiling = vk::ImageTiling::eOptimal,
             .usage = vk::ImageUsageFlagBits::eTransferDst | vk::ImageUsageFlagBits::eSampled,
@@ -318,12 +319,12 @@ private:
         auto memReqs = device.getDevice().getImageMemoryRequirements(texture.image);
 
         vk::MemoryAllocateInfo memAI{
-            .allocationSize = ktxTextureSize,
-            .memoryTypeIndex = device.getMemoryType(memReqs.size, vk::MemoryPropertyFlagBits::eDeviceLocal)
+            .allocationSize = memReqs.size,
+            .memoryTypeIndex = device.getMemoryType(memReqs.memoryTypeBits, vk::MemoryPropertyFlagBits::eDeviceLocal)
         };
 
         texture.mem = device.getDevice().allocateMemory(memAI);
-        device.getDevice().bindImageMemory(texture.image, texture.mem, ktxTextureSize);
+        device.getDevice().bindImageMemory(texture.image, texture.mem, 0);
 
         // Image memory barriers for the texture image
 
@@ -336,6 +337,7 @@ private:
             // We will transition on all mip levels
             .levelCount = texture.mipLevels,
             // The 2D texture only has one layer
+            .baseArrayLayer = 0,
             .layerCount = 1
         };
 
@@ -437,7 +439,13 @@ private:
             .format = format,
             // The subresource range describes the set of mip levels (and array layers) that can be accessed through this image view
             // It's possible to create multiple image views for a single image referring to different (and/or overlapping) ranges of the image
-            .subresourceRange = {vk::ImageAspectFlagBits::eColor, 0, 0, 1, texture.mipLevels}
+            .subresourceRange = {
+                .aspectMask = vk::ImageAspectFlagBits::eColor, 
+                .baseMipLevel = 0,
+                .levelCount = texture.mipLevels,
+                .baseArrayLayer = 0, 
+                .layerCount = 1
+            }
         };
 
         texture.view = device.getDevice().createImageView(viewCI);
@@ -455,6 +463,7 @@ private:
         );
         
         shaderCode = vki::readFile(shaderPathNoSuffix + ".frag.spv");
+        shaderCI.codeSize = shaderCode.size();
         shaderCI.pCode = reinterpret_cast<const uint32_t*>(shaderCode.data());
         vk::ShaderModule fragShaderModule = device.getDevice().createShaderModule(
             shaderCI
@@ -463,13 +472,13 @@ private:
         vk::PipelineShaderStageCreateInfo vertShaderStageInfo{
             .stage = vk::ShaderStageFlagBits::eVertex,
             .module = vertShaderModule,
-            .pName = "name"
+            .pName = "main"
         };
             
         vk::PipelineShaderStageCreateInfo fragShaderStageInfo{
             .stage = vk::ShaderStageFlagBits::eFragment,
             .module = fragShaderModule,
-            .pName = "name"
+            .pName = "main"
         };
 
         vk::PipelineShaderStageCreateInfo shaderStages[] = { vertShaderStageInfo, fragShaderStageInfo };
@@ -536,7 +545,9 @@ private:
         };
 
         vk::PipelineColorBlendStateCreateInfo colorBlending{
-            .logicOpEnable = vk::False
+            .logicOpEnable = vk::False,
+            .attachmentCount = 1,
+            .pAttachments = &colorBlendAttachment
         };
 
         std::vector<vk::DynamicState> dynamicStates = {
@@ -671,6 +682,7 @@ public:
         device.getDevice().destroyImage(texture.image);
         device.getDevice().destroyDescriptorSetLayout(descriptorSetLayout);
         for (auto i = 0; i < uniformBuffers.size(); i++) {
+            device.getDevice().unmapMemory(uniformBuffers[i].mem);
             uniformBuffers[i].clear(device);
         }
         indexBuffer.clear(device);
@@ -702,11 +714,6 @@ public:
             .pSignalSemaphores = &semaphores.renderComplete
         };
         
-        // On which stage to wait
-        // Here we want to wait with writing colors to the image until it's available
-       
-
-        // Which semaphores to signal once the command buffer(s) has finished execution
         graphicsQueue.submit(submitInfo, fences[currentBuffer]);
         Base::presentFrame();
 
