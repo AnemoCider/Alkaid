@@ -25,14 +25,15 @@ include_directories(src/function)
 add_subdirectory(external/glfw)
 add_subdirectory(src/function)
 
+set(SHADER_DIR "${CMAKE_CURRENT_SOURCE_DIR}/shaders")   
+
 if(WIN32)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DVK_USE_PLATFORM_WIN32_MVK")
+    set(GLSL_COMPILER "${SHADER_DIR}/glslc.exe")
 elseif(APPLE)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DVK_USE_PLATFORM_MACOS_KHR")
+    set(GLSL_COMPILER "${SHADER_DIR}/glslc_macos")
 endif()
-
-set(SHADER_DIR "${CMAKE_CURRENT_SOURCE_DIR}/shaders")   
-set(GLSL_COMPILER "${SHADER_DIR}/glslc.exe")
 
 function(buildExample EXAMPLE_NAME)
     set(EXAMPLE_FOLDER ${CMAKE_CURRENT_SOURCE_DIR}/src/examples/${EXAMPLE_NAME}/)
