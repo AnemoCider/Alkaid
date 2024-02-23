@@ -10,7 +10,6 @@ if (NOT CMAKE_VERSION VERSION_LESS 3.7.0)
 endif()
 
 # Set an empty list for subdirs to add source files
-set(FUNC_SRC)
 
 include_directories(external)
 include_directories(external/vulkan/include)
@@ -65,13 +64,11 @@ function(buildExample EXAMPLE_NAME)
         list(APPEND SPIRV_BINARY_FILES ${SHADER_SPIRV})
     endforeach()
 
-    target_sources(${EXAMPLE_NAME} PRIVATE ${FUNC_SRC})
-    target_link_libraries(${EXAMPLE_NAME} base glfw ${Vulkan_LIBRARY})
-
+    target_sources(${EXAMPLE_NAME} PRIVATE ${SHADER_SOURCES} )
+    target_link_libraries(${EXAMPLE_NAME} base glfw)
+    source_group(Shaders FILES ${SHADER_SOURCES})
     message(STATUS "Runtime executables written to ${EXAMPLE_FOLDER}")
 endfunction(buildExample)
-
-source_group("Shaders" FILES ${SHADER_SOURCES})
 
 buildExample(basicTriangle)
 # buildExample(pcss)

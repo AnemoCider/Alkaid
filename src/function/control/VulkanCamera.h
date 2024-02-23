@@ -3,17 +3,14 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/glm.hpp>
 #include <iostream>
+#include "common/VulkanCommon.h"
 
-namespace Merak {
+namespace vki {
     class Camera {
     public:
         float deltaTime = 0.0f;	// Time between current frame and last frame
         float lastFrame = 0.0f; // Time of last frame
-        Camera(float xPos, float yPos, float zPos) : viewMatrix(glm::mat4(1.0f)), projectionMatrix(glm::mat4(1.0f)),
-            position(xPos, yPos, zPos), up(0.0f, 1.0f, 0.0f), yaw(180.0f), pitch(0.0f),
-            moveSpeed(2.5f), sensitivity(0.1f), zoom(45.0f) {
-            right = glm::cross(front, up);
-        }
+        Camera(float xPos, float yPos, float zPos);
 
         glm::vec3 position;
         glm::vec3 up;
