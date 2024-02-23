@@ -5,6 +5,7 @@ CMakeFiles/
 **/CMakeCache.txt
 **/*.cmake
 
+*.sln
 *.filters
 *.vcxproj
 
