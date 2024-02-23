@@ -173,9 +173,9 @@ void Base::destroySyncObjects() {
 void Base::createDescriptorPool() {
 	std::vector<vk::DescriptorPoolSize> poolSizes(2);
 	poolSizes[0].type = vk::DescriptorType::eUniformBuffer;
-	poolSizes[0].descriptorCount = 1;
+	poolSizes[0].descriptorCount = drawCmdBuffers.size();
 	poolSizes[1].type = vk::DescriptorType::eCombinedImageSampler;
-	poolSizes[1].descriptorCount = 1;
+	poolSizes[1].descriptorCount = drawCmdBuffers.size();
 
 	vk::DescriptorPoolCreateInfo poolInfo {
 		.maxSets = static_cast<uint32_t>(drawCmdBuffers.size()),
