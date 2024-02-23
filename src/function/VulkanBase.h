@@ -76,6 +76,8 @@ protected:
 	/** begin command buffer, begin renderPass, bind pipeline, set dynamic states */
 	virtual void buildCommandBuffers() = 0;
 
+	void recreateSwapChain();
+
 	/* Util functions*/
 
 	void destroyImageData(ImageData& img);

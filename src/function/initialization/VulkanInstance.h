@@ -26,6 +26,9 @@ namespace vki {
 		vk::PhysicalDevice phyDevice;
 
 		GLFWwindow* window;
+
+		// the heights and widths can be updated during
+		// recreation of swap chain
 		uint32_t width = 800;
 		uint32_t height = 600;
 		vk::SurfaceKHR surface;

@@ -61,6 +61,21 @@ void Base::setupFrameBuffer() {
 	}
 }
 
+void Base::recreateSwapChain() {
+	device.getDevice().waitIdle();
+	for (uint32_t i = 0; i < frameBuffers.size(); i++) {
+		device.getDevice().destroyFramebuffer(frameBuffers[i]);
+	}
+	for (auto& i : swapChain.views) {
+		device.getDevice().destroyImageView(i);
+	}
+	auto oldSwapChain = swapChain.init();
+	device.getDevice().destroySwapchainKHR(oldSwapChain);
+	destroyImageData(depthStencil);
+	createDepthStencil();
+	setupFrameBuffer();
+}
+
 void Base::destroyImageData(ImageData& img) {
 	device.getDevice().destroyImageView(img.view);
 	device.getDevice().freeMemory(img.mem);
@@ -126,7 +141,7 @@ void Base::prepareFrame() {
 		semaphores.presentComplete, nullptr, &currentBuffer);
 	// Incompatible
 	if (result == vk::Result::eErrorOutOfDateKHR) {
-		// TODO: recreate the swap chain
+		recreateSwapChain();
 	} else {
 		// Compatible, but may not exactly match
 		assert (result == vk::Result::eSuccess || result == vk::Result::eSuboptimalKHR);
@@ -142,7 +157,16 @@ void Base::presentFrame() {
 		.pSwapchains = &swapChain.getSwapChain(),
 		.pImageIndices = &currentBuffer
 	};
-	graphicsQueue.presentKHR(presentInfo);
+	vk::Result result;
+	try {
+		result = graphicsQueue.presentKHR(&presentInfo);
+	}
+	catch (const vk::OutOfDateKHRError& e) {
+		result = vk::Result::eErrorOutOfDateKHR;
+	}
+	if (result == vk::Result::eErrorOutOfDateKHR || result == vk::Result::eSuboptimalKHR) {
+		recreateSwapChain();
+	}
 }
 
 void Base::nextFrame() {

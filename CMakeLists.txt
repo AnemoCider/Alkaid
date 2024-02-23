@@ -71,5 +71,6 @@ function(buildExample EXAMPLE_NAME)
 endfunction(buildExample)
 
 buildExample(basicTriangle)
+buildExample(shading)
 # buildExample(pcss)
 

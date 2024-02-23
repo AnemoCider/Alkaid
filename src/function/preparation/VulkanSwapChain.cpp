@@ -1,8 +1,31 @@
 #include "preparation/VulkanSwapChain.h"
-#include "VulkanSwapChain.h"
-
 
 using vki::SwapChain;
+
+vk::Extent2D vki::SwapChain::chooseExtent() {
+    instance->supports.capabilities = instance->phyDevice.getSurfaceCapabilitiesKHR(instance->surface);
+    if (instance->supports.capabilities.currentExtent.width != (std::numeric_limits<uint32_t>::max)()) {
+        instance->width = instance->supports.capabilities.currentExtent.width;
+        instance->height = instance->supports.capabilities.currentExtent.height;
+        return instance->supports.capabilities.currentExtent;
+    } else {
+        int width, height;
+        glfwGetFramebufferSize(instance->window, &width, &height);
+
+        vk::Extent2D actualExtent = {
+            static_cast<uint32_t>(width),
+            static_cast<uint32_t>(height)
+        };
+
+        actualExtent.width = std::clamp(actualExtent.width, instance->supports.capabilities.minImageExtent.width, instance->supports.capabilities.maxImageExtent.width);
+        actualExtent.height = std::clamp(actualExtent.height, instance->supports.capabilities.minImageExtent.height, instance->supports.capabilities.maxImageExtent.height);
+
+        instance->width = actualExtent.width;
+        instance->height = actualExtent.height;
+
+        return actualExtent;
+    }
+}
 
 void vki::SwapChain::setUp() {
     for (const auto& availableFormat : instance->supports.formats) {
@@ -26,7 +49,7 @@ void vki::SwapChain::setUp() {
         setting.imageCount = instance->supports.capabilities.maxImageCount;
     }
     
-    setting.extent = { instance->width, instance->height };
+    setting.extent = chooseExtent();
 
     if (instance->supports.capabilities.currentExtent.width != (std::numeric_limits<uint32_t>::max)()) {
         setting.extent = instance->supports.capabilities.currentExtent;
@@ -54,8 +77,9 @@ void vki::SwapChain::setDevice(vki::Device* device) {
     this->device = device;
 }
 
-void vki::SwapChain::init() {
+vk::SwapchainKHR vki::SwapChain::init() {
     setUp();
+    auto res = swapChain;
     vk::SwapchainCreateInfoKHR createInfo{
         .surface = instance->surface,
         .minImageCount = setting.imageCount,
@@ -72,6 +96,7 @@ void vki::SwapChain::init() {
     };
     swapChain = device->getDevice().createSwapchainKHR(createInfo);
     createViews();
+    return res;
 }
 
 void vki::SwapChain::clear() {

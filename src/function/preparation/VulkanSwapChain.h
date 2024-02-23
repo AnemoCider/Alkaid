@@ -18,13 +18,21 @@ namespace vki {
 			uint32_t imageCount;
 		} setting;
 		
+		vk::Extent2D chooseExtent();
+
 		void setUp();
 		void createViews();
 	public:
 		std::vector<vk::ImageView> views;
 		void setInstance(vki::Instance* inst);
 		void setDevice(vki::Device* device);
-		void init();
+		/*
+			return the old swap chain
+		*/
+		vk::SwapchainKHR init();
+		/*
+		* Destroy swapChain image views, and then destroy swap chain itself
+		*/
 		void clear();
 		uint32_t getImageCount() const;
 		vk::Format getColorFormat() const;
