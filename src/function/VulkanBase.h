@@ -94,7 +94,7 @@ public:
 	/*
 	*	Initialize instance and device. Get graphics queue handle as well.
 	*/
-	void init();
+	virtual void init();
 
 	/** @brief Prepares all Vulkan resources and functions required to run the sample */
 	virtual void prepare();
@@ -123,7 +123,7 @@ public:
 	/*
 	* 	Clear all the stuff allocated in init(), prepare(), etc.
 	*/
-	void clear();
+	virtual void clear();
 
 };
 

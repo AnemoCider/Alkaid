@@ -162,37 +162,6 @@ private:
     }
 
     void createVertexBuffer() {
-        /*vk::DeviceSize bufferSize = sizeof(verticesData[0]) * verticesData.size();
-
-        vki::StagingBuffer verticesStaging;
-
-        auto bufferCI = vki::StagingBuffer::getCI(bufferSize);
-
-        verticesStaging.buffer =  device.getDevice().createBuffer(bufferCI);
-        auto memReq = device.getDevice().getBufferMemoryRequirements(verticesStaging.buffer);
-        vk::MemoryAllocateInfo memAI {
-            .allocationSize = memReq.size,
-            .memoryTypeIndex =  device.getMemoryType(memReq.memoryTypeBits, vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent)
-        };
-        verticesStaging.mem = device.getDevice().allocateMemory(memAI);
-
-        void* data;
-
-        data = device.getDevice().mapMemory(verticesStaging.mem, 0, bufferSize);
-        memcpy(data, verticesData.data(), (size_t)bufferSize);
-        device.getDevice().unmapMemory(verticesStaging.mem);
-        
-        vertexBuffer.buffer = device.getDevice().createBuffer(
-            bufferCI.setUsage(vk::BufferUsageFlagBits::eVertexBuffer | vk::BufferUsageFlagBits::eTransferDst)
-        );
-        memReq = device.getDevice().getBufferMemoryRequirements(vertexBuffer.buffer);
-        memAI.setAllocationSize(memReq.size);
-        memAI.setMemoryTypeIndex(device.getMemoryType(memReq.memoryTypeBits, vk::MemoryPropertyFlagBits::eDeviceLocal));
-
-        vki::Buffer::copyBuffer(verticesStaging.buffer, vertexBuffer.buffer, bufferSize);
-
-        device.getDevice().freeMemory(verticesStaging.mem);
-        device.getDevice().destroyBuffer(verticesStaging.buffer);*/
         vk::DeviceSize bufferSize = sizeof(verticesData[0]) * verticesData.size();
         vki::StagingBuffer staging{ device, bufferSize };
 
@@ -206,23 +175,24 @@ private:
             vk::BufferUsageFlagBits::eVertexBuffer | vk::BufferUsageFlagBits::eTransferDst, 
             vk::MemoryPropertyFlagBits::eDeviceLocal };
 
+        copyBuffer(staging.buffer, vertexBuffer.buffer, bufferSize);
         staging.clear(device);
     }
 
     void createIndexBuffer() {
-        vk::DeviceSize bufferSize = sizeof(verticesData[0]) * verticesData.size();
+        vk::DeviceSize bufferSize = sizeof(indicesData[0]) * indicesData.size();
         vki::StagingBuffer staging{ device, bufferSize };
 
         void* data;
 
         data = device.getDevice().mapMemory(staging.mem, 0, bufferSize);
-        memcpy(data, verticesData.data(), (size_t)bufferSize);
+        memcpy(data, indicesData.data(), (size_t)bufferSize);
         device.getDevice().unmapMemory(staging.mem);
 
         indexBuffer = vki::Buffer{ device, bufferSize,
             vk::BufferUsageFlagBits::eIndexBuffer | vk::BufferUsageFlagBits::eTransferDst,
             vk::MemoryPropertyFlagBits::eDeviceLocal };
-
+        copyBuffer(staging.buffer, indexBuffer.buffer, bufferSize);
         staging.clear(device);
     }
 
@@ -522,7 +492,7 @@ private:
             .depthClampEnable = vk::False,
             .rasterizerDiscardEnable = vk::False,
             .polygonMode = vk::PolygonMode::eFill,
-            .cullMode = vk::CullModeFlagBits::eBack,
+            .cullMode = vk::CullModeFlagBits::eBack ,
             .frontFace = vk::FrontFace::eCounterClockwise,
             .depthBiasEnable = vk::False,
             .lineWidth = 1.0f,
@@ -541,7 +511,12 @@ private:
         };
 
         vk::PipelineColorBlendAttachmentState colorBlendAttachment{
-            .blendEnable = vk::False
+            .blendEnable = vk::False,
+            .colorWriteMask = 
+            vk::ColorComponentFlagBits::eR | 
+            vk::ColorComponentFlagBits::eG |
+            vk::ColorComponentFlagBits::eB |
+            vk::ColorComponentFlagBits::eA
         };
 
         vk::PipelineColorBlendStateCreateInfo colorBlending{
@@ -658,12 +633,7 @@ private:
 
 public:
 
-    void initVulkan() {
-        // addExtensions();
-        Base::init();
-    }
-
-    void prepare() {
+    void prepare() override {
 		Base::prepare();
 		createVertexBuffer();
         createIndexBuffer();
@@ -674,11 +644,12 @@ public:
 		createPipeline();
 	}
 
-    void clear() {
+    void clear() override {
         device.getDevice().destroyPipelineLayout(pipelineLayout);
         device.getDevice().destroyPipeline(graphicsPipeline);
         device.getDevice().destroyImageView(texture.view);
         device.getDevice().destroySampler(texture.sampler);
+        device.getDevice().freeMemory(texture.mem);
         device.getDevice().destroyImage(texture.image);
         device.getDevice().destroyDescriptorSetLayout(descriptorSetLayout);
         for (auto i = 0; i < uniformBuffers.size(); i++) {
@@ -687,11 +658,11 @@ public:
         }
         indexBuffer.clear(device);
         vertexBuffer.clear(device);
-        device.getDevice().destroyCommandPool(commandPool);
+        // device.getDevice().destroyCommandPool(commandPool);
         Base::clear();
     }
 
-    void render() {
+    void render() override {
         device.getDevice().waitForFences(1, &fences[currentBuffer], VK_TRUE, UINT64_MAX);
         Base::prepareFrame();
 

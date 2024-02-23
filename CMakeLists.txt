@@ -32,7 +32,8 @@ elseif(APPLE)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DVK_USE_PLATFORM_MACOS_KHR")
 endif()
 
-set(${SHADER_DIR} "${CMAKE_CURRENT_SOURCE_DIR}/shaders")
+set(SHADER_DIR "${CMAKE_CURRENT_SOURCE_DIR}/shaders")   
+set(GLSL_COMPILER "${SHADER_DIR}/glslc.exe")
 
 function(buildExample EXAMPLE_NAME)
     set(EXAMPLE_FOLDER ${CMAKE_CURRENT_SOURCE_DIR}/src/examples/${EXAMPLE_NAME}/)
@@ -53,10 +54,11 @@ function(buildExample EXAMPLE_NAME)
         add_custom_command(
             TARGET ${EXAMPLE_NAME}
             PRE_BUILD
-            COMMAND cd ${SHADER_DIR}
+            # COMMAND cd ${SHADER_DIR}
             COMMAND ${GLSL_COMPILER} ${SHADER} -o ${SHADER_SPIRV} 
             DEPENDS ${SHADER}
             COMMENT "Compiling ${SHADER}"
+            WORKING_DIRECTORY ${SHADER_DIR}
         )
 
         # Store all the compiled shaders in a list

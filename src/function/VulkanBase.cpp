@@ -13,6 +13,35 @@ void Base::init() {
 	device.getGraphicsQueue(graphicsQueue);
 }
 
+void Base::prepare() {
+	swapChain.setDevice(&device);
+	swapChain.setInstance(&instance);
+	swapChain.init();
+
+	createRenderPass();
+	createDepthStencil();
+	setupFrameBuffer();
+	createCommandPool();
+	createCommandBuffers();
+	createSyncObjects();
+	createDescriptorPool();
+}
+
+void Base::clear() {
+	device.getDevice().destroyDescriptorPool(descriptorPool);
+	destroySyncObjects();
+	device.getDevice().destroyCommandPool(commandPool);
+	for (uint32_t i = 0; i < frameBuffers.size(); i++) {
+		device.getDevice().destroyFramebuffer(frameBuffers[i]);
+	}
+	destroyImageData(depthStencil);
+	device.getDevice().destroyRenderPass(renderPass);
+	swapChain.clear();
+	device.clear();
+	instance.destroyWindow();
+	instance.clear();
+}
+
 void Base::setupFrameBuffer() {
 	std::vector<vk::ImageView> attachments(2);
 	frameBuffers.resize(swapChain.getImageCount());
@@ -30,21 +59,6 @@ void Base::setupFrameBuffer() {
 		attachments[1] = depthStencil.view;
 		frameBuffers[i] = device.getDevice().createFramebuffer(frameBufferCI, nullptr);
 	}
-}
-
-void Base::prepare()
-{
-    swapChain.setDevice(&device);
-	swapChain.setInstance(&instance);
-	swapChain.init();
-
-	createRenderPass();
-	createDepthStencil();
-	setupFrameBuffer();
-	createCommandPool();
-	createCommandBuffers();
-	createSyncObjects();
-	createDescriptorPool();
 }
 
 void Base::destroyImageData(ImageData& img) {
@@ -101,8 +115,10 @@ void Base::copyBuffer(vk::Buffer srcBuffer, vk::Buffer dstBuffer, vk::DeviceSize
 
 void Base::renderLoop() {
 	while (!glfwWindowShouldClose(instance.window)) {
+		glfwPollEvents();
 		nextFrame();
 	}
+	device.getDevice().waitIdle();
 }
 
 void Base::prepareFrame() {
@@ -131,22 +147,6 @@ void Base::presentFrame() {
 
 void Base::nextFrame() {
 	render();
-}
-
-
-void Base::clear() {
-	device.getDevice().destroyDescriptorPool(descriptorPool);
-	destroySyncObjects();
-	device.getDevice().destroyCommandPool(commandPool);
-	destroyImageData(depthStencil);
-	for (uint32_t i = 0; i < frameBuffers.size(); i++) {
-		device.getDevice().destroyFramebuffer(frameBuffers[i]);
-	}
-	device.getDevice().destroyPipeline(pipeline);
-	swapChain.clear();
-	device.clear();
-	instance.destroyWindow();
-	instance.clear();
 }
 
 void Base::createSyncObjects() {
