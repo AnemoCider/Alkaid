@@ -128,6 +128,10 @@ void Base::copyBuffer(vk::Buffer srcBuffer, vk::Buffer dstBuffer, vk::DeviceSize
 	endSingleTimeCommands(commandBuffer);
 }
 
+vki::Instance Base::getInstance() {
+	return instance;
+}
+
 void Base::renderLoop() {
 	while (!glfwWindowShouldClose(instance.window)) {
 		glfwPollEvents();

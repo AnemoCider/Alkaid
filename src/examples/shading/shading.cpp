@@ -4,7 +4,11 @@
 
 #include <ktx.h>
 #include <ktxvulkan.h>
+#define TINYOBJLOADER_IMPLEMENTATION
+#include "tinyObj/tiny_obj_loader.h"
 
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
 #include <memory>
 #include <iostream>
 #include <array>
@@ -18,36 +22,103 @@ const std::string shaderPathNoSuffix = "shaders/shading/shading";
 
 struct Vertex {
     glm::vec3 pos;
-    glm::vec3 color;
+    glm::vec3 normal;
     glm::vec2 texCoord;
+    glm::vec3 diffuse;
+    glm::vec3 specular;
+    float shininess;
+    int illum;
 };
 
-const std::vector<Vertex> verticesData = {
-    {{-0.5f, -0.5f, 0.0f}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f}},
-    {{0.5f, -0.5f, 0.0f}, {0.0f, 1.0f, 0.0f}, {1.0f, 0.0f}},
-    {{0.5f, 0.5f, 0.0f}, {0.0f, 0.0f, 1.0f}, {1.0f, 1.0f}},
-    {{-0.5f, 0.5f, 0.0f}, {1.0f, 1.0f, 1.0f}, {0.0f, 1.0f}},
-
-    {{-0.5f, -0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f}},
-    {{0.5f, -0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}, {1.0f, 0.0f}},
-    {{0.5f, 0.5f, -0.5f}, {0.0f, 0.0f, 1.0f}, {1.0f, 1.0f}},
-    {{-0.5f, 0.5f, -0.5f}, {1.0f, 1.0f, 1.0f}, {0.0f, 1.0f}}
-};
-
-const std::vector<uint16_t> indicesData = {
-    0, 1, 2, 2, 3, 0,
-    4, 5, 6, 6, 7, 4
-};
+std::vector<Vertex> floorVertices = {};
+std::vector<Vertex> characterVertices = {};
 
 struct UniformBufferObject {
     alignas(16) glm::mat4 model;
     alignas(16) glm::mat4 view;
     alignas(16) glm::mat4 proj;
+    alignas(16) glm::mat3 normalRot;
+    alignas(16) glm::mat4 lightSpace;
 };
+
+void loadObj(const std::string& inputfile, const std::string matPath, std::vector<Vertex>& data) {
+    tinyobj::ObjReaderConfig reader_config;
+    reader_config.mtl_search_path = matPath; // Path to material files
+
+    tinyobj::ObjReader reader;
+
+    if (!reader.ParseFromFile(inputfile, reader_config)) {
+        if (!reader.Error().empty()) {
+            std::cerr << "TinyObjReader: " << reader.Error();
+        }
+        exit(1);
+    }
+
+    if (!reader.Warning().empty()) {
+        std::cout << "TinyObjReader: " << reader.Warning();
+    }
+
+    auto& attrib = reader.GetAttrib();
+    auto& shapes = reader.GetShapes();
+    auto& materials = reader.GetMaterials();
+
+    // loop over shapes
+    for (size_t s = 0; s < shapes.size(); s++) {
+        // loop over faces(polygon)
+        size_t index_offset = 0;
+        for (size_t f = 0; f < shapes[s].mesh.num_face_vertices.size(); f++) {
+
+            auto& material = materials[shapes[s].mesh.material_ids[f]];
+
+            size_t fv = size_t(shapes[s].mesh.num_face_vertices[f]);
+            
+            // loop over vertices in the face.
+            for (size_t v = 0; v < fv; v++) {
+                // assuming triangles
+
+                Vertex curVertex{};
+                curVertex.diffuse = { material.diffuse[0], material.diffuse[1], material.diffuse[2] };
+                curVertex.specular = { material.specular[0], material.specular[1], material.specular[2] };
+                curVertex.shininess = material.shininess;
+                curVertex.illum = material.illum;
+
+                // access to vertex
+                tinyobj::index_t idx = shapes[s].mesh.indices[index_offset + v];
+                tinyobj::real_t vx = attrib.vertices[3 * size_t(idx.vertex_index) + 0];
+                tinyobj::real_t vy = attrib.vertices[3 * size_t(idx.vertex_index) + 1];
+                tinyobj::real_t vz = attrib.vertices[3 * size_t(idx.vertex_index) + 2];
+                curVertex.pos = { vx, vy, vz };
+
+                // check if `normal_index` is zero or positive. negative = no normal data
+                if (idx.normal_index >= 0) {
+                    tinyobj::real_t nx = attrib.normals[3 * size_t(idx.normal_index) + 0];
+                    tinyobj::real_t ny = attrib.normals[3 * size_t(idx.normal_index) + 1];
+                    tinyobj::real_t nz = attrib.normals[3 * size_t(idx.normal_index) + 2];
+                    curVertex.normal = { nx, ny, nz };
+                }
+
+                // check if `texcoord_index` is zero or positive. negative = no texcoord data
+                if (idx.texcoord_index >= 0) {
+                    tinyobj::real_t tx = attrib.texcoords[2 * size_t(idx.texcoord_index) + 0];
+                    tinyobj::real_t ty = attrib.texcoords[2 * size_t(idx.texcoord_index) + 1];
+                    curVertex.texCoord = { tx, 1 - ty };
+                }
+
+                data.push_back(std::move(curVertex));
+                // optional: vertex colors
+                // tinyobj::real_t red   = attrib.colors[3*size_t(idx.vertex_index)+0];
+                // tinyobj::real_t green = attrib.colors[3*size_t(idx.vertex_index)+1];
+                // tinyobj::real_t blue  = attrib.colors[3*size_t(idx.vertex_index)+2];
+            }
+            index_offset += fv;
+        }
+    }
+}
 
 class Example : public Base {
 
 private:
+
     bool framebufferResized = false;
 
     vk::DescriptorSetLayout descriptorSetLayout;
@@ -57,7 +128,6 @@ private:
     vk::Pipeline graphicsPipeline;
 
     vki::Buffer vertexBuffer;
-    vki::Buffer indexBuffer;
 
     struct {
         vk::DeviceMemory mem;
@@ -84,15 +154,30 @@ private:
     } texture;
 
     std::string getShaderPathName() {
-        return "shaders/basicTriangle/basicTriangle";
+        return "shaders/shading/shading";
     }
     std::string getAssetPath() {
-        return "Vulkan-assets/";
+        return "assets/202/";
     }
 
-    void framebufferResizeCallback(GLFWwindow* window, int width, int height) {
+    static void framebufferResizeCallback(GLFWwindow* window, int width, int height) {
         auto app = reinterpret_cast<Example*>(glfwGetWindowUserPointer(window));
         app->framebufferResized = true;
+    }
+    static void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
+        auto app = reinterpret_cast<Example*>(glfwGetWindowUserPointer(window));
+        app->camera.zoomIn(yoffset);
+    }
+    static void mouse_button_callback(GLFWwindow* window, int button, int action, int mods) {
+        auto app = reinterpret_cast<Example*>(glfwGetWindowUserPointer(window));
+        if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS)
+            app->camera.startDrag();
+        else if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE)
+            app->camera.disableDrag();
+    }
+    static void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
+        auto app = reinterpret_cast<Example*>(glfwGetWindowUserPointer(window));
+        app->camera.mouseDrag(xpos, ypos);
     }
 
     void createDescriptorSetLayout() {
@@ -162,13 +247,13 @@ private:
     }
 
     void createVertexBuffer() {
-        vk::DeviceSize bufferSize = sizeof(verticesData[0]) * verticesData.size();
+        vk::DeviceSize bufferSize = sizeof(characterVertices[0]) * characterVertices.size();
         vki::StagingBuffer staging{ device, bufferSize };
 
         void* data;
 
         data = device.getDevice().mapMemory(staging.mem, 0, bufferSize);
-        memcpy(data, verticesData.data(), (size_t)bufferSize);
+        memcpy(data, characterVertices.data(), (size_t)bufferSize);
         device.getDevice().unmapMemory(staging.mem);
 
         vertexBuffer = vki::Buffer{ device, bufferSize,
@@ -176,23 +261,6 @@ private:
             vk::MemoryPropertyFlagBits::eDeviceLocal };
 
         copyBuffer(staging.buffer, vertexBuffer.buffer, bufferSize);
-        staging.clear(device);
-    }
-
-    void createIndexBuffer() {
-        vk::DeviceSize bufferSize = sizeof(indicesData[0]) * indicesData.size();
-        vki::StagingBuffer staging{ device, bufferSize };
-
-        void* data;
-
-        data = device.getDevice().mapMemory(staging.mem, 0, bufferSize);
-        memcpy(data, indicesData.data(), (size_t)bufferSize);
-        device.getDevice().unmapMemory(staging.mem);
-
-        indexBuffer = vki::Buffer{ device, bufferSize,
-            vk::BufferUsageFlagBits::eIndexBuffer | vk::BufferUsageFlagBits::eTransferDst,
-            vk::MemoryPropertyFlagBits::eDeviceLocal };
-        copyBuffer(staging.buffer, indexBuffer.buffer, bufferSize);
         staging.clear(device);
     }
 
@@ -214,58 +282,31 @@ private:
     }
 
     void createTextureImage() {
-        std::string filename = getAssetPath() + "textures/metalplate01_rgba.ktx";
+        std::string filename = getAssetPath() + "marry/MC003_Kozakura_Mari.png";
+        int width, height, nrChannels;
+        unsigned char* textureData = stbi_load(filename.c_str(), &width, &height, &nrChannels, STBI_rgb_alpha);
+        // 4 bytes a pixel: R8G8B8A8
+        auto bufferSize = width * height * 4;
+        texture.width = width;
+        texture.height = height;
+        texture.mipLevels = 1;
         // image format
         vk::Format format = vk::Format::eR8G8B8A8Unorm;
+        
+        vki::StagingBuffer staging{ device, static_cast<vk::DeviceSize>(bufferSize) };
 
-        ktxResult result;
-        ktxTexture* ktxTexture;
-        result = ktxTexture_CreateFromNamedFile(filename.c_str(), KTX_TEXTURE_CREATE_LOAD_IMAGE_DATA_BIT, &ktxTexture);
-        assert(result == KTX_SUCCESS);
-        texture.width = ktxTexture->baseWidth;
-        texture.height = ktxTexture->baseHeight;
-        texture.mipLevels = ktxTexture->numLevels;
-        ktx_uint8_t* ktxTextureData = ktxTexture_GetData(ktxTexture);
-        ktx_size_t ktxTextureSize = ktxTexture_GetSize(ktxTexture);
-
-        vki::StagingBuffer staging{ device, ktxTextureSize };
-
-        /*createBuffer(ktxTextureSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT |
-            VMA_ALLOCATION_CREATE_MAPPED_BIT, stagingBuffer.buffer, stagingBuffer.alloc);*/
-
-            // Copy texture data into host local staging buffer
         void* data;
-        /*VK_CHECK(vmaMapMemory(allocator, stagingBuffer.alloc, &data));
-        memcpy(data, ktxTextureData, ktxTextureSize);
-        vmaUnmapMemory(allocator, stagingBuffer.alloc);*/
-        data = device.getDevice().mapMemory(staging.mem, 0, ktxTextureSize);
-        memcpy(data, ktxTextureData, ktxTextureSize);
+
+        data = device.getDevice().mapMemory(staging.mem, 0, bufferSize);
+        memcpy(data, textureData, bufferSize);
         device.getDevice().unmapMemory(staging.mem);
 
-        // Setup buffer copy regions for each mip level
-        std::vector<vk::BufferImageCopy> bufferCopyRegions;
 
-        for (uint32_t i = 0; i < texture.mipLevels; i++) {
-            // Calculate offset into staging buffer for the current mip level
-            ktx_size_t offset;
-            KTX_error_code ret = ktxTexture_GetImageOffset(ktxTexture, i, 0, 0, &offset);
-            assert(ret == KTX_SUCCESS);
-            // Setup a buffer image copy structure for the current mip level
-            vk::BufferImageCopy bufferCopyRegion = {
-                .bufferOffset = offset,
-                .imageSubresource = {vk::ImageAspectFlagBits::eColor, i, 0, 1},
-                .imageExtent = {ktxTexture->baseWidth >> i, ktxTexture->baseHeight >> i, 1},
-            };
-            /*bufferCopyRegion.imageSubresource.aspectMask = vk::ImageAspectFlagBits::eColor;
-            bufferCopyRegion.imageSubresource.mipLevel = i;
-            bufferCopyRegion.imageSubresource.baseArrayLayer = 0;
-            bufferCopyRegion.imageSubresource.layerCount = 1;*/
-            /*bufferCopyRegion.imageExtent.width = ktxTexture->baseWidth >> i;
-            bufferCopyRegion.imageExtent.height = ktxTexture->baseHeight >> i;
-            bufferCopyRegion.imageExtent.depth = 1;
-            bufferCopyRegion.bufferOffset = offset;*/
-            bufferCopyRegions.push_back(bufferCopyRegion);
-        }
+        vk::BufferImageCopy bufferCopyRegion = {
+            .bufferOffset = 0,
+            .imageSubresource = {vk::ImageAspectFlagBits::eColor, 0, 0, 1},
+            .imageExtent = {texture.width, texture.height, 1},
+        };
 
         vk::ImageCreateInfo imageCI{
             .imageType = vk::ImageType::e2D,
@@ -334,8 +375,8 @@ private:
             staging.buffer,
             texture.image,
             vk::ImageLayout::eTransferDstOptimal,
-            static_cast<uint32_t>(bufferCopyRegions.size()),
-            bufferCopyRegions.data()
+            1,
+            &bufferCopyRegion
         );
 
 
@@ -365,7 +406,7 @@ private:
         /*vmaDestroyBuffer(allocator, stagingBuffer.buffer, stagingBuffer.alloc);*/
         staging.clear(device);
 
-        ktxTexture_Destroy(ktxTexture);
+        stbi_image_free(textureData);
 
         // Create a texture sampler
         // In Vulkan textures are accessed by samplers
@@ -449,16 +490,36 @@ private:
             .stride = sizeof(Vertex),
             .inputRate = vk::VertexInputRate::eVertex
         };
-
-        std::array<vk::VertexInputAttributeDescription, 3> vertexInputAttribs{
+        /*
+            glm::vec3 pos;
+            glm::vec3 normal;
+            glm::vec2 texCoord;
+            glm::vec3 diffuse;
+            glm::vec3 specular;
+            float shininess;
+            int illum;
+        */
+        std::array<vk::VertexInputAttributeDescription, 7> vertexInputAttribs{
             vk::VertexInputAttributeDescription {
                 .location = 0, .binding = 0, .format = vk::Format::eR32G32B32Sfloat, .offset = offsetof(Vertex, pos)
             },
             vk::VertexInputAttributeDescription {
-                .location = 1, .binding = 0, .format = vk::Format::eR32G32B32Sfloat, .offset = offsetof(Vertex, color)
+                .location = 1, .binding = 0, .format = vk::Format::eR32G32B32Sfloat, .offset = offsetof(Vertex, normal)
             },
             vk::VertexInputAttributeDescription {
                 .location = 2, .binding = 0, .format = vk::Format::eR32G32Sfloat, .offset = offsetof(Vertex, texCoord)
+            },
+            vk::VertexInputAttributeDescription {
+                .location = 3, .binding = 0, .format = vk::Format::eR32G32B32Sfloat, .offset = offsetof(Vertex, diffuse)
+            },
+            vk::VertexInputAttributeDescription {
+                .location = 4, .binding = 0, .format = vk::Format::eR32G32B32Sfloat, .offset = offsetof(Vertex, specular)
+            },
+            vk::VertexInputAttributeDescription {
+                .location = 5, .binding = 0, .format = vk::Format::eR32Sfloat, .offset = offsetof(Vertex, shininess)
+            },
+            vk::VertexInputAttributeDescription {
+                .location = 6, .binding = 0, .format = vk::Format::eR32Sint, .offset = offsetof(Vertex, illum)
             }
         };
 
@@ -557,15 +618,11 @@ private:
     }
 
     void updateUniformBuffer(uint32_t frame) {
-        static auto startTime = std::chrono::high_resolution_clock::now();
-
-        auto currentTime = std::chrono::high_resolution_clock::now();
-        float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
-
         UniformBufferObject ubo{};
-        ubo.model = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-        ubo.view = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-        ubo.proj = glm::perspective(glm::radians(45.0f), instance.width / (float)instance.height, 0.1f, 10.0f);
+        ubo.model = glm::mat4(1.0f);
+        ubo.normalRot = glm::mat3(glm::transpose(glm::inverse(ubo.model)));
+        ubo.view = camera.view();
+        ubo.proj = camera.projection((float)instance.width, (float)instance.height);
         // glm is originally for OpenGL, whose y coord of the clip space is inverted
         ubo.proj[1][1] *= -1;
         memcpy(uniformBuffers[frame].mapped, &ubo, sizeof(ubo));
@@ -614,9 +671,8 @@ private:
         vk::DeviceSize offsets[] = { 0 };
         commandBuffer.bindVertexBuffers(0, vertexBuffers, offsets);
 
-        commandBuffer.bindIndexBuffer(indexBuffer.buffer, 0, vk::IndexType::eUint16);
         commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 0, 1, &descriptorSets[currentBuffer], 0, nullptr);
-        commandBuffer.drawIndexed(static_cast<uint32_t>(indicesData.size()), 1, 0, 0, 0);
+        commandBuffer.draw(characterVertices.size(), 1, 0, 0);
 
         commandBuffer.endRenderPass();
         commandBuffer.end();
@@ -626,8 +682,14 @@ public:
 
     void prepare() override {
         Base::prepare();
+        camera = vki::Camera{ -5.0f, 1.5f, 0.0f };
+        glfwSetFramebufferSizeCallback(instance.window, framebufferResizeCallback);
+        glfwSetScrollCallback(instance.window, scroll_callback);
+        glfwSetMouseButtonCallback(instance.window, mouse_button_callback);
+        glfwSetCursorPosCallback(instance.window, mouse_callback);
+        loadObj(getAssetPath() + "marry/Marry.obj", getAssetPath() + "marry/", characterVertices);
+        loadObj(getAssetPath() + "floor/floor.obj", getAssetPath() + "floor/", floorVertices);
         createVertexBuffer();
-        createIndexBuffer();
         createUniformBuffers();
         createDescriptorSetLayout();
         createTextureImage();
@@ -647,7 +709,6 @@ public:
             device.getDevice().unmapMemory(uniformBuffers[i].mem);
             uniformBuffers[i].clear(device);
         }
-        indexBuffer.clear(device);
         vertexBuffer.clear(device);
         // device.getDevice().destroyCommandPool(commandPool);
         Base::clear();
@@ -664,6 +725,7 @@ public:
 
         buildCommandBuffers();
 
+        camera.update(instance.window);
         updateUniformBuffer(currentBuffer);
 
         vk::PipelineStageFlags waitStages[] = { vk::PipelineStageFlagBits::eColorAttachmentOutput };

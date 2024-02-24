@@ -17,7 +17,6 @@ namespace vki {
 
 	public:
 
-
 		vk::Instance instance;
 		std::vector<const char*> extensions;
 		std::vector<const char*> phyExtensions;

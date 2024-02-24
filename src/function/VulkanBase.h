@@ -5,6 +5,7 @@
 #include "initialization/VulkanInstance.h"
 #include "preparation/VulkanSwapChain.h"
 #include "utils/VulkanBuffer.h"
+#include "control/VulkanCamera.h"
 
 class Base {
 
@@ -16,6 +17,7 @@ protected:
 	vk::Queue graphicsQueue;
 	vki::SwapChain swapChain;
 	vk::Pipeline pipeline;
+	vki::Camera camera;
 
 	vk::CommandPool commandPool;
 	// Command buffers used for rendering
@@ -93,6 +95,7 @@ protected:
 	void copyBuffer(vk::Buffer srcBuffer, vk::Buffer dstBuffer, vk::DeviceSize size);
 
 public:
+	vki::Instance getInstance();
 	/*
 	*	Initialize instance and device. Get graphics queue handle as well.
 	*/
