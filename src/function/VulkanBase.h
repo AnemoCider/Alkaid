@@ -50,17 +50,12 @@ protected:
 
 	void destroySyncObjects();
 
-	void createDescriptorPool();
+	virtual void createDescriptorPool();
 	
 	/*
 		Create a default renderpass
 	*/
 	void createRenderPass();
-
-	/*
-	* Create a vertex buffer.
-	*/
-	virtual void createVertexBuffer() = 0;
 	
 	/** @brief prepare frame; submit to queue; presentFrame; updateUniformBuffers*/
 	virtual void render() = 0;
@@ -76,7 +71,7 @@ protected:
 	virtual void setupFrameBuffer();
 
 	/** begin command buffer, begin renderPass, bind pipeline, set dynamic states */
-	virtual void buildCommandBuffers() = 0;
+	virtual void buildCommandBuffer() = 0;
 
 	void recreateSwapChain();
 

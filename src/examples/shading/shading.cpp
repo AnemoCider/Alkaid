@@ -122,12 +122,14 @@ private:
     bool framebufferResized = false;
 
     vk::DescriptorSetLayout descriptorSetLayout;
-    std::vector<vk::DescriptorSet> descriptorSets;
+    std::vector<vk::DescriptorSet> descSets_character;
+    std::vector<vk::DescriptorSet> descSets_floor;
 
     vk::PipelineLayout pipelineLayout;
     vk::Pipeline graphicsPipeline;
 
-    vki::Buffer vertexBuffer;
+    vki::Buffer characterVertBuffer;
+    vki::Buffer floorVertBuffer;
 
     struct {
         vk::DeviceMemory mem;
@@ -151,7 +153,12 @@ private:
         vk::ImageView view;
         uint32_t width, height;
         uint32_t mipLevels;
-    } texture;
+    };
+
+    struct Textures {
+        Texture character;
+        Texture floor;
+    } textures;
 
     std::string getShaderPathName() {
         return "shaders/shading/shading";
@@ -180,6 +187,21 @@ private:
         app->camera.mouseDrag(xpos, ypos);
     }
 
+    void createDescriptorPool() override {
+        std::vector<vk::DescriptorPoolSize> poolSizes(2);
+        poolSizes[0].type = vk::DescriptorType::eUniformBuffer;
+        poolSizes[0].descriptorCount = drawCmdBuffers.size() * 2;
+        poolSizes[1].type = vk::DescriptorType::eCombinedImageSampler;
+        poolSizes[1].descriptorCount = drawCmdBuffers.size() * 2;
+
+        vk::DescriptorPoolCreateInfo poolInfo{
+            .maxSets = static_cast<uint32_t>(drawCmdBuffers.size()) * 2,
+            .poolSizeCount = static_cast<uint32_t>(poolSizes.size()),
+            .pPoolSizes = poolSizes.data()
+        };
+        descriptorPool = device.getDevice().createDescriptorPool(poolInfo);
+    };
+
     void createDescriptorSetLayout() {
         vk::DescriptorSetLayoutBinding uboLayoutBinding{};
         uboLayoutBinding.binding = 0;
@@ -204,12 +226,15 @@ private:
 
     void createDescriptorSets() {
         std::vector<vk::DescriptorSetLayout> setLayouts(drawCmdBuffers.size(), descriptorSetLayout);
+        descSets_character.reserve(setLayouts.size());
+        descSets_floor.reserve(setLayouts.size());
         vk::DescriptorSetAllocateInfo descriptorSetAI{
             .descriptorPool = descriptorPool,
             .descriptorSetCount = static_cast<uint32_t>(setLayouts.size()),
             .pSetLayouts = setLayouts.data()
         };
-        descriptorSets = device.getDevice().allocateDescriptorSets(descriptorSetAI);
+        descSets_character = device.getDevice().allocateDescriptorSets(descriptorSetAI);
+        descSets_floor = device.getDevice().allocateDescriptorSets(descriptorSetAI);
 
         for (size_t i = 0; i < drawCmdBuffers.size(); i++) {
             vk::DescriptorBufferInfo bufferInfo{};
@@ -218,13 +243,13 @@ private:
             bufferInfo.range = sizeof(UniformBufferObject);
 
             vk::DescriptorImageInfo imageInfo{};
-            imageInfo.imageLayout = texture.imageLayout;
-            imageInfo.imageView = texture.view;
-            imageInfo.sampler = texture.sampler;
+            imageInfo.imageLayout = textures.character.imageLayout;
+            imageInfo.imageView = textures.character.view;
+            imageInfo.sampler = textures.character.sampler;
 
             std::array<vk::WriteDescriptorSet, 2> descriptorWrites{};
             descriptorWrites[0] = {
-                .dstSet = descriptorSets[i],
+                .dstSet = descSets_character[i],
                 .dstBinding = 0,
                 .dstArrayElement = 0,
                 .descriptorCount = 1,
@@ -233,7 +258,7 @@ private:
                 .pBufferInfo = &bufferInfo
             };
             descriptorWrites[1] = {
-                .dstSet = descriptorSets[i],
+                .dstSet = descSets_character[i],
                 .dstBinding = 1,
                 .dstArrayElement = 0,
                 .descriptorCount = 1,
@@ -243,24 +268,32 @@ private:
             };
             device.getDevice().updateDescriptorSets(
                 static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
+
+            imageInfo.imageLayout = textures.floor.imageLayout;
+            imageInfo.imageView = textures.floor.view;
+            imageInfo.sampler = textures.floor.sampler;
+            descriptorWrites[0].dstSet = descSets_floor[i];
+            descriptorWrites[1].dstSet = descSets_floor[i];
+            device.getDevice().updateDescriptorSets(
+                static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
         }
     }
 
-    void createVertexBuffer() {
-        vk::DeviceSize bufferSize = sizeof(characterVertices[0]) * characterVertices.size();
+    void createVertexBuffer(const std::vector<Vertex>& vertices, vki::Buffer& dstBuffer) {
+        vk::DeviceSize bufferSize = sizeof(vertices[0]) * vertices.size();
         vki::StagingBuffer staging{ device, bufferSize };
 
         void* data;
 
         data = device.getDevice().mapMemory(staging.mem, 0, bufferSize);
-        memcpy(data, characterVertices.data(), (size_t)bufferSize);
+        memcpy(data, vertices.data(), (size_t)bufferSize);
         device.getDevice().unmapMemory(staging.mem);
 
-        vertexBuffer = vki::Buffer{ device, bufferSize,
+        dstBuffer = vki::Buffer{ device, bufferSize,
             vk::BufferUsageFlagBits::eVertexBuffer | vk::BufferUsageFlagBits::eTransferDst,
             vk::MemoryPropertyFlagBits::eDeviceLocal };
 
-        copyBuffer(staging.buffer, vertexBuffer.buffer, bufferSize);
+        copyBuffer(staging.buffer, dstBuffer.buffer, bufferSize);
         staging.clear(device);
     }
 
@@ -281,10 +314,10 @@ private:
 
     }
 
-    void createTextureImage() {
-        std::string filename = getAssetPath() + "marry/MC003_Kozakura_Mari.png";
+    void createTextureImage(const std::string& file, Texture& texture) {
         int width, height, nrChannels;
-        unsigned char* textureData = stbi_load(filename.c_str(), &width, &height, &nrChannels, STBI_rgb_alpha);
+        unsigned char* textureData = stbi_load(file.c_str(), &width, &height, &nrChannels, STBI_rgb_alpha);
+        assert(textureData);
         // 4 bytes a pixel: R8G8B8A8
         auto bufferSize = width * height * 4;
         texture.width = width;
@@ -451,6 +484,13 @@ private:
         };
 
         texture.view = device.getDevice().createImageView(viewCI);
+    }
+
+    void destroyTexture(Texture& texture) {
+        device.getDevice().destroyImageView(texture.view);
+        device.getDevice().destroySampler(texture.sampler);
+        device.getDevice().freeMemory(texture.mem);
+        device.getDevice().destroyImage(texture.image);
     }
 
     void createPipeline() {
@@ -628,7 +668,7 @@ private:
         memcpy(uniformBuffers[frame].mapped, &ubo, sizeof(ubo));
     }
 
-    void buildCommandBuffers() override {
+    void buildCommandBuffer() override {
         const auto& commandBuffer = drawCmdBuffers[currentBuffer];
 
         commandBuffer.reset();
@@ -667,12 +707,17 @@ private:
         scissor.extent = { instance.width, instance.height };
         commandBuffer.setScissor(0, scissor);
 
-        vk::Buffer vertexBuffers[] = { vertexBuffer.buffer };
+        vk::Buffer vertexBuffers[] = { characterVertBuffer.buffer };
         vk::DeviceSize offsets[] = { 0 };
         commandBuffer.bindVertexBuffers(0, vertexBuffers, offsets);
 
-        commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 0, 1, &descriptorSets[currentBuffer], 0, nullptr);
+        commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 0, 1, &descSets_character[currentBuffer], 0, nullptr);
         commandBuffer.draw(characterVertices.size(), 1, 0, 0);
+
+        vertexBuffers[0] = floorVertBuffer.buffer;
+        commandBuffer.bindVertexBuffers(0, vertexBuffers, offsets);
+        commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 0, 1, &descSets_floor[currentBuffer], 0, nullptr);
+        commandBuffer.draw(floorVertices.size(), 1, 0, 0);
 
         commandBuffer.endRenderPass();
         commandBuffer.end();
@@ -689,10 +734,12 @@ public:
         glfwSetCursorPosCallback(instance.window, mouse_callback);
         loadObj(getAssetPath() + "marry/Marry.obj", getAssetPath() + "marry/", characterVertices);
         loadObj(getAssetPath() + "floor/floor.obj", getAssetPath() + "floor/", floorVertices);
-        createVertexBuffer();
+        createVertexBuffer(characterVertices, characterVertBuffer);
+        createVertexBuffer(floorVertices, floorVertBuffer);
         createUniformBuffers();
         createDescriptorSetLayout();
-        createTextureImage();
+        createTextureImage(getAssetPath() + "marry/MC003_Kozakura_Mari.png", textures.character);
+        createTextureImage(getAssetPath() + "floor/floor.png", textures.floor);
         createDescriptorSets();
         createPipeline();
     }
@@ -700,16 +747,15 @@ public:
     void clear() override {
         device.getDevice().destroyPipelineLayout(pipelineLayout);
         device.getDevice().destroyPipeline(graphicsPipeline);
-        device.getDevice().destroyImageView(texture.view);
-        device.getDevice().destroySampler(texture.sampler);
-        device.getDevice().freeMemory(texture.mem);
-        device.getDevice().destroyImage(texture.image);
+        destroyTexture(textures.floor);
+        destroyTexture(textures.character);
         device.getDevice().destroyDescriptorSetLayout(descriptorSetLayout);
         for (auto i = 0; i < uniformBuffers.size(); i++) {
             device.getDevice().unmapMemory(uniformBuffers[i].mem);
             uniformBuffers[i].clear(device);
         }
-        vertexBuffer.clear(device);
+        characterVertBuffer.clear(device);
+        floorVertBuffer.clear(device);
         // device.getDevice().destroyCommandPool(commandPool);
         Base::clear();
     }
@@ -723,7 +769,7 @@ public:
         // Must delay this to after recreateSwapChain to avoid deadlock
         device.getDevice().resetFences(1, &fences[currentBuffer]);
 
-        buildCommandBuffers();
+        buildCommandBuffer();
 
         camera.update(instance.window);
         updateUniformBuffer(currentBuffer);
