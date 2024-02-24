@@ -618,11 +618,11 @@ private:
             .pDynamicStates = dynamicStates.data()
         };
 
-        vk::PushConstantRange pushConstantRange(
-            vk::ShaderStageFlagBits::eFragment,
-            0,
-            sizeof(uint32_t)
-        );
+        vk::PushConstantRange pushConstantRange {
+            .stageFlags = vk::ShaderStageFlagBits::eFragment,
+            .offset = 0,
+            .size = sizeof(uint32_t)
+        };
 
         vk::PipelineLayoutCreateInfo pipelineLayoutCI{
             .setLayoutCount = 1,
