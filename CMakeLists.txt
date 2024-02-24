@@ -73,5 +73,6 @@ endfunction(buildExample)
 
 buildExample(basicTriangle)
 buildExample(shading)
+buildExample(shadowMapping)
 # buildExample(pcss)
 
