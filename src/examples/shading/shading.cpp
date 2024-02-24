@@ -122,8 +122,7 @@ private:
     bool framebufferResized = false;
 
     vk::DescriptorSetLayout descriptorSetLayout;
-    std::vector<vk::DescriptorSet> descSets_character;
-    std::vector<vk::DescriptorSet> descSets_floor;
+    std::vector<vk::DescriptorSet> descriptorSets;
 
     vk::PipelineLayout pipelineLayout;
     vk::Pipeline graphicsPipeline;
@@ -155,10 +154,7 @@ private:
         uint32_t mipLevels;
     };
 
-    struct Textures {
-        Texture character;
-        Texture floor;
-    } textures;
+    std::vector<Texture> textures;
 
     std::string getShaderPathName() {
         return "shaders/shading/shading";
@@ -188,14 +184,16 @@ private:
     }
 
     void createDescriptorPool() override {
+        textures.resize(2);
         std::vector<vk::DescriptorPoolSize> poolSizes(2);
         poolSizes[0].type = vk::DescriptorType::eUniformBuffer;
-        poolSizes[0].descriptorCount = drawCmdBuffers.size() * 2;
+        poolSizes[0].descriptorCount = drawCmdBuffers.size();
         poolSizes[1].type = vk::DescriptorType::eCombinedImageSampler;
-        poolSizes[1].descriptorCount = drawCmdBuffers.size() * 2;
+        // each corresponding to one texture
+        poolSizes[1].descriptorCount = drawCmdBuffers.size() * textures.size();
 
         vk::DescriptorPoolCreateInfo poolInfo{
-            .maxSets = static_cast<uint32_t>(drawCmdBuffers.size()) * 2,
+            .maxSets = static_cast<uint32_t>(drawCmdBuffers.size()),
             .poolSizeCount = static_cast<uint32_t>(poolSizes.size()),
             .pPoolSizes = poolSizes.data()
         };
@@ -211,7 +209,7 @@ private:
 
         vk::DescriptorSetLayoutBinding textureLayoutBinding{};
         textureLayoutBinding.binding = 1;
-        textureLayoutBinding.descriptorCount = 1;
+        textureLayoutBinding.descriptorCount = textures.size();
         textureLayoutBinding.descriptorType = vk::DescriptorType::eCombinedImageSampler;
         textureLayoutBinding.stageFlags = vk::ShaderStageFlagBits::eFragment;
 
@@ -226,30 +224,30 @@ private:
 
     void createDescriptorSets() {
         std::vector<vk::DescriptorSetLayout> setLayouts(drawCmdBuffers.size(), descriptorSetLayout);
-        descSets_character.reserve(setLayouts.size());
-        descSets_floor.reserve(setLayouts.size());
         vk::DescriptorSetAllocateInfo descriptorSetAI{
             .descriptorPool = descriptorPool,
             .descriptorSetCount = static_cast<uint32_t>(setLayouts.size()),
             .pSetLayouts = setLayouts.data()
         };
-        descSets_character = device.getDevice().allocateDescriptorSets(descriptorSetAI);
-        descSets_floor = device.getDevice().allocateDescriptorSets(descriptorSetAI);
-
+        descriptorSets = device.getDevice().allocateDescriptorSets(descriptorSetAI);
+        std::vector<vk::DescriptorImageInfo> imageInfos(textures.size());
+        for (int i = 0; i < textures.size(); i++) {
+            imageInfos[i] = {
+                .sampler = textures[i].sampler,
+                .imageView = textures[i].view,
+                .imageLayout = textures[i].imageLayout
+            };
+        }
+        
         for (size_t i = 0; i < drawCmdBuffers.size(); i++) {
             vk::DescriptorBufferInfo bufferInfo{};
             bufferInfo.buffer = uniformBuffers[i].buffer;
             bufferInfo.offset = 0;
             bufferInfo.range = sizeof(UniformBufferObject);
 
-            vk::DescriptorImageInfo imageInfo{};
-            imageInfo.imageLayout = textures.character.imageLayout;
-            imageInfo.imageView = textures.character.view;
-            imageInfo.sampler = textures.character.sampler;
-
             std::array<vk::WriteDescriptorSet, 2> descriptorWrites{};
             descriptorWrites[0] = {
-                .dstSet = descSets_character[i],
+                .dstSet = descriptorSets[i],
                 .dstBinding = 0,
                 .dstArrayElement = 0,
                 .descriptorCount = 1,
@@ -258,22 +256,14 @@ private:
                 .pBufferInfo = &bufferInfo
             };
             descriptorWrites[1] = {
-                .dstSet = descSets_character[i],
+                .dstSet = descriptorSets[i],
                 .dstBinding = 1,
                 .dstArrayElement = 0,
-                .descriptorCount = 1,
+                .descriptorCount = static_cast<uint32_t>(imageInfos.size()),
                 .descriptorType = vk::DescriptorType::eCombinedImageSampler,
-                .pImageInfo = &imageInfo,
+                .pImageInfo = imageInfos.data(),
                 .pBufferInfo = nullptr
             };
-            device.getDevice().updateDescriptorSets(
-                static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
-
-            imageInfo.imageLayout = textures.floor.imageLayout;
-            imageInfo.imageView = textures.floor.view;
-            imageInfo.sampler = textures.floor.sampler;
-            descriptorWrites[0].dstSet = descSets_floor[i];
-            descriptorWrites[1].dstSet = descSets_floor[i];
             device.getDevice().updateDescriptorSets(
                 static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
         }
@@ -627,10 +617,17 @@ private:
             .pDynamicStates = dynamicStates.data()
         };
 
+        vk::PushConstantRange pushConstantRange(
+            vk::ShaderStageFlagBits::eFragment,
+            0,
+            sizeof(uint32_t)
+        );
+
         vk::PipelineLayoutCreateInfo pipelineLayoutCI{
             .setLayoutCount = 1,
             .pSetLayouts = &descriptorSetLayout,
-            .pushConstantRangeCount = 0
+            .pushConstantRangeCount = 1,
+            .pPushConstantRanges = &pushConstantRange
         };
 
         pipelineLayout = device.getDevice().createPipelineLayout(pipelineLayoutCI);
@@ -709,14 +706,15 @@ private:
 
         vk::Buffer vertexBuffers[] = { characterVertBuffer.buffer };
         vk::DeviceSize offsets[] = { 0 };
-        commandBuffer.bindVertexBuffers(0, vertexBuffers, offsets);
 
-        commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 0, 1, &descSets_character[currentBuffer], 0, nullptr);
+        commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 0, 1, &descriptorSets[currentBuffer], 0, nullptr);
+        commandBuffer.bindVertexBuffers(0, vertexBuffers, offsets);
+        commandBuffer.pushConstants<uint32_t>(pipelineLayout, vk::ShaderStageFlagBits::eFragment, 0, (uint32_t)0);
         commandBuffer.draw(characterVertices.size(), 1, 0, 0);
 
         vertexBuffers[0] = floorVertBuffer.buffer;
         commandBuffer.bindVertexBuffers(0, vertexBuffers, offsets);
-        commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 0, 1, &descSets_floor[currentBuffer], 0, nullptr);
+        commandBuffer.pushConstants<uint32_t>(pipelineLayout, vk::ShaderStageFlagBits::eFragment, 0, (uint32_t)1);
         commandBuffer.draw(floorVertices.size(), 1, 0, 0);
 
         commandBuffer.endRenderPass();
@@ -738,8 +736,8 @@ public:
         createVertexBuffer(floorVertices, floorVertBuffer);
         createUniformBuffers();
         createDescriptorSetLayout();
-        createTextureImage(getAssetPath() + "marry/MC003_Kozakura_Mari.png", textures.character);
-        createTextureImage(getAssetPath() + "floor/floor.png", textures.floor);
+        createTextureImage(getAssetPath() + "marry/MC003_Kozakura_Mari.png", textures[0]);
+        createTextureImage(getAssetPath() + "floor/floor.png", textures[1]);
         createDescriptorSets();
         createPipeline();
     }
@@ -747,8 +745,8 @@ public:
     void clear() override {
         device.getDevice().destroyPipelineLayout(pipelineLayout);
         device.getDevice().destroyPipeline(graphicsPipeline);
-        destroyTexture(textures.floor);
-        destroyTexture(textures.character);
+        destroyTexture(textures[1]);
+        destroyTexture(textures[0]);
         device.getDevice().destroyDescriptorSetLayout(descriptorSetLayout);
         for (auto i = 0; i < uniformBuffers.size(); i++) {
             device.getDevice().unmapMemory(uniformBuffers[i].mem);
