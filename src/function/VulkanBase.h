@@ -125,6 +125,8 @@ public:
 	*/
 	virtual void clear();
 
+	virtual ~Base() = default;
+
 };
 
 //template<typename T>
