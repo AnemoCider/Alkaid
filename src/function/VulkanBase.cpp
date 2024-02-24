@@ -165,7 +165,7 @@ void Base::presentFrame() {
 	try {
 		result = graphicsQueue.presentKHR(&presentInfo);
 	}
-	catch (const vk::OutOfDateKHRError& e) {
+	catch (const vk::OutOfDateKHRError&) {
 		result = vk::Result::eErrorOutOfDateKHR;
 	}
 	if (result == vk::Result::eErrorOutOfDateKHR || result == vk::Result::eSuboptimalKHR) {
@@ -201,9 +201,9 @@ void Base::destroySyncObjects() {
 void Base::createDescriptorPool() {
 	std::vector<vk::DescriptorPoolSize> poolSizes(2);
 	poolSizes[0].type = vk::DescriptorType::eUniformBuffer;
-	poolSizes[0].descriptorCount = drawCmdBuffers.size();
+	poolSizes[0].descriptorCount = static_cast<uint32_t>(drawCmdBuffers.size());
 	poolSizes[1].type = vk::DescriptorType::eCombinedImageSampler;
-	poolSizes[1].descriptorCount = drawCmdBuffers.size();
+	poolSizes[1].descriptorCount = static_cast<uint32_t>(drawCmdBuffers.size());
 
 	vk::DescriptorPoolCreateInfo poolInfo {
 		.maxSets = static_cast<uint32_t>(drawCmdBuffers.size()),

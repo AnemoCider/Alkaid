@@ -19,7 +19,7 @@ namespace vki {
     }
 
     void Camera::move(GLFWwindow* window) {
-        float currentFrame = glfwGetTime();
+        float currentFrame = static_cast<float>(glfwGetTime());
         deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;
         glm::vec3 moveDir{ 0.0f, 0.0f, 0.0f };
@@ -59,7 +59,7 @@ namespace vki {
         move(window);
     }
 
-    void Camera::zoomIn(double scrollOffset) {
+    void Camera::zoomIn(float scrollOffset) {
         zoom -= scrollOffset * 5.0f;
         if (zoom < 20.0f) zoom = 20.0f;
         if (zoom > 90.0f) zoom = 90.0f;
@@ -74,7 +74,7 @@ namespace vki {
         firstMouse = true;
     }
 
-    void Camera::mouseDrag(double xpos, double ypos) {
+    void Camera::mouseDrag(float xpos, float ypos) {
         if (!inDrag) return;
         if (firstMouse) // initially set to true
         {
@@ -88,7 +88,6 @@ namespace vki {
 
         lastX = xpos;
         lastY = ypos;
-
 
         xoffset *= sensitivity;
         yoffset *= sensitivity;

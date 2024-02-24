@@ -33,12 +33,13 @@ struct Vertex {
 std::vector<Vertex> floorVertices = {};
 std::vector<Vertex> characterVertices = {};
 
-struct UniformBufferObject {
-    alignas(16) glm::mat4 model;
-    alignas(16) glm::mat4 view;
-    alignas(16) glm::mat4 proj;
-    alignas(16) glm::mat3 normalRot;
-    alignas(16) glm::mat4 lightSpace;
+struct alignas(16) UniformBufferObject {
+     glm::mat4 model;
+     glm::mat4 view;
+     glm::mat4 proj;
+     glm::mat4 normalRot;
+     glm::vec4 lightPos;
+     glm::vec4 viewPos;
 };
 
 void loadObj(const std::string& inputfile, const std::string matPath, std::vector<Vertex>& data) {
@@ -169,7 +170,7 @@ private:
     }
     static void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
         auto app = reinterpret_cast<Example*>(glfwGetWindowUserPointer(window));
-        app->camera.zoomIn(yoffset);
+        app->camera.zoomIn(static_cast<float>(yoffset));
     }
     static void mouse_button_callback(GLFWwindow* window, int button, int action, int mods) {
         auto app = reinterpret_cast<Example*>(glfwGetWindowUserPointer(window));
@@ -180,17 +181,17 @@ private:
     }
     static void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
         auto app = reinterpret_cast<Example*>(glfwGetWindowUserPointer(window));
-        app->camera.mouseDrag(xpos, ypos);
+        app->camera.mouseDrag(static_cast<float>(xpos), static_cast<float>(ypos));
     }
 
     void createDescriptorPool() override {
         textures.resize(2);
         std::vector<vk::DescriptorPoolSize> poolSizes(2);
         poolSizes[0].type = vk::DescriptorType::eUniformBuffer;
-        poolSizes[0].descriptorCount = drawCmdBuffers.size();
+        poolSizes[0].descriptorCount = static_cast<uint32_t>(drawCmdBuffers.size());
         poolSizes[1].type = vk::DescriptorType::eCombinedImageSampler;
         // each corresponding to one texture
-        poolSizes[1].descriptorCount = drawCmdBuffers.size() * textures.size();
+        poolSizes[1].descriptorCount = static_cast<uint32_t>(drawCmdBuffers.size() * textures.size());
 
         vk::DescriptorPoolCreateInfo poolInfo{
             .maxSets = static_cast<uint32_t>(drawCmdBuffers.size()),
@@ -209,7 +210,7 @@ private:
 
         vk::DescriptorSetLayoutBinding textureLayoutBinding{};
         textureLayoutBinding.binding = 1;
-        textureLayoutBinding.descriptorCount = textures.size();
+        textureLayoutBinding.descriptorCount = static_cast<uint32_t>(textures.size());
         textureLayoutBinding.descriptorType = vk::DescriptorType::eCombinedImageSampler;
         textureLayoutBinding.stageFlags = vk::ShaderStageFlagBits::eFragment;
 
@@ -660,6 +661,8 @@ private:
         ubo.normalRot = glm::mat3(glm::transpose(glm::inverse(ubo.model)));
         ubo.view = camera.view();
         ubo.proj = camera.projection((float)instance.width, (float)instance.height);
+        ubo.lightPos = { 2.0f, 2.0f, 2.0f, 0.0f};
+        ubo.viewPos = { camera.position, 0.0f };
         // glm is originally for OpenGL, whose y coord of the clip space is inverted
         ubo.proj[1][1] *= -1;
         memcpy(uniformBuffers[frame].mapped, &ubo, sizeof(ubo));
@@ -710,12 +713,12 @@ private:
         commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 0, 1, &descriptorSets[currentBuffer], 0, nullptr);
         commandBuffer.bindVertexBuffers(0, vertexBuffers, offsets);
         commandBuffer.pushConstants<uint32_t>(pipelineLayout, vk::ShaderStageFlagBits::eFragment, 0, (uint32_t)0);
-        commandBuffer.draw(characterVertices.size(), 1, 0, 0);
+        commandBuffer.draw(static_cast<uint32_t>(characterVertices.size()), 1, 0, 0);
 
         vertexBuffers[0] = floorVertBuffer.buffer;
         commandBuffer.bindVertexBuffers(0, vertexBuffers, offsets);
         commandBuffer.pushConstants<uint32_t>(pipelineLayout, vk::ShaderStageFlagBits::eFragment, 0, (uint32_t)1);
-        commandBuffer.draw(floorVertices.size(), 1, 0, 0);
+        commandBuffer.draw(static_cast<uint32_t>(floorVertices.size()), 1, 0, 0);
 
         commandBuffer.endRenderPass();
         commandBuffer.end();
@@ -760,12 +763,14 @@ public:
 
     void render() override {
         static int count = 0;
-        device.getDevice().waitForFences(1, &fences[currentBuffer], VK_TRUE, UINT64_MAX);
+        auto result = device.getDevice().waitForFences(1, &fences[currentBuffer], VK_TRUE, UINT64_MAX);
+        assert(result == vk::Result::eSuccess);
         Base::prepareFrame();
 
         // Set fence to unsignaled
         // Must delay this to after recreateSwapChain to avoid deadlock
-        device.getDevice().resetFences(1, &fences[currentBuffer]);
+        result = device.getDevice().resetFences(1, &fences[currentBuffer]);
+        assert(result == vk::Result::eSuccess);
 
         buildCommandBuffer();
 

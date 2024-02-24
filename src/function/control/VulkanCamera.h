@@ -38,12 +38,12 @@ namespace vki {
 
         void update(GLFWwindow* window);
 
-        void zoomIn(double scrollOffset);
+        void zoomIn(float scrollOffset);
 
         void startDrag();
 
         void disableDrag();
 
-        void mouseDrag(double xpos, double ypos);
+        void mouseDrag(float xpos, float ypos);
     };
 };
