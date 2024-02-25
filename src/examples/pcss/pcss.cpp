@@ -43,6 +43,7 @@ struct alignas(16) UniformBufferObject {
      glm::vec4 lightPos;
      glm::vec4 viewPos;
      glm::mat4 lightVP;
+     glm::vec4 lightFov;
 };
 
 struct alignas(16) LightUbo {
@@ -883,9 +884,10 @@ private:
     }
 
     void updateUniformBuffer(uint32_t frame) {
-        light.position = { 10.0f, 15.0f, 10.0f};
+        light.position = { 10.0f, 13.0f, 10.0f};
         light.zoom = 20.0f;
-        /*camera.position = light.position;
+        // fix camera position for comparison
+        /*camera.position = {-1.0f, 3.0f, 5.0f};
         camera.front = glm::normalize(glm::vec3(0.0f, 1.5f, 0.0f) - camera.position);*/
         UniformBufferObject ubo{};
         ubo.model = glm::mat4(1.0f);
@@ -894,6 +896,7 @@ private:
         ubo.proj = camera.projection((float)instance.width, (float)instance.height);
         ubo.lightPos = { light.position, 1.0f };
         ubo.viewPos = { camera.position, 1.0f };
+        ubo.lightFov = {light.zoom / 60.0f, 0.0f, 0.0f, 0.0f};
         // glm is originally for OpenGL, whose y coord of the clip space is inverted
         ubo.proj[1][1] *= -1;
 

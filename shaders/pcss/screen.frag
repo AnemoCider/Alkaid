@@ -17,15 +17,52 @@ layout(push_constant) uniform PushConstants {
     uint objectID;
 } pc;
 
+// shadow map resolution:
+const float unit = 1.0 / 2048.0;
+const float lightRadius = 5.0f;
+
+// return -1 if fully lit
+float getAvgBlockerDepth(vec3 coord) {
+    int count = 0;
+    float sum = 0;
+    for (int i = -2; i <= 2; i++) {
+        for (int j = -2; j <= 2; j++) {
+            if (texture(shadowSampler, coord.xy + vec2(i * unit, j * unit)).r < coord.z) {
+                count++;
+                sum += texture(shadowSampler, coord.xy).r;
+            }
+        }
+    }
+    if (count == 0) {
+        return -1.0;
+    } else {
+        return sum / count;
+    }
+}
+
 
 layout(location = 0) out vec4 outColor;
 
 float getShadow(vec4 shadowCoord) {
     vec3 projCoord = shadowCoord.xyz / shadowCoord.w;
     projCoord.xy = projCoord.xy * 0.5 + 0.5;
-    return projCoord.z > (texture(shadowSampler, projCoord.xy).r * 1.01) ? 0.0 : 1.0;
-    /*return texture(shadowSampler, projCoord.xy).r;*/
-    // return projCoord.x;
+    float blockerDepth = getAvgBlockerDepth(projCoord);
+    if (blockerDepth < 0) {
+        return 1.0;
+    } else {
+        int count = 0;
+        int sum = 0;
+        float kernelSize = clamp((projCoord.z - blockerDepth) * lightRadius / 150.0 / blockerDepth, 0.0, 100 * unit);
+        for (float i = -kernelSize; i <= kernelSize; i += unit) {
+            for (float j = -kernelSize; j <= kernelSize; j += unit) {
+                count++;
+                if (projCoord.z <= texture(shadowSampler, projCoord.xy + vec2(i, j)).r) {
+                    sum++;
+               }
+            }
+        }
+        return float(sum) / count;
+    }
 }
 
 
@@ -40,5 +77,4 @@ void main() {
             pow(max(dot(halfDir, normal), 0.0), shininess) * specular * 2.0
             ) / distanceSquare * 100.0 + 0.1, 0.0, 1.0), 1.0)
         * getShadow(shadowCoord);
-    // outColor = vec4(vec3(getShadow(shadowCoord).r), 1.0);
 }
