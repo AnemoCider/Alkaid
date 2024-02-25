@@ -225,7 +225,7 @@ private:
         poolSizes[0].descriptorCount = static_cast<uint32_t>(drawCmdBuffers.size() * 2);
         poolSizes[1].type = vk::DescriptorType::eCombinedImageSampler;
         // each corresponding to one texture, plus one shadowMap
-        poolSizes[1].descriptorCount = static_cast<uint32_t>(drawCmdBuffers.size() * textures.size() + 1);
+        poolSizes[1].descriptorCount = static_cast<uint32_t>(drawCmdBuffers.size() * (textures.size() + 1));
 
         vk::DescriptorPoolCreateInfo poolInfo{
             .maxSets = static_cast<uint32_t>(drawCmdBuffers.size() * 2),
@@ -987,8 +987,8 @@ private:
             imageMemoryBarrier
         );
 
-        clearValues[0].color = vk::ClearColorValue(std::array<float, 4>{{0.0f, 0.0f, 0.0f, 1.0f}});
-        clearValues[1].depthStencil = vk::ClearDepthStencilValue(1.0f, 0);
+        clearValues[0].color.setFloat32({0.0f, 0.0f, 0.0f, 1.0f});
+        clearValues[1].depthStencil = vk::ClearDepthStencilValue({1.0f, 0});
 
         renderPassBeginInfo.setRenderPass(renderPass)
             .setFramebuffer(frameBuffers[currentBuffer])
