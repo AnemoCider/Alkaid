@@ -46,9 +46,7 @@ struct alignas(16) UniformBufferObject {
 };
 
 struct alignas(16) LightUbo {
-    glm::mat4 model;
-    glm::mat4 view;
-    glm::mat4 proj;
+    glm::mat4 lightMVP;
 };
 
 
@@ -172,7 +170,7 @@ private:
 
     vki::Camera light;
     Texture shadowMap;
-    vk::Format shadowMapFormat = vk::Format::eD32Sfloat;
+    vk::Format shadowMapFormat = vk::Format::eD16Unorm;
 
     vk::Framebuffer offscreenFrameBuffer;
     vk::RenderPass offscreenPass;
@@ -409,23 +407,18 @@ private:
         shadowMap.imageLayout = vk::ImageLayout::eDepthStencilAttachmentOptimal;
 
         vk::SamplerCreateInfo samplerCI{
-            .magFilter = vk::Filter::eLinear,
-            .minFilter = vk::Filter::eLinear,
+            .magFilter = vk::Filter::eNearest,
+            .minFilter = vk::Filter::eNearest,
             .mipmapMode = vk::SamplerMipmapMode::eLinear,
-            .addressModeU = vk::SamplerAddressMode::eClampToBorder,
+            .addressModeU = vk::SamplerAddressMode::eClampToEdge,
             .addressModeV = vk::SamplerAddressMode::eClampToBorder,
             .addressModeW = vk::SamplerAddressMode::eClampToBorder,
             .mipLodBias = 0.0f,
-            // Enable anisotropic filtering
-            // This feature is optional, so we must check if it's supported on the device
-            // TODO: Check it
-            // Use max. level of anisotropy for this example
-            .anisotropyEnable = vk::True,
-            .maxAnisotropy = instance.supports.properties.limits.maxSamplerAnisotropy,
-            .compareOp = vk::CompareOp::eNever,
+            .anisotropyEnable = vk::False,
+            .maxAnisotropy = 1.0f,
             .minLod = 0.0f,
             // Set max level-of-detail to mip level count of the texture
-            .maxLod = 1,
+            .maxLod = 1.0f,
             .borderColor = vk::BorderColor::eFloatOpaqueWhite
         };
 
@@ -450,8 +443,6 @@ private:
         //    imageViewCI.subresourceRange.aspectMask |= vk::ImageAspectFlagBits::eStencil;
         //}
         shadowMap.view = device.getDevice().createImageView(imageViewCI);
-        
-
     }
 
     void createTextureImage(const std::string& file, Texture& texture) {
@@ -893,6 +884,7 @@ private:
 
     void updateUniformBuffer(uint32_t frame) {
         light.position = { 5.0f, 5.0f, 5.0f};
+        light.zoom = 100.f;
         /*camera.position = light.position;
         camera.front = glm::normalize(glm::vec3(0.0f, 1.5f, 0.0f) - camera.position);*/
         UniformBufferObject ubo{};
@@ -905,14 +897,17 @@ private:
         // glm is originally for OpenGL, whose y coord of the clip space is inverted
         ubo.proj[1][1] *= -1;
 
-        LightUbo lightUbo{
-            .model = glm::mat4(1.0f),
-            .view = glm::lookAt(light.position, {0.0f, 1.5f, 0.0f}, light.up),
-            .proj = light.projection((float)shadowMapWidth, (float)shadowMapHeight, 1.0f, 45.0f)
-        };
-        lightUbo.proj[1][1] *= -1;
+        auto proj = light.projection((float)shadowMapWidth, (float)shadowMapHeight, 1.0f, 45.0f);
+        proj[1][1] *= -1;
 
-        ubo.lightVP = lightUbo.proj * lightUbo.view;
+        LightUbo lightUbo{
+            .lightMVP = 
+                proj
+                * glm::lookAt(light.position, {0.0f, 1.5f, 0.0f}, light.up) 
+                * glm::mat4(1.0f)
+        };
+
+        ubo.lightVP = lightUbo.lightMVP;
         memcpy(uniformBuffers[frame].mapped, &ubo, sizeof(ubo));
         memcpy(lightUbos[frame].mapped, &lightUbo, sizeof(lightUbo));
     }

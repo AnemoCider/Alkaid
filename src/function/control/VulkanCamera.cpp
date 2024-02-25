@@ -14,7 +14,7 @@ namespace vki {
     }
 
     glm::mat4 Camera::projection(float width, float height) {
-        projectionMatrix = glm::perspective(glm::radians(zoom), (float)width / (float)height, 0.1f, 10.0f);
+        projectionMatrix = glm::perspective(glm::radians(zoom), (float)width / (float)height, 0.1f, 50.0f);
         return projectionMatrix;
     }
 

@@ -28,12 +28,6 @@ layout(location = 6) out vec3 fragLightPos;
 layout(location = 7) out vec3 fragViewPos;
 layout(location = 8) out vec4 fragShadowCoord;
 
-const mat4 biasMat = mat4( 
-	0.5, 0.0, 0.0, 0.0,
-	0.0, 0.5, 0.0, 0.0,
-	0.0, 0.0, 1.0, 0.0,
-	0.5, 0.5, 0.0, 1.0 );
-
 void main() {
     gl_Position = ubo.proj * ubo.view * ubo.model * vec4(inPosition, 1.0);
     fragNormal = (ubo.normalRot * vec4(inNormal, 1.0)).xyz;
@@ -49,5 +43,5 @@ void main() {
     }
     fragLightPos = ubo.lightPos.xyz;
     fragViewPos = ubo.viewPos.xyz;
-    fragShadowCoord = biasMat * ubo.lightVP * ubo.model * vec4(inPosition, 1.0);
+    fragShadowCoord = ubo.lightVP * ubo.model * vec4(inPosition, 1.0);
 }
