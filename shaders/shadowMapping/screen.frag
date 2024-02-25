@@ -11,6 +11,7 @@ layout(location = 4) in vec3 specular;
 layout(location = 5) in float shininess;
 layout(location = 6) in vec3 lightWorldPos;
 layout(location = 7) in vec3 viewPos;
+layout(location = 8) in vec4 shadowCoord;
 
 layout(push_constant) uniform PushConstants {
     uint objectID;
@@ -25,10 +26,17 @@ void main() {
     float distanceSquare = dot(fragToLight, fragToLight);
     vec3 lightDir = normalize(fragToLight);
     vec3 halfDir = normalize(lightDir + normalize(viewPos - worldPos));
-    outColor = vec4(texture(texSampler[pc.objectID], texCoord).xyz *
+
+    float shadow = 1.0;
+    if (shadowCoord.z > texture(shadowSampler, shadowCoord.xy).r) {
+        shadow = 0.1;
+    }
+    /* outColor = vec4(texture(texSampler[pc.objectID], texCoord).xyz *
         clamp((
-            max(dot(normalize(normal), lightDir), 0.0) * diffuse + 
+            max(dot(normalize(normal), lightDir), 0.0) * diffuse +
             pow(max(dot(halfDir, normal), 0.0), shininess) * specular * 2.0
-        ) / distanceSquare * 3.0 + 0.1, 0.0, 1.0), 1.0);
+            ) / distanceSquare * 3.0 + 0.1, 0.0, 1.0), 1.0)
+        * shadow; */
+    outColor = vec4(vec3(texture(shadowSampler, shadowCoord.xy).r), 1.0);
     // outColor = texture(texSampler[pc.objectID], texCoord);
 }

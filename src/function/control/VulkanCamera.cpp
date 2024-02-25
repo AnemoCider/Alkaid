@@ -18,6 +18,11 @@ namespace vki {
         return projectionMatrix;
     }
 
+    glm::mat4 Camera::projection(float width, float height, float zNear, float zFar) {
+        projectionMatrix = glm::perspective(glm::radians(zoom), (float)width / (float)height, zNear, zFar);
+        return projectionMatrix;
+    }
+
     void Camera::move(GLFWwindow* window) {
         float currentFrame = static_cast<float>(glfwGetTime());
         deltaTime = currentFrame - lastFrame;

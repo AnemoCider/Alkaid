@@ -13,17 +13,17 @@ namespace vki {
         Camera() = default;
         Camera(float xPos, float yPos, float zPos);
 
-        glm::vec3 position;
-        glm::vec3 up;
-        glm::vec3 front;
+        glm::vec3 position = { 0.0f, 0.0f, 0.0f };
+        glm::vec3 up = { 0.0f, 1.0f, 0.0f };
+        glm::vec3 front = { 1.0f, 0.0f, 0.0f };
         glm::vec3 right;
         float yaw;
         float pitch;
-        float moveSpeed;
-        float sensitivity;
-        float zoom;
-        glm::mat4 viewMatrix;
-        glm::mat4 projectionMatrix;
+        float moveSpeed = 2.5f;
+        float sensitivity = 0.1f;
+        float zoom = 45.0f;
+        glm::mat4 viewMatrix = glm::mat4(1.0f);
+        glm::mat4 projectionMatrix = glm::mat4(1.0f);
 
         // User is dragging the cursor
         bool inDrag = false;
@@ -33,6 +33,8 @@ namespace vki {
         glm::mat4 view();
 
         glm::mat4 projection(float width, float height);
+
+        glm::mat4 projection(float width, float height, float zNear, float zFar);
 
         void move(GLFWwindow* window);
 

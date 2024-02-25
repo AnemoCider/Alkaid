@@ -42,6 +42,7 @@ struct alignas(16) UniformBufferObject {
      glm::mat4 normalRot;
      glm::vec4 lightPos;
      glm::vec4 viewPos;
+     glm::mat4 lightVP;
 };
 
 struct alignas(16) LightUbo {
@@ -296,7 +297,7 @@ private:
         vk::DescriptorImageInfo shadowMapInfo{
             .sampler = shadowMap.sampler,
             .imageView = shadowMap.view,
-            .imageLayout = vk::ImageLayout::eDepthAttachmentStencilReadOnlyOptimal
+            .imageLayout = vk::ImageLayout::eDepthStencilReadOnlyOptimal
         };
         
         for (size_t i = 0; i < drawCmdBuffers.size(); i++) {
@@ -411,9 +412,9 @@ private:
             .magFilter = vk::Filter::eLinear,
             .minFilter = vk::Filter::eLinear,
             .mipmapMode = vk::SamplerMipmapMode::eLinear,
-            .addressModeU = vk::SamplerAddressMode::eRepeat,
-            .addressModeV = vk::SamplerAddressMode::eRepeat,
-            .addressModeW = vk::SamplerAddressMode::eRepeat,
+            .addressModeU = vk::SamplerAddressMode::eClampToBorder,
+            .addressModeV = vk::SamplerAddressMode::eClampToBorder,
+            .addressModeW = vk::SamplerAddressMode::eClampToBorder,
             .mipLodBias = 0.0f,
             // Enable anisotropic filtering
             // This feature is optional, so we must check if it's supported on the device
@@ -637,7 +638,7 @@ private:
             .format = shadowMapFormat,
             .samples = vk::SampleCountFlagBits::e1,
             .loadOp = vk::AttachmentLoadOp::eClear,
-            .storeOp = vk::AttachmentStoreOp::eDontCare,
+            .storeOp = vk::AttachmentStoreOp::eStore,
             .stencilLoadOp = vk::AttachmentLoadOp::eDontCare,
             .stencilStoreOp = vk::AttachmentStoreOp::eDontCare,
             .initialLayout = vk::ImageLayout::eUndefined,
@@ -664,14 +665,14 @@ private:
         vk::SubpassDependency dependency {
             .srcSubpass = vk::SubpassExternal,
             .dstSubpass = 0,
-            .srcStageMask =
-                vk::PipelineStageFlagBits::eEarlyFragmentTests | vk::PipelineStageFlagBits::eLateFragmentTests,
+            .srcStageMask = 
+                vk::PipelineStageFlagBits::eFragmentShader,
             .dstStageMask =
-                vk::PipelineStageFlagBits::eEarlyFragmentTests | vk::PipelineStageFlagBits::eLateFragmentTests,
+                vk::PipelineStageFlagBits::eEarlyFragmentTests,
             .srcAccessMask =
-                vk::AccessFlagBits::eDepthStencilAttachmentWrite,
+                vk::AccessFlagBits::eShaderRead,
             .dstAccessMask =
-                vk::AccessFlagBits::eDepthStencilAttachmentRead | vk::AccessFlagBits::eDepthStencilAttachmentWrite,
+                vk::AccessFlagBits::eDepthStencilAttachmentWrite,
         };
 
         vk::RenderPassCreateInfo renderPassCI{
@@ -891,23 +892,28 @@ private:
     }
 
     void updateUniformBuffer(uint32_t frame) {
+        light.position = { 5.0f, 5.0f, 5.0f};
+        /*camera.position = light.position;
+        camera.front = glm::normalize(glm::vec3(0.0f, 1.5f, 0.0f) - camera.position);*/
         UniformBufferObject ubo{};
         ubo.model = glm::mat4(1.0f);
         ubo.normalRot = glm::mat3(glm::transpose(glm::inverse(ubo.model)));
         ubo.view = camera.view();
         ubo.proj = camera.projection((float)instance.width, (float)instance.height);
-        ubo.lightPos = { 2.0f, 2.0f, 2.0f, 0.0f};
-        ubo.viewPos = { camera.position, 0.0f };
+        ubo.lightPos = { light.position, 1.0f };
+        ubo.viewPos = { camera.position, 1.0f };
         // glm is originally for OpenGL, whose y coord of the clip space is inverted
         ubo.proj[1][1] *= -1;
-        memcpy(uniformBuffers[frame].mapped, &ubo, sizeof(ubo));
 
         LightUbo lightUbo{
             .model = glm::mat4(1.0f),
-            .view = light.view(),
-            .proj = light.projection((float)shadowMapWidth, (float)shadowMapHeight)
+            .view = glm::lookAt(light.position, {0.0f, 1.5f, 0.0f}, light.up),
+            .proj = light.projection((float)shadowMapWidth, (float)shadowMapHeight, 1.0f, 45.0f)
         };
         lightUbo.proj[1][1] *= -1;
+
+        ubo.lightVP = lightUbo.proj * lightUbo.view;
+        memcpy(uniformBuffers[frame].mapped, &ubo, sizeof(ubo));
         memcpy(lightUbos[frame].mapped, &lightUbo, sizeof(lightUbo));
     }
 
@@ -926,8 +932,7 @@ private:
         };
 
         std::array<vk::ClearValue, 2> clearValues{};
-        clearValues[0].color.setFloat32({ 0.0f, 0.0f, 0.0f, 1.0f });
-        clearValues[1].depthStencil = { 1.0f, 0 };
+        clearValues[0].depthStencil = { 1.0f, 0 };
 
         renderPassBeginInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
         renderPassBeginInfo.pClearValues = clearValues.data();
@@ -963,10 +968,38 @@ private:
 
         commandBuffer.endRenderPass();
 
+        vk::ImageMemoryBarrier imageMemoryBarrier = {
+            .srcAccessMask = vk::AccessFlagBits::eDepthStencilAttachmentWrite,
+            .dstAccessMask = vk::AccessFlagBits::eShaderRead,
+            .oldLayout = vk::ImageLayout::eDepthStencilAttachmentOptimal,
+            .newLayout = vk::ImageLayout::eDepthStencilReadOnlyOptimal,
+            .image = shadowMap.image,
+            .subresourceRange {
+                .aspectMask = vk::ImageAspectFlagBits::eDepth,
+                .baseMipLevel = 0,
+                .levelCount = 1,
+                .baseArrayLayer = 0,
+                .layerCount = 1,
+            }
+        };
+
+        commandBuffer.pipelineBarrier(
+            vk::PipelineStageFlagBits::eEarlyFragmentTests | vk::PipelineStageFlagBits::eLateFragmentTests,
+            vk::PipelineStageFlagBits::eFragmentShader,
+            vk::DependencyFlags(),
+            nullptr,
+            nullptr,
+            imageMemoryBarrier
+        );
+
+        clearValues[0].color = vk::ClearColorValue(std::array<float, 4>{{0.0f, 0.0f, 0.0f, 1.0f}});
+        clearValues[1].depthStencil = vk::ClearDepthStencilValue(1.0f, 0);
 
         renderPassBeginInfo.setRenderPass(renderPass)
             .setFramebuffer(frameBuffers[currentBuffer])
-            .setRenderArea({ .offset = { 0, 0 }, .extent = {instance.width, instance.height} });
+            .setRenderArea({ .offset = { 0, 0 }, .extent = {instance.width, instance.height} })
+            .setClearValueCount(clearValues.size())
+            .setPClearValues(clearValues.data());
 
         commandBuffer.beginRenderPass(renderPassBeginInfo, vk::SubpassContents::eInline);
         commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, graphicsPipeline);
@@ -986,7 +1019,6 @@ private:
         commandBuffer.draw(static_cast<uint32_t>(floorVertices.size()), 1, 0, 0);
 
         commandBuffer.endRenderPass();
-
 
         commandBuffer.end();
     }

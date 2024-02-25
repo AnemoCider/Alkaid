@@ -7,6 +7,7 @@ layout(binding = 0) uniform UniformBufferObject {
     mat4 normalRot;
     vec4 lightPos;
     vec4 viewPos;
+    mat4 lightVP;
 } ubo;
 
 layout(location = 0) in vec3 inPosition;
@@ -25,6 +26,13 @@ layout(location = 4) out vec3 fragSpecular;
 layout(location = 5) out float fragShininess;
 layout(location = 6) out vec3 fragLightPos;
 layout(location = 7) out vec3 fragViewPos;
+layout(location = 8) out vec4 fragShadowCoord;
+
+const mat4 biasMat = mat4( 
+	0.5, 0.0, 0.0, 0.0,
+	0.0, 0.5, 0.0, 0.0,
+	0.0, 0.0, 1.0, 0.0,
+	0.5, 0.5, 0.0, 1.0 );
 
 void main() {
     gl_Position = ubo.proj * ubo.view * ubo.model * vec4(inPosition, 1.0);
@@ -41,4 +49,5 @@ void main() {
     }
     fragLightPos = ubo.lightPos.xyz;
     fragViewPos = ubo.viewPos.xyz;
+    fragShadowCoord = biasMat * ubo.lightVP * ubo.model * vec4(inPosition, 1.0);
 }
