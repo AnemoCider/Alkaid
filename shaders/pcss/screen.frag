@@ -52,7 +52,7 @@ float getShadow(vec4 shadowCoord) {
     } else {
         int count = 0;
         int sum = 0;
-        float kernelSize = clamp((projCoord.z - blockerDepth) * lightRadius / 150.0 / blockerDepth, 0.0, 100 * unit);
+        float kernelSize = clamp((projCoord.z - blockerDepth) * lightRadius / 100.0 / blockerDepth, 0.0, 100 * unit);
         for (float i = -kernelSize; i <= kernelSize; i += unit) {
             for (float j = -kernelSize; j <= kernelSize; j += unit) {
                 count++;
