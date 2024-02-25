@@ -883,7 +883,7 @@ private:
     }
 
     void updateUniformBuffer(uint32_t frame) {
-        light.position = { 5.0f, 5.0f, 5.0f};
+        light.position = { 10.0f, 15.0f, 10.0f};
         light.zoom = 100.f;
         /*camera.position = light.position;
         camera.front = glm::normalize(glm::vec3(0.0f, 1.5f, 0.0f) - camera.position);*/
@@ -897,7 +897,7 @@ private:
         // glm is originally for OpenGL, whose y coord of the clip space is inverted
         ubo.proj[1][1] *= -1;
 
-        auto proj = light.projection((float)shadowMapWidth, (float)shadowMapHeight, 1.0f, 45.0f);
+        auto proj = light.projection((float)shadowMapWidth, (float)shadowMapHeight, 10.0f, 200.0f);
         proj[1][1] *= -1;
 
         LightUbo lightUbo{
