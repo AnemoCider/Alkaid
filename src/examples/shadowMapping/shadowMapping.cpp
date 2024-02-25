@@ -884,7 +884,7 @@ private:
 
     void updateUniformBuffer(uint32_t frame) {
         light.position = { 10.0f, 15.0f, 10.0f};
-        light.zoom = 100.f;
+        light.zoom = 20.0f;
         /*camera.position = light.position;
         camera.front = glm::normalize(glm::vec3(0.0f, 1.5f, 0.0f) - camera.position);*/
         UniformBufferObject ubo{};
