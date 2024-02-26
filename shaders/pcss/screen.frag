@@ -19,8 +19,8 @@ layout(push_constant) uniform PushConstants {
 
 // shadow map resolution:
 // set the step size to be larger to improve efficiency
-const float unit = 4.0 / 2048.0;
-const float lightRadius = 50.0f;
+const float unit = 2.0 / 2048.0;
+const float lightRadius = 5.0f;
 
 // return -1 if fully lit
 float getAvgBlockerDepth(vec3 coord) {

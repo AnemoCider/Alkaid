@@ -50,7 +50,7 @@ void main() {
     // 512 here is experimental value
     fragShadowCoord = ubo.lightVP * ubo.model * vec4(
         inPosition + normalizedNormal * length(vecToLight) * ubo.lightFov.x / 256.0 * 
-        sqrt(1 - pow(dot(normalizedNormal, normalize(vecToLight)), 2))
+        (1 - dot(normalizedNormal, normalize(vecToLight)))
         , 1.0);
     // fragShadowCoord = ubo.lightVP * ubo.model * vec4(inPosition, 1.0);
 }
