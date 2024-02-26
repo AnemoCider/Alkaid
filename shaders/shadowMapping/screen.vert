@@ -8,6 +8,7 @@ layout(binding = 0) uniform UniformBufferObject {
     vec4 lightPos;
     vec4 viewPos;
     mat4 lightVP;
+    vec4 lightFov;
 } ubo;
 
 layout(location = 0) in vec3 inPosition;
@@ -43,5 +44,10 @@ void main() {
     }
     fragLightPos = ubo.lightPos.xyz;
     fragViewPos = ubo.viewPos.xyz;
-    fragShadowCoord = ubo.lightVP * ubo.model * vec4(inPosition, 1.0);
+    vec3 normalizedNormal = normalize(inNormal);
+    vec3 vecToLight = ubo.lightPos.xyz - inPosition;
+    fragShadowCoord = ubo.lightVP * ubo.model * vec4(
+        inPosition + normalizedNormal * length(vecToLight) * ubo.lightFov.x / 256.0 * 
+        sqrt(1 - pow(dot(normalizedNormal, normalize(vecToLight)), 2))
+        , 1.0);
 }

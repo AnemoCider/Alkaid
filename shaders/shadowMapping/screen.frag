@@ -23,7 +23,7 @@ layout(location = 0) out vec4 outColor;
 float getShadow(vec4 shadowCoord) {
     vec3 projCoord = shadowCoord.xyz / shadowCoord.w;
     projCoord.xy = projCoord.xy * 0.5 + 0.5;
-    return projCoord.z > (texture(shadowSampler, projCoord.xy).r * 1.01) ? 0.0 : 1.0;
+    return projCoord.z > (texture(shadowSampler, projCoord.xy).r) ? 0.0 : 1.0;
     /*return texture(shadowSampler, projCoord.xy).r;*/
     // return projCoord.x;
 }
@@ -38,7 +38,7 @@ void main() {
         clamp((
             max(dot(normalize(normal), lightDir), 0.0) * diffuse +
             pow(max(dot(halfDir, normal), 0.0), shininess) * specular * 2.0
-            ) / distanceSquare * 50.0 + 0.1, 0.0, 1.0), 1.0)
+            ) / distanceSquare * 300.0 + 0.1, 0.0, 1.0), 1.0)
         * getShadow(shadowCoord);
     // outColor = vec4(vec3(getShadow(shadowCoord).r), 1.0);
 }
