@@ -75,4 +75,5 @@ buildExample(basicTriangle)
 buildExample(shading)
 buildExample(shadowMapping)
 buildExample(pcss)
+buildExample(cubeMap)
 
