@@ -17,7 +17,6 @@ void Base::prepare() {
 	swapChain.setDevice(&device);
 	swapChain.setInstance(&instance);
 	swapChain.init();
-
 	createRenderPass();
 	createDepthStencil();
 	setupFrameBuffer();

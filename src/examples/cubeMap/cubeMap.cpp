@@ -7,6 +7,9 @@
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "tiny_gltf.h"
 
+#include <ktx.h>
+#include <ktxvulkan.h>
+
 #include <memory>
 #include <iostream>
 #include <array>
@@ -25,8 +28,15 @@ struct Vertex {
     glm::vec2 texCoord;
 };
 
+struct CubeVertex {
+    glm::vec3 pos;
+};
+
 std::vector<Vertex> verticesData = {};
 std::vector<uint16_t> indicesData = {};
+
+std::vector<CubeVertex> skyBoxVertices = {};
+std::vector<uint16_t> skyBoxIndices = {};
 
 struct alignas(16) UniformBufferObject {
      glm::mat4 model;
@@ -35,6 +45,11 @@ struct alignas(16) UniformBufferObject {
      glm::mat4 normalRot;
      glm::vec4 lightPos;
      glm::vec4 viewPos;
+};
+
+struct alignas(16) SkyBoxUbo {
+    glm::mat4 view;
+    glm::mat4 proj;
 };
 
 
@@ -47,11 +62,20 @@ private:
     vk::DescriptorSetLayout descriptorSetLayout;
     std::vector<vk::DescriptorSet> descriptorSets;
 
+    vk::DescriptorSetLayout skyBoxDescLayout;
+    std::vector<vk::DescriptorSet> skyBoxDescSets;
+
     vk::PipelineLayout pipelineLayout;
     vk::Pipeline graphicsPipeline;
 
+    vk::PipelineLayout skyBoxPipelineLayout;
+    vk::Pipeline skyBoxPipeline;
+
     vki::Buffer vertexBuffer;
     vki::Buffer indexBuffer;
+
+    vki::Buffer skyBoxVertexBuffer;
+    vki::Buffer skyBoxIndexBuffer;
 
     struct {
         vk::DeviceMemory mem;
@@ -60,6 +84,7 @@ private:
     } indices;
 
     std::vector<vki::UniformBuffer> uniformBuffers;
+    std::vector<vki::UniformBuffer> skyBoxUniformBuffers;
 
     /*struct ShaderData {
         glm::mat4 projectionMatrix;
@@ -76,6 +101,8 @@ private:
         uint32_t width, height;
         uint32_t mipLevels;
     };
+
+    Texture cubeMap;
 
     std::string getAssetPath() {
         return "Vulkan-Assets/";
@@ -114,7 +141,7 @@ private:
         return model;
     }
 
-    void loadAssets() {
+    void loadModel() {
         auto model = loadGlTFModel(getAssetPath() + "models/sphere.gltf");
         // there is only one mesh and one primitive
         // the properties (and their indices)
@@ -156,16 +183,50 @@ private:
             vert.texCoord = glm::make_vec2(&bufferTexCoords[v * 2]);
             verticesData.emplace_back(std::move(vert));
         }
-        // loadCubeMap(getAssetPath() + "textures/cubemap_yokohama_rgba.ktx")
     }
 
+    void loadCube() {
+        auto model = loadGlTFModel(getAssetPath() + "models/cube.gltf");
+        // there is only one mesh and one primitive
+        // the properties (and their indices)
+        auto& primitive = model.meshes[0].primitives[0];
+        const tinygltf::Accessor& indexAccessor = model.accessors[primitive.indices];
+
+        // Indices
+        const tinygltf::BufferView& bufferView = model.bufferViews[indexAccessor.bufferView];
+        const tinygltf::Buffer& buffer = model.buffers[bufferView.buffer];
+        const uint16_t* indicesBuffer = reinterpret_cast<const uint16_t*>(&buffer.data[bufferView.byteOffset + indexAccessor.byteOffset]);
+        skyBoxIndices.insert(skyBoxIndices.end(), indicesBuffer, indicesBuffer + indexAccessor.count);
+
+        // Get the accessor indices for position, normal, and texcoords
+        int posAccessorIndex = primitive.attributes.find("POSITION")->second;
+
+        // Obtain the buffer views corresponding to the accessors
+        const tinygltf::Accessor& posAccessor = model.accessors[posAccessorIndex];
+
+        // Obtain buffer data for positions, normals, and texcoords
+        const tinygltf::BufferView& posView = model.bufferViews[posAccessor.bufferView];
+
+        verticesData.reserve(posAccessor.count);
+
+        const float* bufferPos = reinterpret_cast<const float*>(&(model.buffers[posView.buffer].data[posAccessor.byteOffset + posView.byteOffset]));
+        for (size_t v = 0; v < posAccessor.count; v++) {
+            CubeVertex vert{};
+            vert.pos = glm::vec4(glm::make_vec3(&bufferPos[v * 3]), 1.0f);
+            skyBoxVertices.emplace_back(std::move(vert));
+        }
+    }
+
+
     void createDescriptorPool() override {
-        std::vector<vk::DescriptorPoolSize> poolSizes(1);
+        std::vector<vk::DescriptorPoolSize> poolSizes(2);
         poolSizes[0].type = vk::DescriptorType::eUniformBuffer;
-        poolSizes[0].descriptorCount = static_cast<uint32_t>(drawCmdBuffers.size());
+        poolSizes[0].descriptorCount = static_cast<uint32_t>(drawCmdBuffers.size() * 2);
+        poolSizes[1].type = vk::DescriptorType::eCombinedImageSampler;
+        poolSizes[1].descriptorCount = static_cast<uint32_t>(drawCmdBuffers.size());
 
         vk::DescriptorPoolCreateInfo poolInfo{
-            .maxSets = static_cast<uint32_t>(drawCmdBuffers.size()),
+            .maxSets = static_cast<uint32_t>(drawCmdBuffers.size() * 2),
             .poolSizeCount = static_cast<uint32_t>(poolSizes.size()),
             .pPoolSizes = poolSizes.data()
         };
@@ -173,11 +234,12 @@ private:
     };
 
     void createDescriptorSetLayout() {
-        vk::DescriptorSetLayoutBinding uboLayoutBinding{};
-        uboLayoutBinding.binding = 0;
-        uboLayoutBinding.descriptorCount = 1;
-        uboLayoutBinding.descriptorType = vk::DescriptorType::eUniformBuffer;
-        uboLayoutBinding.stageFlags = vk::ShaderStageFlagBits::eVertex;
+        vk::DescriptorSetLayoutBinding uboLayoutBinding{
+            .binding = 0,
+            .descriptorType = vk::DescriptorType::eUniformBuffer,
+            .descriptorCount = 1,
+            .stageFlags = vk::ShaderStageFlagBits::eVertex
+        };
 
         std::vector<vk::DescriptorSetLayoutBinding> setLayoutBindings{ uboLayoutBinding };
         vk::DescriptorSetLayoutCreateInfo layoutInfo{
@@ -186,11 +248,35 @@ private:
         };
 
         descriptorSetLayout = device.getDevice().createDescriptorSetLayout(layoutInfo, nullptr);
+
+        vk::DescriptorSetLayoutBinding samplerBinding{
+            .binding = 1,
+            .descriptorType = vk::DescriptorType::eCombinedImageSampler,
+            .descriptorCount = 1,
+            .stageFlags = vk::ShaderStageFlagBits::eFragment
+        };
+
+        setLayoutBindings.push_back(samplerBinding);
+        
+        layoutInfo = {
+            .bindingCount = static_cast<uint32_t>(setLayoutBindings.size()),
+            .pBindings = setLayoutBindings.data()
+        };
+
+        skyBoxDescLayout = device.getDevice().createDescriptorSetLayout(layoutInfo, nullptr);
     }
 
     void createDescriptorSets() {
-        std::vector<vk::DescriptorSetLayout> setLayouts(drawCmdBuffers.size(), descriptorSetLayout);
+        std::vector<vk::DescriptorSetLayout> skyBoxSetLayouts(drawCmdBuffers.size(), skyBoxDescLayout);
         vk::DescriptorSetAllocateInfo descriptorSetAI{
+            .descriptorPool = descriptorPool,
+            .descriptorSetCount = static_cast<uint32_t>(skyBoxSetLayouts.size()),
+            .pSetLayouts = skyBoxSetLayouts.data()
+        };
+        skyBoxDescSets = device.getDevice().allocateDescriptorSets(descriptorSetAI);
+
+        std::vector<vk::DescriptorSetLayout> setLayouts(drawCmdBuffers.size(), descriptorSetLayout);
+        descriptorSetAI = {
             .descriptorPool = descriptorPool,
             .descriptorSetCount = static_cast<uint32_t>(setLayouts.size()),
             .pSetLayouts = setLayouts.data()
@@ -199,13 +285,18 @@ private:
         
         for (size_t i = 0; i < drawCmdBuffers.size(); i++) {
             vk::DescriptorBufferInfo bufferInfo{};
-            bufferInfo.buffer = uniformBuffers[i].buffer;
+            bufferInfo.buffer = skyBoxUniformBuffers[i].buffer;
             bufferInfo.offset = 0;
-            bufferInfo.range = sizeof(UniformBufferObject);
+            bufferInfo.range = sizeof(SkyBoxUbo);
 
-            std::array<vk::WriteDescriptorSet, 1> descriptorWrites{};
+            vk::DescriptorImageInfo imageInfo{};
+            imageInfo.imageLayout = cubeMap.imageLayout;
+            imageInfo.imageView = cubeMap.view;
+            imageInfo.sampler = cubeMap.sampler;
+
+            std::array<vk::WriteDescriptorSet, 2> descriptorWrites{};
             descriptorWrites[0] = {
-                .dstSet = descriptorSets[i],
+                .dstSet = skyBoxDescSets[i],
                 .dstBinding = 0,
                 .dstArrayElement = 0,
                 .descriptorCount = 1,
@@ -213,12 +304,27 @@ private:
                 .pImageInfo = nullptr,
                 .pBufferInfo = &bufferInfo
             };
+            descriptorWrites[1] = {
+                .dstSet = skyBoxDescSets[i],
+                .dstBinding = 1,
+                .dstArrayElement = 0,
+                .descriptorCount = 1,
+                .descriptorType = vk::DescriptorType::eCombinedImageSampler,
+                .pImageInfo = &imageInfo,
+                .pBufferInfo = nullptr
+            };
             device.getDevice().updateDescriptorSets(
                 static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
+
+            bufferInfo.setBuffer(uniformBuffers[i].buffer).setRange(sizeof(UniformBufferObject));
+            descriptorWrites[0].setDstSet(descriptorSets[i]).setPBufferInfo(&bufferInfo);
+            device.getDevice().updateDescriptorSets(
+                1, &descriptorWrites[0], 0, nullptr);
         }
     }
 
-    void createVertexBuffer(const std::vector<Vertex>& vertices, vki::Buffer& dstBuffer) {
+    template<typename T>
+    void createVertexBuffer(const std::vector<T>& vertices, vki::Buffer& dstBuffer) {
         vk::DeviceSize bufferSize = sizeof(vertices[0]) * vertices.size();
         vki::StagingBuffer staging{ device, bufferSize };
 
@@ -236,8 +342,8 @@ private:
         staging.clear(device);
     }
 
-    void createIndexBuffer() {
-        vk::DeviceSize bufferSize = sizeof(indicesData[0]) * indicesData.size();
+    void createIndexBuffer(const std::vector<uint16_t>& indices, vki::Buffer& dstBuffer) {
+        vk::DeviceSize bufferSize = sizeof(indices[0]) * indices.size();
         vki::StagingBuffer staging{ device, bufferSize };
 
         void* data;
@@ -246,63 +352,78 @@ private:
         memcpy(data, indicesData.data(), (size_t)bufferSize);
         device.getDevice().unmapMemory(staging.mem);
 
-        indexBuffer = vki::Buffer{ device, bufferSize,
+        dstBuffer = vki::Buffer{ device, bufferSize,
             vk::BufferUsageFlagBits::eIndexBuffer | vk::BufferUsageFlagBits::eTransferDst,
             vk::MemoryPropertyFlagBits::eDeviceLocal };
-        copyBuffer(staging.buffer, indexBuffer.buffer, bufferSize);
+        copyBuffer(staging.buffer, dstBuffer.buffer, bufferSize);
         staging.clear(device);
     }
 
     void createUniformBuffers() {
         vk::DeviceSize bufferSize = sizeof(UniformBufferObject);
+        vk::DeviceSize skyBoxBufferSize = sizeof(SkyBoxUbo);
         uniformBuffers.resize(drawCmdBuffers.size());
-
+        skyBoxUniformBuffers.resize(drawCmdBuffers.size());
         for (size_t i = 0; i < uniformBuffers.size(); i++) {
-            /*uniformBuffers[i].buffer = device.getDevice().createBuffer(bufferCI);
-            auto memReqs = device.getDevice().getBufferMemoryRequirements(uniformBuffers[i].buffer);
-            auto index = device.getMemoryType(memReqs.memoryTypeBits, vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent);
-            memAI.setAllocationSize(memReqs.size);
-            memAI.setMemoryTypeIndex(index);
-            uniformBuffers[i].mem = device.getDevice().allocateMemory(memAI);
-            uniformBuffers[i].mapped = device.getDevice().mapMemory(uniformBuffers[i].mem, 0, bufferSize);*/
+            skyBoxUniformBuffers[i] = vki::UniformBuffer(device, skyBoxBufferSize);
             uniformBuffers[i] = vki::UniformBuffer(device, bufferSize);
         }
-
     }
 
-    void createTextureImage(const std::string& file, Texture& texture) {
-        int width, height, nrChannels;
-        unsigned char* textureData = stbi_load(file.c_str(), &width, &height, &nrChannels, STBI_rgb_alpha);
-        assert(textureData);
-        // 4 bytes a pixel: R8G8B8A8
-        auto bufferSize = width * height * 4;
-        texture.width = width;
-        texture.height = height;
-        texture.mipLevels = 1;
-        // image format
+    void createCubeMap(const std::string& file, Texture& texture) {
         vk::Format format = vk::Format::eR8G8B8A8Unorm;
+
+        ktxResult result;
+        ktxTexture* ktxTexture;
+        result = ktxTexture_CreateFromNamedFile(file.c_str(), KTX_TEXTURE_CREATE_LOAD_IMAGE_DATA_BIT, &ktxTexture);
+        assert(result == KTX_SUCCESS);
+        texture.width = ktxTexture->baseWidth;
+        texture.height = ktxTexture->baseHeight;
+        texture.mipLevels = ktxTexture->numLevels;
+        ktx_uint8_t* ktxTextureData = ktxTexture_GetData(ktxTexture);
+        ktx_size_t ktxTextureSize = ktxTexture_GetSize(ktxTexture);
         
-        vki::StagingBuffer staging{ device, static_cast<vk::DeviceSize>(bufferSize) };
+        vki::StagingBuffer staging{ device, static_cast<vk::DeviceSize>(ktxTextureSize) };
 
         void* data;
 
-        data = device.getDevice().mapMemory(staging.mem, 0, bufferSize);
-        memcpy(data, textureData, bufferSize);
+        data = device.getDevice().mapMemory(staging.mem, 0, ktxTextureSize);
+        memcpy(data, ktxTextureData, ktxTextureSize);
         device.getDevice().unmapMemory(staging.mem);
 
 
-        vk::BufferImageCopy bufferCopyRegion = {
-            .bufferOffset = 0,
-            .imageSubresource = {vk::ImageAspectFlagBits::eColor, 0, 0, 1},
-            .imageExtent = {texture.width, texture.height, 1},
-        };
+        std::vector<vk::BufferImageCopy> bufferCopyRegions;
+
+        for (uint32_t face = 0; face < 6; face++) {
+            for (uint32_t level = 0; level < texture.mipLevels; level++) {
+                ktx_size_t offset;
+                KTX_error_code ret = ktxTexture_GetImageOffset(ktxTexture, level, 0, face, &offset);
+                assert(ret == KTX_SUCCESS);
+                vk::BufferImageCopy bufferCopyRegion = {
+                    .bufferOffset = offset,
+                    .imageSubresource {
+                        .aspectMask = vk::ImageAspectFlagBits::eColor,
+                        .mipLevel = level,
+                        .baseArrayLayer = face,
+                        .layerCount = 1,
+                    },
+                    .imageExtent {
+                        .width = ktxTexture->baseWidth >> level,
+                        .height = ktxTexture->baseHeight >> level,
+                        .depth = 1
+                    }
+                };
+                bufferCopyRegions.push_back(bufferCopyRegion);
+            }
+        }
 
         vk::ImageCreateInfo imageCI{
+            .flags = vk::ImageCreateFlagBits::eCubeCompatible,
             .imageType = vk::ImageType::e2D,
             .format = format,
             .extent = { texture.width, texture.height, 1 },
             .mipLevels = texture.mipLevels,
-            .arrayLayers = 1,
+            .arrayLayers = 6,
             .samples = vk::SampleCountFlagBits::e1,
             .tiling = vk::ImageTiling::eOptimal,
             .usage = vk::ImageUsageFlagBits::eTransferDst | vk::ImageUsageFlagBits::eSampled,
@@ -333,7 +454,7 @@ private:
             .levelCount = texture.mipLevels,
             // The 2D texture only has one layer
             .baseArrayLayer = 0,
-            .layerCount = 1
+            .layerCount = 6
         };
 
         // Transition the texture image layout to transfer target, so we can safely copy our buffer data to it.
@@ -364,8 +485,8 @@ private:
             staging.buffer,
             texture.image,
             vk::ImageLayout::eTransferDstOptimal,
-            1,
-            &bufferCopyRegion
+            bufferCopyRegions.size(),
+            bufferCopyRegions.data()
         );
 
 
@@ -395,7 +516,7 @@ private:
         /*vmaDestroyBuffer(allocator, stagingBuffer.buffer, stagingBuffer.alloc);*/
         staging.clear(device);
 
-        stbi_image_free(textureData);
+        ktxTexture_Destroy(ktxTexture);
 
         // Create a texture sampler
         // In Vulkan textures are accessed by samplers
@@ -405,9 +526,9 @@ private:
             .magFilter = vk::Filter::eLinear,
             .minFilter = vk::Filter::eLinear,
             .mipmapMode = vk::SamplerMipmapMode::eLinear,
-            .addressModeU = vk::SamplerAddressMode::eRepeat,
-            .addressModeV = vk::SamplerAddressMode::eRepeat,
-            .addressModeW = vk::SamplerAddressMode::eRepeat,
+            .addressModeU = vk::SamplerAddressMode::eClampToEdge,
+            .addressModeV = vk::SamplerAddressMode::eClampToEdge,
+            .addressModeW = vk::SamplerAddressMode::eClampToEdge,
             .mipLodBias = 0.0f,
             // Enable anisotropic filtering
             // This feature is optional, so we must check if it's supported on the device
@@ -426,7 +547,7 @@ private:
 
         vk::ImageViewCreateInfo viewCI{
             .image = texture.image,
-            .viewType = vk::ImageViewType::e2D,
+            .viewType = vk::ImageViewType::eCube,
             .format = format,
             // The subresource range describes the set of mip levels (and array layers) that can be accessed through this image view
             // It's possible to create multiple image views for a single image referring to different (and/or overlapping) ranges of the image
@@ -435,7 +556,7 @@ private:
                 .baseMipLevel = 0,
                 .levelCount = texture.mipLevels,
                 .baseArrayLayer = 0,
-                .layerCount = 1
+                .layerCount = 6
             }
         };
 
@@ -528,7 +649,7 @@ private:
             .depthClampEnable = vk::False,
             .rasterizerDiscardEnable = vk::False,
             .polygonMode = vk::PolygonMode::eFill,
-            .cullMode = vk::CullModeFlagBits::eBack ,
+            .cullMode = vk::CullModeFlagBits::eBack,
             .frontFace = vk::FrontFace::eCounterClockwise,
             .depthBiasEnable = vk::False,
             .lineWidth = 1.0f,
@@ -599,7 +720,66 @@ private:
 
         device.getDevice().destroyShaderModule(fragShaderModule);
         device.getDevice().destroyShaderModule(vertShaderModule);
+
+
+        shaderCode = vki::readFile(shaderFolder + "skyBox.vert.spv");
+        shaderCI.setCodeSize(shaderCode.size()).setPCode(reinterpret_cast<const uint32_t*>(shaderCode.data()));
+
+        vertShaderModule = device.getDevice().createShaderModule(
+            shaderCI
+        );
+
+        shaderCode = vki::readFile(shaderFolder + "skyBox.frag.spv");
+        shaderCI.setCodeSize(shaderCode.size()).setPCode(reinterpret_cast<const uint32_t*>(shaderCode.data()));
+
+        fragShaderModule = device.getDevice().createShaderModule(
+            shaderCI
+        );
+
+        vertShaderStageInfo = {
+            .stage = vk::ShaderStageFlagBits::eVertex,
+            .module = vertShaderModule,
+            .pName = "main"
+        };
+
+        fragShaderStageInfo = {
+            .stage = vk::ShaderStageFlagBits::eFragment,
+            .module = fragShaderModule,
+            .pName = "main"
+        };
+
+        shaderStages[0] = vertShaderStageInfo;
+        shaderStages[1] = fragShaderStageInfo;
+
+        vertexInputBinding = {
+            .binding = 0,
+            .stride = sizeof(CubeVertex),
+            .inputRate = vk::VertexInputRate::eVertex
+        };
+
+        vertexInputInfo = {
+            .vertexBindingDescriptionCount = 1,
+            .pVertexBindingDescriptions = &vertexInputBinding,
+            .vertexAttributeDescriptionCount = 1,
+            .pVertexAttributeDescriptions = &vertexInputAttribs[0]
+        };
+
+        rasterizer.setCullMode(vk::CullModeFlagBits::eNone);
+        depthStencil.setDepthTestEnable(vk::False).setDepthWriteEnable(vk::False).setDepthCompareOp(vk::CompareOp::eLessOrEqual);
+        
+        pipelineLayoutCI.setPSetLayouts(&skyBoxDescLayout);
+
+        skyBoxPipelineLayout = device.getDevice().createPipelineLayout(pipelineLayoutCI);
+
+        pipelineCI.setPVertexInputState(&vertexInputInfo)
+            .setLayout(skyBoxPipelineLayout);
+
+        skyBoxPipeline = device.getDevice().createGraphicsPipeline(nullptr, pipelineCI).value;
+
+        device.getDevice().destroyShaderModule(fragShaderModule);
+        device.getDevice().destroyShaderModule(vertShaderModule);
     }
+
 
     void updateUniformBuffer(uint32_t frame) {
         UniformBufferObject ubo{};
@@ -612,6 +792,13 @@ private:
         // glm is originally for OpenGL, whose y coord of the clip space is inverted
         ubo.proj[1][1] *= -1;
         memcpy(uniformBuffers[frame].mapped, &ubo, sizeof(ubo));
+
+        SkyBoxUbo skyBoxUbo{};
+        skyBoxUbo.view = ubo.view;
+        skyBoxUbo.proj = ubo.proj;
+        // camera translation should not affect skyBox
+        skyBoxUbo.view[3] = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+        memcpy(skyBoxUniformBuffers[frame].mapped, &skyBoxUbo, sizeof(skyBoxUbo));
     }
 
     void buildCommandBuffer() override {
@@ -637,8 +824,6 @@ private:
 
         commandBuffer.beginRenderPass(renderPassBeginInfo, vk::SubpassContents::eInline);
 
-        commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, graphicsPipeline);
-
         vk::Viewport viewport{};
         viewport.x = 0.0f;
         viewport.y = 0.0f;
@@ -656,6 +841,13 @@ private:
         vk::Buffer vertexBuffers[] = { vertexBuffer.buffer };
         vk::DeviceSize offsets[] = { 0 };
 
+        commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, skyBoxPipeline);
+        commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, skyBoxPipelineLayout, 0, 1, &skyBoxDescSets[currentBuffer], 0, nullptr);
+        commandBuffer.bindVertexBuffers(0, skyBoxVertexBuffer.buffer, offsets);
+        commandBuffer.bindIndexBuffer(skyBoxIndexBuffer.buffer, 0, vk::IndexType::eUint16);
+        commandBuffer.drawIndexed(static_cast<uint32_t>(skyBoxIndices.size()), 1, 0, 0, 0);
+
+        commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, graphicsPipeline);
         commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 0, 1, &descriptorSets[currentBuffer], 0, nullptr);
         commandBuffer.bindVertexBuffers(0, vertexBuffers, offsets);
         commandBuffer.bindIndexBuffer(indexBuffer.buffer, 0, vk::IndexType::eUint16);
@@ -673,23 +865,35 @@ public:
         glfwSetScrollCallback(instance.window, scroll_callback);
         glfwSetMouseButtonCallback(instance.window, mouse_button_callback);
         glfwSetCursorPosCallback(instance.window, mouse_callback);
-        loadAssets();
+        loadModel();
+        loadCube();
         createVertexBuffer(verticesData, vertexBuffer);
-        createIndexBuffer();
+        createVertexBuffer(skyBoxVertices, skyBoxVertexBuffer);
+        createIndexBuffer(indicesData, indexBuffer);
+        createIndexBuffer(skyBoxIndices, skyBoxIndexBuffer);
         createUniformBuffers();
+        createCubeMap(getAssetPath() + "textures/cubemap_yokohama_rgba.ktx", cubeMap);
         createDescriptorSetLayout();
         createDescriptorSets();
         createPipeline();
     }
 
     void clear() override {
+        device.getDevice().destroyPipelineLayout(skyBoxPipelineLayout);
+        device.getDevice().destroyPipeline(skyBoxPipeline);
         device.getDevice().destroyPipelineLayout(pipelineLayout);
         device.getDevice().destroyPipeline(graphicsPipeline);
+        device.getDevice().destroyDescriptorSetLayout(skyBoxDescLayout);
         device.getDevice().destroyDescriptorSetLayout(descriptorSetLayout);
+        destroyTexture(cubeMap);
         for (auto i = 0; i < uniformBuffers.size(); i++) {
+            device.getDevice().unmapMemory(skyBoxUniformBuffers[i].mem);
+            skyBoxUniformBuffers[i].clear(device);
             device.getDevice().unmapMemory(uniformBuffers[i].mem);
             uniformBuffers[i].clear(device);
         }
+        skyBoxIndexBuffer.clear(device);
+        skyBoxVertexBuffer.clear(device);
         indexBuffer.clear(device);
         vertexBuffer.clear(device);
         // device.getDevice().destroyCommandPool(commandPool);

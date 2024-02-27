@@ -36,6 +36,7 @@ void vki::SwapChain::setUp() {
         }
     }
     
+    
     setting.presentMode = vk::PresentModeKHR::eFifo;
     for (const auto& availablePresentMode : instance->supports.presentModes) {
         if (availablePresentMode == vk::PresentModeKHR::eMailbox) {

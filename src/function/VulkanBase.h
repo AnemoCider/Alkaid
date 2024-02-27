@@ -10,7 +10,6 @@
 class Base {
 
 protected:
-
 	vki::Instance instance;
 	vki::Device device;
 	// Handle to the graphics queue, should be obtained during Base::Init
