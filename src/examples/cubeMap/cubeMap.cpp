@@ -178,7 +178,7 @@ private:
         for (size_t v = 0; v < posAccessor.count; v++) {
             Vertex vert{};
 
-            vert.pos = glm::vec4(glm::make_vec3(&bufferPos[v * 3]), 1.0f);
+            vert.pos = glm::make_vec3(&bufferPos[v * 3]);
             vert.normal = glm::normalize(glm::make_vec3(&bufferNormals[v * 3]));
             vert.texCoord = glm::make_vec2(&bufferTexCoords[v * 2]);
             verticesData.emplace_back(std::move(vert));
@@ -207,12 +207,12 @@ private:
         // Obtain buffer data for positions, normals, and texcoords
         const tinygltf::BufferView& posView = model.bufferViews[posAccessor.bufferView];
 
-        verticesData.reserve(posAccessor.count);
+        skyBoxVertices.reserve(posAccessor.count);
 
         const float* bufferPos = reinterpret_cast<const float*>(&(model.buffers[posView.buffer].data[posAccessor.byteOffset + posView.byteOffset]));
         for (size_t v = 0; v < posAccessor.count; v++) {
             CubeVertex vert{};
-            vert.pos = glm::vec4(glm::make_vec3(&bufferPos[v * 3]), 1.0f);
+            vert.pos = glm::make_vec3(&bufferPos[v * 3]);
             skyBoxVertices.emplace_back(std::move(vert));
         }
     }
@@ -349,7 +349,7 @@ private:
         void* data;
 
         data = device.getDevice().mapMemory(staging.mem, 0, bufferSize);
-        memcpy(data, indicesData.data(), (size_t)bufferSize);
+        memcpy(data, indices.data(), (size_t)bufferSize);
         device.getDevice().unmapMemory(staging.mem);
 
         dstBuffer = vki::Buffer{ device, bufferSize,
@@ -764,7 +764,7 @@ private:
             .pVertexAttributeDescriptions = &vertexInputAttribs[0]
         };
 
-        rasterizer.setCullMode(vk::CullModeFlagBits::eNone);
+        rasterizer.setCullMode(vk::CullModeFlagBits::eFront);
         depthStencil.setDepthTestEnable(vk::False).setDepthWriteEnable(vk::False).setDepthCompareOp(vk::CompareOp::eLessOrEqual);
         
         pipelineLayoutCI.setPSetLayouts(&skyBoxDescLayout);
