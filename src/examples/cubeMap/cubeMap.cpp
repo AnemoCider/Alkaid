@@ -223,7 +223,7 @@ private:
         poolSizes[0].type = vk::DescriptorType::eUniformBuffer;
         poolSizes[0].descriptorCount = static_cast<uint32_t>(drawCmdBuffers.size() * 2);
         poolSizes[1].type = vk::DescriptorType::eCombinedImageSampler;
-        poolSizes[1].descriptorCount = static_cast<uint32_t>(drawCmdBuffers.size());
+        poolSizes[1].descriptorCount = static_cast<uint32_t>(drawCmdBuffers.size() * 2);
 
         vk::DescriptorPoolCreateInfo poolInfo{
             .maxSets = static_cast<uint32_t>(drawCmdBuffers.size() * 2),
@@ -241,14 +241,6 @@ private:
             .stageFlags = vk::ShaderStageFlagBits::eVertex
         };
 
-        std::vector<vk::DescriptorSetLayoutBinding> setLayoutBindings{ uboLayoutBinding };
-        vk::DescriptorSetLayoutCreateInfo layoutInfo{
-            .bindingCount = static_cast<uint32_t>(setLayoutBindings.size()),
-            .pBindings = setLayoutBindings.data()
-        };
-
-        descriptorSetLayout = device.getDevice().createDescriptorSetLayout(layoutInfo, nullptr);
-
         vk::DescriptorSetLayoutBinding samplerBinding{
             .binding = 1,
             .descriptorType = vk::DescriptorType::eCombinedImageSampler,
@@ -256,13 +248,13 @@ private:
             .stageFlags = vk::ShaderStageFlagBits::eFragment
         };
 
-        setLayoutBindings.push_back(samplerBinding);
-        
-        layoutInfo = {
+        std::vector<vk::DescriptorSetLayoutBinding> setLayoutBindings{ uboLayoutBinding, samplerBinding };
+        vk::DescriptorSetLayoutCreateInfo layoutInfo{
             .bindingCount = static_cast<uint32_t>(setLayoutBindings.size()),
             .pBindings = setLayoutBindings.data()
         };
 
+        descriptorSetLayout = device.getDevice().createDescriptorSetLayout(layoutInfo, nullptr);
         skyBoxDescLayout = device.getDevice().createDescriptorSetLayout(layoutInfo, nullptr);
     }
 
@@ -318,8 +310,9 @@ private:
 
             bufferInfo.setBuffer(uniformBuffers[i].buffer).setRange(sizeof(UniformBufferObject));
             descriptorWrites[0].setDstSet(descriptorSets[i]).setPBufferInfo(&bufferInfo);
+            descriptorWrites[1].setDstSet(descriptorSets[i]);
             device.getDevice().updateDescriptorSets(
-                1, &descriptorWrites[0], 0, nullptr);
+                static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
         }
     }
 
