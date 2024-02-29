@@ -1139,7 +1139,7 @@ private:
         poolSizes[0].type = vk::DescriptorType::eUniformBuffer;
         poolSizes[0].descriptorCount = static_cast<uint32_t>(drawCmdBuffers.size() * 2);
         poolSizes[1].type = vk::DescriptorType::eCombinedImageSampler;
-        poolSizes[1].descriptorCount = static_cast<uint32_t>(drawCmdBuffers.size() * 3);
+        poolSizes[1].descriptorCount = static_cast<uint32_t>(drawCmdBuffers.size() * 4);
 
         vk::DescriptorPoolCreateInfo poolInfo{
             .maxSets = static_cast<uint32_t>(drawCmdBuffers.size() * 2),
