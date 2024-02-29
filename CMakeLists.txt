@@ -77,4 +77,4 @@ buildExample(shading)
 buildExample(shadowMapping)
 buildExample(pcss)
 buildExample(cubeMap)
-
+buildExample(pbribl)
