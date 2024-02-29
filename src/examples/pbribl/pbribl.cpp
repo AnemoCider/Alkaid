@@ -555,7 +555,7 @@ private:
             .depthClampEnable = vk::False,
             .rasterizerDiscardEnable = vk::False,
             .polygonMode = vk::PolygonMode::eFill,
-            .cullMode = vk::CullModeFlagBits::eFrontAndBack,
+            .cullMode = vk::CullModeFlagBits::eNone,
             .frontFace = vk::FrontFace::eCounterClockwise,
             .depthBiasEnable = vk::False,
             .lineWidth = 1.0f,
@@ -812,6 +812,20 @@ private:
         );
 
         endSingleTimeCommands(cmdBuffer);
+
+
+        device.getDevice().destroyPipeline(pipeline);
+        device.getDevice().destroyPipelineLayout(pipeLayout);
+        device.getDevice().destroyShaderModule(fragShaderModule);
+        device.getDevice().destroyShaderModule(vertShaderModule);
+        device.getDevice().destroyImageView(view);
+        device.getDevice().freeMemory(imageMem);
+        device.getDevice().destroyImage(image);
+        device.getDevice().destroyDescriptorPool(descPool);
+        device.getDevice().destroyDescriptorSetLayout(descLayout);
+        device.getDevice().destroyFramebuffer(irradiance.frameBuffer);
+        device.getDevice().destroyRenderPass(irradiance.renderPass);
+
     }
 
     void createDescriptorPool() override {
@@ -1394,6 +1408,7 @@ private:
     }
 
     void buildCommandBuffer() override {
+
         const auto& commandBuffer = drawCmdBuffers[currentBuffer];
 
         commandBuffer.reset();
@@ -1478,6 +1493,7 @@ public:
         device.getDevice().destroyPipeline(graphicsPipeline);
         device.getDevice().destroyDescriptorSetLayout(skyBoxDescLayout);
         device.getDevice().destroyDescriptorSetLayout(descriptorSetLayout);
+        destroyTexture(irradiance.colorMap);
         destroyTexture(cubeMap);
         for (auto i = 0; i < uniformBuffers.size(); i++) {
             device.getDevice().unmapMemory(skyBoxUniformBuffers[i].mem);

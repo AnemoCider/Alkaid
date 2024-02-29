@@ -95,6 +95,5 @@ vec3 prefilterEnvMap(vec3 R, float roughness) {
 
 void main() {
 	vec3 N = normalize(inPos);
-	// outColor = vec4(prefilterEnvMap(N, consts.roughness), 1.0);
-	outColor = vec4(1.0, 0.5, 0.0, 0.5);
+	outColor = vec4(prefilterEnvMap(N, consts.roughness), 1.0);
 }
