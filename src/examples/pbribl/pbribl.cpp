@@ -43,7 +43,6 @@ struct alignas(16) UniformBufferObject {
      glm::mat4 view;
      glm::mat4 proj;
      glm::mat4 normalRot;
-     glm::vec4 lightPos;
      glm::vec4 viewPos;
 };
 
@@ -113,6 +112,19 @@ private:
         vk::RenderPass renderPass;
         vk::Pipeline pipeline;
     } irradiance;
+
+    struct MatPushBlock {
+        float roughness = 0.541931f;
+        float metallic = 0.496791f;
+        float specular = 0.449419f;
+        float r = 1.0f;
+        float g = 1.0f;
+        float b = 1.0f;
+    };
+
+    struct {
+        Texture table;
+    } lut;
 
     std::string getAssetPath() {
         return "Vulkan-Assets/";
@@ -227,6 +239,299 @@ private:
         }
     }
 
+    void createLut() {
+        const vk::Format format = vk::Format::eR16G16Sfloat;
+        const int32_t dim = 512;
+
+        vk::ImageCreateInfo imageCI{
+            .imageType = vk::ImageType::e2D,
+            .format = format,
+            .extent {
+                .width = dim,
+                .height = dim,
+                .depth = 1
+            },
+            .mipLevels = 1,
+            .arrayLayers = 1,
+            .samples = vk::SampleCountFlagBits::e1,
+            .tiling = vk::ImageTiling::eOptimal,
+            .usage = vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled
+        };
+
+        lut.table.image = device.getDevice().createImage(imageCI);
+
+        auto memReqs = device.getDevice().getImageMemoryRequirements(lut.table.image);
+
+        vk::MemoryAllocateInfo memAI{
+            .allocationSize = memReqs.size,
+            .memoryTypeIndex = device.getMemoryType(memReqs.memoryTypeBits, vk::MemoryPropertyFlagBits::eDeviceLocal)
+        };
+
+        lut.table.mem = device.getDevice().allocateMemory(memAI);
+        device.getDevice().bindImageMemory(lut.table.image, lut.table.mem, 0);
+
+        vk::SamplerCreateInfo samplerCI{
+            .magFilter = vk::Filter::eLinear,
+            .minFilter = vk::Filter::eLinear,
+            .mipmapMode = vk::SamplerMipmapMode::eLinear,
+            .addressModeU = vk::SamplerAddressMode::eClampToEdge,
+            .addressModeV = vk::SamplerAddressMode::eClampToEdge,
+            .addressModeW = vk::SamplerAddressMode::eClampToEdge,
+            .minLod = 0.0f,
+            .maxLod = 1.0f,
+            .borderColor = vk::BorderColor::eFloatOpaqueWhite
+        };
+
+        lut.table.sampler = device.getDevice().createSampler(samplerCI);
+
+        vk::AttachmentDescription colorDescription {
+            .format = format,
+            .samples = vk::SampleCountFlagBits::e1,
+            .loadOp = vk::AttachmentLoadOp::eClear,
+            .storeOp = vk::AttachmentStoreOp::eStore,
+            .stencilLoadOp = vk::AttachmentLoadOp::eDontCare,
+            .stencilStoreOp = vk::AttachmentStoreOp::eDontCare,
+            .initialLayout = vk::ImageLayout::eUndefined,
+            .finalLayout = vk::ImageLayout::eShaderReadOnlyOptimal
+        };
+        vk::AttachmentReference colorRef{
+            .attachment = 0,
+            .layout = vk::ImageLayout::eColorAttachmentOptimal
+        };
+
+        vk::SubpassDescription subPass{
+            .pipelineBindPoint = vk::PipelineBindPoint::eGraphics,
+            .inputAttachmentCount = 0,
+            .pInputAttachments = nullptr,
+            .colorAttachmentCount = 1,
+            .pColorAttachments = &colorRef,
+            .pResolveAttachments = nullptr,
+            .pDepthStencilAttachment = nullptr,
+            .preserveAttachmentCount = 0,
+            .pPreserveAttachments = nullptr,
+        };
+
+        std::array<vk::SubpassDependency, 2> dependencies;
+        dependencies[0] = {
+            .srcSubpass = vk::SubpassExternal,
+            .dstSubpass = 0,
+            .srcStageMask = vk::PipelineStageFlagBits::eBottomOfPipe,
+            .dstStageMask = vk::PipelineStageFlagBits::eColorAttachmentOutput,
+            .srcAccessMask = vk::AccessFlagBits::eMemoryRead,
+            .dstAccessMask = vk::AccessFlagBits::eColorAttachmentWrite | vk::AccessFlagBits::eColorAttachmentRead,
+            .dependencyFlags = vk::DependencyFlagBits::eByRegion
+        };
+        dependencies[1] = {
+            .srcSubpass = vk::SubpassExternal,
+            .dstSubpass = 0,
+            .srcStageMask = vk::PipelineStageFlagBits::eColorAttachmentOutput,
+            .dstStageMask = vk::PipelineStageFlagBits::eBottomOfPipe,
+            .srcAccessMask = vk::AccessFlagBits::eColorAttachmentWrite | vk::AccessFlagBits::eColorAttachmentRead,
+            .dstAccessMask = vk::AccessFlagBits::eMemoryRead,
+            .dependencyFlags = vk::DependencyFlagBits::eByRegion
+        };
+
+        vk::RenderPassCreateInfo renderPassCI{
+            .attachmentCount = 1,
+            .pAttachments = &colorDescription,
+            .subpassCount = 1,
+            .pSubpasses = &subPass,
+            .dependencyCount = static_cast<uint32_t>(dependencies.size()),
+            .pDependencies = dependencies.data()
+        };
+
+        auto renderPass = device.getDevice().createRenderPass(renderPassCI, nullptr);
+
+        vk::ImageViewCreateInfo viewCI{
+            .image = lut.table.image,
+            .viewType = vk::ImageViewType::e2D,
+            .format = format,
+            .subresourceRange = {
+                .aspectMask = vk::ImageAspectFlagBits::eColor,
+                .baseMipLevel = 0,
+                .levelCount = 1,
+                .baseArrayLayer = 0,
+                .layerCount = 1
+            }
+        };
+
+        lut.table.view = device.getDevice().createImageView(viewCI);
+
+        vk::FramebufferCreateInfo frameBufferCI{
+            .renderPass = renderPass,
+            .attachmentCount = 1,
+            .pAttachments = &lut.table.view,
+            .width = dim,
+            .height = dim,
+            .layers = 1
+        };
+
+        auto frameBuffer = device.getDevice().createFramebuffer(frameBufferCI);
+
+        auto shaderCode = vki::readFile(shaderFolder + "lut.vert.spv");
+        vk::ShaderModuleCreateInfo shaderCI{
+            .codeSize = shaderCode.size(),
+            .pCode = reinterpret_cast<const uint32_t*>(shaderCode.data())
+        };
+
+        vk::ShaderModule vertShaderModule = device.getDevice().createShaderModule(
+            shaderCI
+        );
+
+        shaderCode = vki::readFile(shaderFolder + "lut.frag.spv");
+        shaderCI.codeSize = shaderCode.size();
+        shaderCI.pCode = reinterpret_cast<const uint32_t*>(shaderCode.data());
+        vk::ShaderModule fragShaderModule = device.getDevice().createShaderModule(
+            shaderCI
+        );
+
+        vk::PipelineShaderStageCreateInfo vertShaderStageInfo{
+            .stage = vk::ShaderStageFlagBits::eVertex,
+            .module = vertShaderModule,
+            .pName = "main"
+        };
+
+        vk::PipelineShaderStageCreateInfo fragShaderStageInfo{
+            .stage = vk::ShaderStageFlagBits::eFragment,
+            .module = fragShaderModule,
+            .pName = "main"
+        };
+
+        vk::PipelineShaderStageCreateInfo shaderStages[] = { vertShaderStageInfo, fragShaderStageInfo };
+
+        vk::PipelineVertexInputStateCreateInfo vertexInputInfo = {};
+
+        vk::PipelineInputAssemblyStateCreateInfo inputAssembly{
+            .topology = vk::PrimitiveTopology::eTriangleList,
+            .primitiveRestartEnable = vk::False
+        };
+
+        vk::PipelineViewportStateCreateInfo viewportState{
+            .viewportCount = 1,
+            .scissorCount = 1
+        };
+
+        vk::PipelineRasterizationStateCreateInfo rasterizer{
+            .depthClampEnable = vk::False,
+            .rasterizerDiscardEnable = vk::False,
+            .polygonMode = vk::PolygonMode::eFill,
+            .cullMode = vk::CullModeFlagBits::eNone,
+            .frontFace = vk::FrontFace::eCounterClockwise,
+            .depthBiasEnable = vk::False,
+            .lineWidth = 1.0f,
+        };
+
+        vk::PipelineDepthStencilStateCreateInfo depthStencil{
+            .depthTestEnable = vk::False,
+            .depthWriteEnable = vk::False,
+            .depthCompareOp = vk::CompareOp::eLessOrEqual ,
+            .stencilTestEnable = vk::False
+        };
+
+        vk::PipelineMultisampleStateCreateInfo multisampling{
+            .rasterizationSamples = vk::SampleCountFlagBits::e1,
+            .sampleShadingEnable = vk::False
+        };
+
+        vk::PipelineColorBlendAttachmentState colorBlendAttachment{
+            .blendEnable = vk::False,
+            .colorWriteMask =
+            vk::ColorComponentFlagBits::eR |
+            vk::ColorComponentFlagBits::eG |
+            vk::ColorComponentFlagBits::eB |
+            vk::ColorComponentFlagBits::eA
+        };
+
+        vk::PipelineColorBlendStateCreateInfo colorBlending{
+            .logicOpEnable = vk::False,
+            .attachmentCount = 1,
+            .pAttachments = &colorBlendAttachment
+        };
+
+        std::vector<vk::DynamicState> dynamicStates = {
+            vk::DynamicState::eViewport,
+            vk::DynamicState::eScissor
+        };
+
+        vk::PipelineDynamicStateCreateInfo dynamicState{
+            .dynamicStateCount = static_cast<uint32_t>(dynamicStates.size()),
+            .pDynamicStates = dynamicStates.data()
+        };
+
+        vk::PipelineLayoutCreateInfo pipelineLayoutCI{
+            .setLayoutCount = 0,
+            .pushConstantRangeCount = 0,
+        };
+
+        auto pipeLayout = device.getDevice().createPipelineLayout(pipelineLayoutCI);
+
+        vk::GraphicsPipelineCreateInfo pipelineCI{
+            .stageCount = 2,
+            .pStages = shaderStages,
+            .pVertexInputState = &vertexInputInfo,
+            .pInputAssemblyState = &inputAssembly,
+            .pViewportState = &viewportState,
+            .pRasterizationState = &rasterizer,
+            .pMultisampleState = &multisampling,
+            .pDepthStencilState = &depthStencil,
+            .pColorBlendState = &colorBlending,
+            .pDynamicState = &dynamicState,
+            .layout = pipeLayout,
+            .renderPass = renderPass,
+            .subpass = 0
+        };
+
+        auto pipeline = device.getDevice().createGraphicsPipeline(nullptr, pipelineCI).value;
+
+        vk::ClearValue clearValue{};
+        clearValue.color.setFloat32({ 0.0f, 0.0f, 0.0f, 1.0f });
+
+        vk::RenderPassBeginInfo renderPassBeginInfo{
+            .renderPass = renderPass,
+            .framebuffer = frameBuffer,
+            .renderArea {
+                .extent {
+                    .width = dim,
+                    .height = dim
+                }
+            },
+            .clearValueCount = 1,
+            .pClearValues = &clearValue
+        };
+
+        auto cmdBuffer = beginSingleTimeCommands();
+
+        vk::Viewport viewport{};
+        viewport.x = 0.0f;
+        viewport.y = 0.0f;
+        viewport.width = static_cast<float>(dim);
+        viewport.height = static_cast<float>(dim);
+        viewport.minDepth = 0.0f;
+        viewport.maxDepth = 1.0f;
+        cmdBuffer.setViewport(0, viewport);
+
+        vk::Rect2D scissor{};
+        scissor.offset = { 0, 0 };
+        scissor.extent = { dim, dim };
+        cmdBuffer.setScissor(0, scissor);
+
+        cmdBuffer.beginRenderPass(renderPassBeginInfo, vk::SubpassContents::eInline);
+        cmdBuffer.setViewport(0, viewport);
+        cmdBuffer.setScissor(0, scissor);
+        cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline);
+        cmdBuffer.draw(3, 1, 0, 0);
+        cmdBuffer.endRenderPass();
+
+        endSingleTimeCommands(cmdBuffer);
+
+        device.getDevice().destroyShaderModule(vertShaderModule);
+        device.getDevice().destroyShaderModule(fragShaderModule);
+        device.getDevice().destroyPipeline(pipeline);
+        device.getDevice().destroyPipelineLayout(pipeLayout);
+        device.getDevice().destroyRenderPass(renderPass);
+        device.getDevice().destroyFramebuffer(frameBuffer);
+    }
+
     void createIrradianceMap() {
         const uint32_t dim = 512;
         vk::Format format = vk::Format::eR16G16B16A16Sfloat;
@@ -234,6 +539,7 @@ private:
         irradiance.colorMap.width = dim;
         irradiance.colorMap.height = dim;
 
+        // roughness r is stored in miplevel of r * (mipCount - 1)
         const uint32_t mipCount = static_cast<uint32_t>(floor(log2(dim))) + 1;
         irradiance.colorMap.mipLevels = mipCount;
 
@@ -833,7 +1139,7 @@ private:
         poolSizes[0].type = vk::DescriptorType::eUniformBuffer;
         poolSizes[0].descriptorCount = static_cast<uint32_t>(drawCmdBuffers.size() * 2);
         poolSizes[1].type = vk::DescriptorType::eCombinedImageSampler;
-        poolSizes[1].descriptorCount = static_cast<uint32_t>(drawCmdBuffers.size() * 2);
+        poolSizes[1].descriptorCount = static_cast<uint32_t>(drawCmdBuffers.size() * 3);
 
         vk::DescriptorPoolCreateInfo poolInfo{
             .maxSets = static_cast<uint32_t>(drawCmdBuffers.size() * 2),
@@ -851,14 +1157,21 @@ private:
             .stageFlags = vk::ShaderStageFlagBits::eVertex
         };
 
-        vk::DescriptorSetLayoutBinding samplerBinding{
+        vk::DescriptorSetLayoutBinding lutBinding{
             .binding = 1,
             .descriptorType = vk::DescriptorType::eCombinedImageSampler,
             .descriptorCount = 1,
             .stageFlags = vk::ShaderStageFlagBits::eFragment
         };
 
-        std::vector<vk::DescriptorSetLayoutBinding> setLayoutBindings{ uboLayoutBinding, samplerBinding };
+        vk::DescriptorSetLayoutBinding filterBinding{
+            .binding = 2,
+            .descriptorType = vk::DescriptorType::eCombinedImageSampler,
+            .descriptorCount = 1,
+            .stageFlags = vk::ShaderStageFlagBits::eFragment
+        };
+
+        std::vector<vk::DescriptorSetLayoutBinding> setLayoutBindings{ uboLayoutBinding, lutBinding, filterBinding};
         vk::DescriptorSetLayoutCreateInfo layoutInfo{
             .bindingCount = static_cast<uint32_t>(setLayoutBindings.size()),
             .pBindings = setLayoutBindings.data()
@@ -896,7 +1209,7 @@ private:
             imageInfo.imageView = cubeMap.view;
             imageInfo.sampler = cubeMap.sampler;
 
-            std::array<vk::WriteDescriptorSet, 2> descriptorWrites{};
+            std::vector<vk::WriteDescriptorSet> descriptorWrites(3);
             descriptorWrites[0] = {
                 .dstSet = skyBoxDescSets[i],
                 .dstBinding = 0,
@@ -916,16 +1229,34 @@ private:
                 .pBufferInfo = nullptr
             };
             device.getDevice().updateDescriptorSets(
-                static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
+                2, descriptorWrites.data(), 0, nullptr);
 
             bufferInfo.setBuffer(uniformBuffers[i].buffer).setRange(sizeof(UniformBufferObject));
             descriptorWrites[0].setDstSet(descriptorSets[i]).setPBufferInfo(&bufferInfo);
+
+            vk::DescriptorImageInfo lutInfo{
+                .sampler = lut.table.sampler,
+                .imageView = lut.table.view,
+                .imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal,
+            };
+
             imageInfo = {
                 .sampler = irradiance.colorMap.sampler,
                 .imageView = irradiance.colorMap.view,
                 .imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal,
             };
-            descriptorWrites[1].setDstSet(descriptorSets[i]).setPImageInfo(&imageInfo);
+
+            descriptorWrites[1].setDstSet(descriptorSets[i]).setPImageInfo(&lutInfo);
+            descriptorWrites[2] = {
+                .dstSet = descriptorSets[i],
+                .dstBinding = 2,
+                .dstArrayElement = 0,
+                .descriptorCount = 1,
+                .descriptorType = vk::DescriptorType::eCombinedImageSampler,
+                .pImageInfo = &imageInfo,
+                .pBufferInfo = nullptr
+            };
+
             device.getDevice().updateDescriptorSets(
                 static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
         }
@@ -1298,10 +1629,17 @@ private:
             .pDynamicStates = dynamicStates.data()
         };
 
+        vk::PushConstantRange pcRange{
+            .stageFlags = vk::ShaderStageFlagBits::eFragment,
+            .offset = 0,
+            .size = sizeof(MatPushBlock)
+        };
+
         vk::PipelineLayoutCreateInfo pipelineLayoutCI{
             .setLayoutCount = 1,
             .pSetLayouts = &descriptorSetLayout,
-            .pushConstantRangeCount = 0
+            .pushConstantRangeCount = 1,
+            .pPushConstantRanges = &pcRange
         };
 
         pipelineLayout = device.getDevice().createPipelineLayout(pipelineLayoutCI);
@@ -1393,7 +1731,6 @@ private:
         ubo.normalRot = glm::mat3(glm::transpose(glm::inverse(ubo.model)));
         ubo.view = camera.view();
         ubo.proj = camera.projection((float)instance.width, (float)instance.height);
-        ubo.lightPos = { 5.0f, 5.0f, 5.0f, 0.0f};
         ubo.viewPos = { camera.position, 0.0f };
         // glm is originally for OpenGL, whose y coord of the clip space is inverted
         ubo.proj[1][1] *= -1;
@@ -1454,6 +1791,8 @@ private:
         commandBuffer.bindIndexBuffer(skyBoxIndexBuffer.buffer, 0, vk::IndexType::eUint16);
         commandBuffer.drawIndexed(static_cast<uint32_t>(skyBoxIndices.size()), 1, 0, 0, 0);
 
+        MatPushBlock material{ .roughness = 0.0f, .metallic = 1.0f };
+        commandBuffer.pushConstants(pipelineLayout, vk::ShaderStageFlagBits::eFragment, 0, sizeof(MatPushBlock), &material);
         commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, graphicsPipeline);
         commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 0, 1, &descriptorSets[currentBuffer], 0, nullptr);
         commandBuffer.bindVertexBuffers(0, vertexBuffers, offsets);
@@ -1480,6 +1819,7 @@ public:
         createIndexBuffer(skyBoxIndices, skyBoxIndexBuffer);
         createUniformBuffers();
         createCubeMap(getAssetPath() + "textures/cubemap_yokohama_rgba.ktx", cubeMap);
+        createLut();
         createIrradianceMap();
         createDescriptorSetLayout();
         createDescriptorSets();
@@ -1493,6 +1833,7 @@ public:
         device.getDevice().destroyPipeline(graphicsPipeline);
         device.getDevice().destroyDescriptorSetLayout(skyBoxDescLayout);
         device.getDevice().destroyDescriptorSetLayout(descriptorSetLayout);
+        destroyTexture(lut.table);
         destroyTexture(irradiance.colorMap);
         destroyTexture(cubeMap);
         for (auto i = 0; i < uniformBuffers.size(); i++) {
