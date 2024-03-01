@@ -1791,7 +1791,14 @@ private:
         commandBuffer.bindIndexBuffer(skyBoxIndexBuffer.buffer, 0, vk::IndexType::eUint16);
         commandBuffer.drawIndexed(static_cast<uint32_t>(skyBoxIndices.size()), 1, 0, 0, 0);
 
-        MatPushBlock material{ .roughness = 0.0f, .metallic = 1.0f };
+        static float roughness = 0.0f;
+        static float step = 0.0001f;
+        roughness += step;
+        if (roughness >= 1.0f || roughness <= 0.0f) {
+            step = -step;
+            roughness += step;
+        }
+        MatPushBlock material{ .roughness = roughness, .metallic = 1.0f };
         commandBuffer.pushConstants(pipelineLayout, vk::ShaderStageFlagBits::eFragment, 0, sizeof(MatPushBlock), &material);
         commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, graphicsPipeline);
         commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 0, 1, &descriptorSets[currentBuffer], 0, nullptr);
