@@ -22,6 +22,7 @@ float random(vec2 co) {
 	return fract(sin(sn) * c);
 }
 
+// uniformly sample a point on the hemisphere
 vec2 hammersley2d(uint i, uint N) {
 	// Radical inverse based on http://holger.dammertz.org/stuff/notes_HammersleyOnHemisphere.html
 	uint bits = (i << 16u) | (i >> 16u);

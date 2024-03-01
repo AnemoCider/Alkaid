@@ -11,6 +11,7 @@ layout(push_constant) uniform PushConsts {
 	float r;
 	float g;
 	float b;
+	uint index;
 } material;
 
 layout(binding = 1) uniform sampler2D samplerBRDFLUT;
@@ -39,18 +40,18 @@ float G_SchlicksmithGGX(float dotNL, float dotNV, float roughness) {
 }
 
 // Fresnel function ----------------------------------------------------
-vec3 F_Schlick(float cosTheta, vec3 F0) {
-	return F0 + (1.0 - F0) * pow(1.0 - cosTheta, 5.0);
-}
+
 vec3 F_SchlickR(float cosTheta, vec3 F0, float roughness) {
 	return F0 + (max(vec3(1.0 - roughness), F0) - F0) * pow(1.0 - cosTheta, 5.0);
 }
 
 vec3 prefilteredReflection(vec3 R, float roughness) {
-	const float MAX_REFLECTION_LOD = 9.0; // todo: param/const
+	// totalMipCount = log2(dim_of_map) = 9
+	const float MAX_REFLECTION_LOD = 9.0;
 	float lod = roughness * MAX_REFLECTION_LOD;
 	float lodf = floor(lod);
 	float lodc = ceil(lod);
+	// trilinear interpolation
 	vec3 a = textureLod(prefilteredMap, R, lodf).rgb;
 	vec3 b = textureLod(prefilteredMap, R, lodc).rgb;
 	return mix(a, b, lod - lodf);
@@ -72,7 +73,6 @@ void main() {
 
 	vec3 F = F_SchlickR(max(dot(N, V), 0.0), F0, roughness);
 
-	// Specular reflectance
 	vec3 color = reflection * (F * brdf.x + brdf.y);
 
 	outColor = vec4(color, 1.0);

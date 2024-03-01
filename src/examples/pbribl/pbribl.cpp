@@ -120,6 +120,7 @@ private:
         float r = 1.0f;
         float g = 1.0f;
         float b = 1.0f;
+        uint32_t index = 0;
     };
 
     struct {
@@ -1630,7 +1631,7 @@ private:
         };
 
         vk::PushConstantRange pcRange{
-            .stageFlags = vk::ShaderStageFlagBits::eFragment,
+            .stageFlags = vk::ShaderStageFlagBits::eFragment | vk::ShaderStageFlagBits::eVertex,
             .offset = 0,
             .size = sizeof(MatPushBlock)
         };
@@ -1791,20 +1792,16 @@ private:
         commandBuffer.bindIndexBuffer(skyBoxIndexBuffer.buffer, 0, vk::IndexType::eUint16);
         commandBuffer.drawIndexed(static_cast<uint32_t>(skyBoxIndices.size()), 1, 0, 0, 0);
 
-        static float roughness = 0.0f;
-        static float step = 0.0001f;
-        roughness += step;
-        if (roughness >= 1.0f || roughness <= 0.0f) {
-            step = -step;
-            roughness += step;
-        }
-        MatPushBlock material{ .roughness = roughness, .metallic = 1.0f };
-        commandBuffer.pushConstants(pipelineLayout, vk::ShaderStageFlagBits::eFragment, 0, sizeof(MatPushBlock), &material);
         commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, graphicsPipeline);
         commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 0, 1, &descriptorSets[currentBuffer], 0, nullptr);
         commandBuffer.bindVertexBuffers(0, vertexBuffers, offsets);
         commandBuffer.bindIndexBuffer(indexBuffer.buffer, 0, vk::IndexType::eUint16);
-        commandBuffer.drawIndexed(static_cast<uint32_t>(indicesData.size()), 1, 0, 0, 0);
+        for (uint32_t i = 0; i < 10; i++) {
+            float roughness = i * 0.1;
+            MatPushBlock material{ .roughness = roughness, .metallic = 1.0f, .index = i};
+            commandBuffer.pushConstants(pipelineLayout, vk::ShaderStageFlagBits::eFragment | vk::ShaderStageFlagBits::eVertex, 0, sizeof(MatPushBlock), &material);
+            commandBuffer.drawIndexed(static_cast<uint32_t>(indicesData.size()), 1, 0, 0, 0);
+        }
 
         commandBuffer.endRenderPass();
         commandBuffer.end();
