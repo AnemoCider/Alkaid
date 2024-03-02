@@ -5,6 +5,10 @@ CMakeFiles/
 **/CMakeCache.txt
 **/*.cmake
 
+# MACOS executables
+cubeMap
+pbribl
+
 *.sln
 *.filters
 *.vcxproj

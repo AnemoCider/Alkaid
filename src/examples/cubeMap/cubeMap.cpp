@@ -9,7 +9,6 @@
 
 #include <ktx.h>
 #include <ktxvulkan.h>
-
 #include <memory>
 #include <iostream>
 #include <array>

@@ -23,5 +23,6 @@ void main() {
     // outColor = texture(texSampler[pc.objectID], texCoord);
 
     vec3 lightDir = reflect(normalize(worldPos - viewPos), normalize(normal));
+    lightDir.x = -lightDir.x;
     outColor = texture(cubeMap, lightDir);
 }

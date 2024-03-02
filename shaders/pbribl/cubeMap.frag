@@ -61,6 +61,7 @@ void main() {
 	vec3 N = normalize(normal);
 	vec3 V = normalize(viewPos - worldPos);
 	vec3 R = reflect(-V, N);
+	R.x = -R.x;
 
 	float metallic = material.metallic;
 	float roughness = material.roughness;
