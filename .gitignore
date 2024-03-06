@@ -5,6 +5,8 @@ CMakeFiles/
 **/CMakeCache.txt
 **/*.cmake
 
+**/*.spv
+
 # MACOS executables
 cubeMap
 pbribl

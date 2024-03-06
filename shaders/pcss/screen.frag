@@ -19,35 +19,45 @@ layout(push_constant) uniform PushConstants {
 
 // shadow map resolution:
 // set the step size to be larger to improve efficiency
-const float unit = 2.0 / 2048.0;
+const float unit = 1.0 / 2048.0;
 const float lightRadius = 5.0f;
 
+vec2 spiralPattern(int k, float radius, int samples) {
+    const float goldenAngle = 2.39996323; // Use golden angle for even distribution
+    float angle = goldenAngle * float(k);
+    float distance = mix(0.0, radius, sqrt(float(k) / float(samples - 1))); // Distribute samples within a radius
+    return vec2(cos(angle), sin(angle)) * distance;
+}
+
 // return -1 if fully lit
-float getAvgBlockerDepth(vec3 coord) {
+float getAvgBlockerDepth(vec3 coord, float lightDis) {
+    float searchRadius = lightRadius * (coord.z / lightDis) / 50;
     int count = 0;
     float sum = 0;
-    for (int i = -3; i <= 3; i++) {
-        for (int j = -3; j <= 3; j++) {
-            if (texture(shadowSampler, coord.xy + vec2(i * unit, j * unit)).r < coord.z) {
-                count++;
-                sum += texture(shadowSampler, coord.xy).r;
-            }
+    // Spiral search pattern
+    int numSamples = 20;
+    for (int k = 0; k < numSamples; ++k) {
+        vec2 offset = spiralPattern(k, searchRadius, numSamples); // Generate offset for sample k
+        float sampledDepth = texture(shadowSampler, coord.xy + offset).r;
+        if (sampledDepth < coord.z) { 
+            count++;
+            sum += sampledDepth;
         }
     }
     if (count == 0) {
         return -1.0;
     } else {
-        return sum / count;
+        return sum / float(count);
     }
 }
 
 
 layout(location = 0) out vec4 outColor;
 
-float getShadow(vec4 shadowCoord) {
+float getShadow(vec4 shadowCoord, float lightDis) {
     vec3 projCoord = shadowCoord.xyz / shadowCoord.w;
     projCoord.xy = projCoord.xy * 0.5 + 0.5;
-    float blockerDepth = getAvgBlockerDepth(projCoord);
+    float blockerDepth = getAvgBlockerDepth(projCoord, lightDis);
     if (blockerDepth < 0) {
         return 1.0;
     } else {
@@ -72,10 +82,10 @@ void main() {
     float distanceSquare = dot(fragToLight, fragToLight);
     vec3 lightDir = normalize(fragToLight);
     vec3 halfDir = normalize(lightDir + normalize(viewPos - worldPos));
-     outColor = vec4(texture(texSampler[pc.objectID], texCoord).xyz *
+    outColor = vec4(texture(texSampler[pc.objectID], texCoord).xyz *
         clamp((
             max(dot(normalize(normal), lightDir), 0.0) * diffuse +
             pow(max(dot(halfDir, normal), 0.0), shininess) * specular * 2.0
-            ) / distanceSquare * 300.0 + 0.1, 0.0, 1.0), 1.0)
-        * getShadow(shadowCoord);
+            ) / distanceSquare * 200.0 + 0.1, 0.0, 1.0), 1.0)
+        * getShadow(shadowCoord, length(fragToLight));
 }
