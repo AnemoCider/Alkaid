@@ -7,10 +7,6 @@ CMakeFiles/
 
 **/*.spv
 
-# MACOS executables
-cubeMap
-pbribl
-
 *.sln
 *.filters
 *.vcxproj
