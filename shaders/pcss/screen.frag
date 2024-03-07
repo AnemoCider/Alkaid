@@ -30,14 +30,13 @@ vec2 spiralPattern(int k, float radius, int samples) {
 }
 
 // return -1 if fully lit
-float getAvgBlockerDepth(vec3 coord, float lightDis) {
+float getAvgBlockerDepth(vec3 coord, float lightDis, float searchRadius) {
     // the further the point is away from the light,
     // the larger the area it casts on the shadowMap
-    float searchRadius = lightRadius * lightDis / 5000;
     int count = 0;
     float sum = 0;
     // Spiral search pattern
-    int numSamples = 500;
+    int numSamples = 10;
     for (int k = 0; k < numSamples; ++k) {
         vec2 offset = spiralPattern(k, searchRadius, numSamples); // Generate offset for sample k
         float sampledDepth = texture(shadowSampler, coord.xy + offset).r;
@@ -53,13 +52,13 @@ float getAvgBlockerDepth(vec3 coord, float lightDis) {
     }
 }
 
-
 layout(location = 0) out vec4 outColor;
 
 float getShadow(vec4 shadowCoord, float lightDis) {
     vec3 projCoord = shadowCoord.xyz / shadowCoord.w;
     projCoord.xy = projCoord.xy * 0.5 + 0.5;
-    float blockerDepth = getAvgBlockerDepth(projCoord, lightDis);
+    float radius = lightRadius * lightDis / 5000;
+    float blockerDepth = getAvgBlockerDepth(projCoord, lightDis, radius);
     if (blockerDepth < 0) {
         return 1.0;
     } else {
