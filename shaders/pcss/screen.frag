@@ -31,11 +31,13 @@ vec2 spiralPattern(int k, float radius, int samples) {
 
 // return -1 if fully lit
 float getAvgBlockerDepth(vec3 coord, float lightDis) {
-    float searchRadius = lightRadius * (coord.z / lightDis) / 50;
+    // the further the point is away from the light,
+    // the larger the area it casts on the shadowMap
+    float searchRadius = lightRadius * lightDis / 5000;
     int count = 0;
     float sum = 0;
     // Spiral search pattern
-    int numSamples = 20;
+    int numSamples = 500;
     for (int k = 0; k < numSamples; ++k) {
         vec2 offset = spiralPattern(k, searchRadius, numSamples); // Generate offset for sample k
         float sampledDepth = texture(shadowSampler, coord.xy + offset).r;

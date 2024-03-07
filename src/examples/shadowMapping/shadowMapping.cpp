@@ -886,8 +886,8 @@ private:
     void updateUniformBuffer(uint32_t frame) {
         light.position = { 10.0f, 15.0f, 10.0f};
         light.zoom = 20.0f;
-        camera.position = { -1.0f, 3.0f, 5.0f };
-        camera.front = glm::normalize(glm::vec3(0.0f, 1.5f, 0.0f) - camera.position);
+        /*camera.position = { -1.0f, 3.0f, 5.0f };
+        camera.front = glm::normalize(glm::vec3(0.0f, 1.5f, 0.0f) - camera.position);*/
         UniformBufferObject ubo{};
         ubo.model = glm::mat4(1.0f);
         ubo.normalRot = glm::mat3(glm::transpose(glm::inverse(ubo.model)));
