@@ -2,14 +2,15 @@ cmake_minimum_required(VERSION 3.7 FATAL_ERROR)
 
 project(Alkaid)
 
-set(CMAKE_CXX_STANDARD 20)
-
-if (NOT CMAKE_VERSION VERSION_LESS 3.7.0)
-	message(STATUS "Using module to find Vulkan")
-	find_package(Vulkan)
+### Require out-of-source builds
+file(TO_CMAKE_PATH "${PROJECT_BINARY_DIR}/CMakeLists.txt" LOC_PATH)
+if(EXISTS "${LOC_PATH}")
+    message(FATAL_ERROR "You cannot build in a source directory (or any directory with a CMakeLists.txt file). Please make a build subdirectory. Feel free to remove CMakeCache.txt and CMakeFiles.")
 endif()
 
-# Set an empty list for subdirs to add source files
+set(CMAKE_CXX_STANDARD 20)
+
+find_package(Vulkan)
 
 include_directories(external)
 include_directories(external/vulkan/include)
