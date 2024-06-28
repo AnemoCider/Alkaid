@@ -10,7 +10,7 @@ endif()
 
 set(CMAKE_CXX_STANDARD 20)
 
-find_package(Vulkan)
+find_package(Vulkan REQUIRED)
 
 include_directories(external)
 include_directories(external/vulkan/include)
@@ -25,7 +25,7 @@ include_directories(external/imgui)
 include_directories(src/function)
 
 add_subdirectory(external/glfw)
-add_subdirectory(src/function)
+add_subdirectory(src/backend)
 
 set(SHADER_DIR "${CMAKE_CURRENT_SOURCE_DIR}/shaders")   
 
@@ -68,15 +68,15 @@ function(buildExample EXAMPLE_NAME)
     endforeach()
 
     target_sources(${EXAMPLE_NAME} PRIVATE ${SHADER_SOURCES} )
-    target_link_libraries(${EXAMPLE_NAME} base glfw)
+    target_link_libraries(${EXAMPLE_NAME} PRIVATE base glfw)
     source_group(Shaders FILES ${SHADER_SOURCES})
     message(STATUS "Runtime executables written to ${EXAMPLE_FOLDER}")
 endfunction(buildExample)
 
 buildExample(basicTriangle)
-buildExample(shading)
-buildExample(shadowMapping)
-buildExample(pcss)
-buildExample(cubeMap)
-buildExample(pbribl)
-buildExample(ssr)
+# buildExample(shading)
+# buildExample(shadowMapping)
+# buildExample(pcss)
+# buildExample(cubeMap)
+# buildExample(pbribl)
+# buildExample(ssr)

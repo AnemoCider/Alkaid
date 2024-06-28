@@ -1,7 +1,7 @@
 #pragma once
 
-#include "common/VulkanCommon.h"
-#include "initialization/VulkanDevice.h"
+#include "VulkanCommon.h"
+#include "VulkanDevice.h"
 
 namespace vki {
 	class Command {
