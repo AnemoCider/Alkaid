@@ -1,11 +1,11 @@
 #pragma once
 
-#include "common/VulkanCommon.h"
-#include "initialization/VulkanDevice.h"
-#include "initialization/VulkanInstance.h"
-#include "preparation/VulkanSwapChain.h"
-#include "utils/VulkanBuffer.h"
-#include "control/VulkanCamera.h"
+#include "VulkanCommon.h"
+#include "VulkanDevice.h"
+#include "VulkanInstance.h"
+#include "VulkanSwapChain.h"
+#include "VulkanBuffer.h"
+#include "VulkanCamera.h"
 
 class Base {
 

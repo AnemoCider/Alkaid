@@ -1,7 +1,7 @@
 #pragma once
 
 #include <vector>
-#include "initialization/VulkanInstance.h"
+#include "VulkanInstance.h"
 
 
 namespace vki {

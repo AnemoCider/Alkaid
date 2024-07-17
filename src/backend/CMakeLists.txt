@@ -1,5 +1,3 @@
-set(PUBLIC_HEADER_DIR include)
-
 set(PRIVATE_HEADERS
         
 )
@@ -40,9 +38,9 @@ file(GLOB IMGUI_SOURCES
     ${IMGUI_DIR}/backends/imgui_impl_vulkan.h
 )
 
-add_library(base STATIC ${BASE_SRC} ${FUNC_SRC} ${PUBLIC_HEADERS} ${PRIVATE_HEADERS} ${KTX_SOURCES} ${IMGUI_SOURCES})
+add_library(base STATIC ${SRCS} ${PUBLIC_HEADERS} ${PRIVATE_HEADERS} ${KTX_SOURCES} ${IMGUI_SOURCES})
 source_group("Header Files" FILES ${PUBLIC_HEADERS} ${PRIVATE_HEADERS})
 source_group("KTX sources" FILES ${KTX_SOURCES})
 source_group("ImGUI sources" FILES ${IMGUI_SOURCES})
 target_link_libraries(base PUBLIC ${Vulkan_LIBRARY})
-target_include_directories(base PUBLIC ${PUBLIC_HEADER_DIR})
+target_include_directories(base INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/src)

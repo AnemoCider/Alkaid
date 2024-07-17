@@ -1,4 +1,4 @@
-#include "control/VulkanCamera.h"
+#include "VulkanCamera.h"
 
 namespace vki {
 	Camera::Camera(float xPos, float yPos, float zPos) : viewMatrix(glm::mat4(1.0f)), projectionMatrix(glm::mat4(1.0f)),

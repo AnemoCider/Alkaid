@@ -3,7 +3,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/glm.hpp>
 #include <iostream>
-#include "common/VulkanCommon.h"
+#include "VulkanCommon.h"
 
 namespace vki {
     class Camera {

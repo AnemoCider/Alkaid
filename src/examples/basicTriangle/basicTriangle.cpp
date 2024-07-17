@@ -1,6 +1,5 @@
-#include "VulkanBase.h"
-#include "utils/VulkanBuffer.h"
-#include "asset/VulkanAsset.h"
+#include "vulkan/VulkanBuffer.h"
+#include "vulkan/VulkanAsset.h"
 
 #include <ktx.h>
 #include <ktxvulkan.h>

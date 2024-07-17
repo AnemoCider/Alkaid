@@ -1,8 +1,8 @@
 #pragma once
 
-#include "common/VulkanCommon.h"
-#include "initialization/VulkanInstance.h"
-#include "initialization/VulkanDevice.h"
+#include "VulkanCommon.h"
+#include "VulkanInstance.h"
+#include "VulkanDevice.h"
 
 namespace vki {
 	class SwapChain {

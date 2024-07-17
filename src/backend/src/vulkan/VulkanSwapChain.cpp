@@ -1,4 +1,4 @@
-#include "preparation/VulkanSwapChain.h"
+#include "VulkanSwapChain.h"
 
 using vki::SwapChain;
 

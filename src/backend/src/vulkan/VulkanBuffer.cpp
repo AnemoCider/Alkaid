@@ -1,4 +1,4 @@
-#include "utils/VulkanBuffer.h"
+#include "VulkanBuffer.h"
 
 vki::StagingBuffer::StagingBuffer(vki::Device& device, vk::DeviceSize sz) : 
 	Buffer(device, sz, vk::BufferUsageFlagBits::eTransferSrc,

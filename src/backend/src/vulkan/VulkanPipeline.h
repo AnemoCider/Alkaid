@@ -1,8 +1,8 @@
 #pragma once
 
-#include "common/VulkanCommon.h"
-#include "asset/VulkanAsset.h"
-#include "initialization/VulkanDevice.h"
+#include "VulkanCommon.h"
+#include "VulkanAsset.h"
+#include "VulkanDevice.h"
 #include <string>
 
 namespace vki {

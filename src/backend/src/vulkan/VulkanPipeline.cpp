@@ -1,5 +1,5 @@
-#include "rendering/VulkanPipeline.h"
-#include "asset/VulkanAsset.h"
+#include "VulkanPipeline.h"
+#include "VulkanAsset.h"
 
 void vki::Pipeline::setDevice(vki::Device* device) {
 	this->device = device;

@@ -1,4 +1,4 @@
-#include "preparation/VulkanCommand.h"
+#include "VulkanCommand.h"
 
 void vki::Command::setDevice(vki::Device* device) {
 	this->device = device;

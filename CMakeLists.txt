@@ -67,7 +67,7 @@ function(buildExample EXAMPLE_NAME)
         list(APPEND SPIRV_BINARY_FILES ${SHADER_SPIRV})
     endforeach()
 
-    target_sources(${EXAMPLE_NAME} PRIVATE ${SHADER_SOURCES} )
+    target_sources(${EXAMPLE_NAME} PRIVATE ${SHADER_SOURCES})
     target_link_libraries(${EXAMPLE_NAME} PRIVATE base glfw)
     source_group(Shaders FILES ${SHADER_SOURCES})
     message(STATUS "Runtime executables written to ${EXAMPLE_FOLDER}")
