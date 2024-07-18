@@ -3,7 +3,8 @@ set(PRIVATE_HEADERS
 )
 
 set(PUBLIC_HEADERS
-        
+        include/Engine.h
+        include/Application.h
 )
 
 set(BACKEND_SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/backend/src)
@@ -23,6 +24,7 @@ set(BACKEND_SRCS
 
 set(ENGINE_SRCS
         src/Engine.cpp
+        src/Application.cpp
 )
 
 # set(KTX_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../external/ktx)
