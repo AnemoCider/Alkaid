@@ -25,7 +25,7 @@ include_directories(external/imgui)
 include_directories(src/function)
 
 add_subdirectory(external/glfw)
-add_subdirectory(src/backend)
+add_subdirectory(src)
 
 set(SHADER_DIR "${CMAKE_CURRENT_SOURCE_DIR}/shaders")   
 
