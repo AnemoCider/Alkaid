@@ -1,4 +1,5 @@
 #include "Application.h"
+#include "VertexBuffer.h"
 
 #include <utility>
 #include <memory>
@@ -42,5 +43,8 @@ struct UniformBufferObject {
 };
 
 int main() {
+    VertexBuffer* triangleVertBuf =
+        VertexBuffer::Builder().build();
+
     Application::get().run();
 }

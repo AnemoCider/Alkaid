@@ -5,6 +5,7 @@ set(PRIVATE_HEADERS
 set(PUBLIC_HEADERS
         include/Engine.h
         include/Application.h
+        include/VertexBuffer.h
 )
 
 set(BACKEND_SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/backend/src)
@@ -25,6 +26,7 @@ set(BACKEND_SRCS
 set(ENGINE_SRCS
         src/Engine.cpp
         src/Application.cpp
+        src/VertexBuffer.cpp
 )
 
 # set(KTX_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../external/ktx)
