@@ -16,7 +16,7 @@ using namespace alkaid;
 
 struct Vertex {
     glm::vec3 pos;
-    glm::vec3 color;
+    glm::vec3 color;    
     glm::vec2 texCoord;
 };
 
@@ -46,6 +46,6 @@ struct UniformBufferObject {
 int main() {
     VertexBuffer* triangleVertBuf =
         VertexBuffer::Builder().build();
-
+    Engine* engine = Engine::Builder().build();
     Application::get().run();
 }

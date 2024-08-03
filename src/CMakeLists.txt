@@ -46,8 +46,8 @@ set(ENGINE_MODULE_INTERFACES
 add_library(base STATIC) #  ${PUBLIC_HEADERS} ${PRIVATE_HEADERS} ${KTX_SOURCES} ${IMGUI_SOURCES})
 
 target_sources(base
-    PRIVATE
-        FILE_SET cxx_modules TYPE CXX_MODULES FILES
+    PUBLIC
+        FILE_SET CXX_MODULES FILES
         ${ENGINE_MODULE_INTERFACES})
 
 target_sources(base
@@ -64,3 +64,24 @@ source_group("Engine sources" FILES ${ENGINE_SRCS})
 target_link_libraries(base PUBLIC ${Vulkan_LIBRARY})
 target_include_directories(base PRIVATE ${BACKEND_SRC_DIR})
 target_include_directories(base PUBLIC include)
+
+# install(
+#         DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/base.dir/
+#         DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/ifc
+#         FILES_MATCHING PATTERN "*.ifc"
+#     )
+
+# Create a list of .ifc files to be copied
+file(GLOB IFC_FILES "${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/base.dir/*.ifc")
+
+# Copy .ifc files for, e.g., intellisense usage
+foreach(ifc_file IN LISTS IFC_FILES)
+    get_filename_component(ifc_filename ${ifc_file} NAME)
+    add_custom_command(
+        TARGET base POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy
+                ${ifc_file}
+                ${CMAKE_BINARY_DIR}/ifc/${ifc_filename}
+        COMMENT "Copying ${ifc_filename} after build."
+    )
+endforeach()

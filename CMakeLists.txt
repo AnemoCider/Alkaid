@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.7 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.28 FATAL_ERROR)
 
 project(Alkaid)
 
@@ -37,6 +37,11 @@ elseif(APPLE)
     set(GLSL_COMPILER "${SHADER_DIR}/glslc_macos")
 endif()
 
+if (MSVC)
+    add_compile_options(/ifcSearchDir ${CMAKE_BINARY_DIR}/ifc)
+    # message(STATUS "IFC search directory:  ${CMAKE_BINARY_DIR}/ifc")
+endif()
+
 function(buildExample EXAMPLE_NAME)
     set(EXAMPLE_FOLDER ${CMAKE_CURRENT_SOURCE_DIR}/src/examples/${EXAMPLE_NAME}/)
     set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${EXAMPLE_FOLDER})
@@ -71,6 +76,7 @@ function(buildExample EXAMPLE_NAME)
     target_link_libraries(${EXAMPLE_NAME} PRIVATE base glfw)
     source_group(Shaders FILES ${SHADER_SOURCES})
     message(STATUS "Runtime executables written to ${EXAMPLE_FOLDER}")
+
 endfunction(buildExample)
 
 buildExample(basicTriangle)

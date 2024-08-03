@@ -1,6 +1,7 @@
 export module application;
 
 namespace alkaid {
+    
     export class Application {
     public:
         static Application& get();
