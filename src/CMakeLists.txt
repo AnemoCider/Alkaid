@@ -2,11 +2,11 @@ set(PRIVATE_HEADERS
         
 )
 
-set(PUBLIC_HEADERS
-        include/Engine.h
-        include/Application.h
-        include/VertexBuffer.h
-)
+# set(PUBLIC_HEADERS
+#         include/Engine.h
+#         include/Application.h
+#         include/VertexBuffer.h
+# )
 
 set(BACKEND_SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/backend/src)
 
@@ -49,7 +49,7 @@ set(ENGINE_SRCS
 # )
 
 add_library(base STATIC ${BACKEND_SRCS} ${ENGINE_SRCS} ${PUBLIC_HEADERS} ${PRIVATE_HEADERS}) # ${KTX_SOURCES} ${IMGUI_SOURCES})
-source_group("Header Files" FILES ${PUBLIC_HEADERS} ${PRIVATE_HEADERS})
+# source_group("Header Files" FILES ${PUBLIC_HEADERS} ${PRIVATE_HEADERS})
 source_group("Backend sources" FILES ${BACKEND_SRCS})
 source_group("Engine sources" FILES ${ENGINE_SRCS})
 # source_group("KTX sources" FILES ${KTX_SOURCES})
