@@ -1,14 +1,5 @@
-set(PRIVATE_HEADERS
-        
-)
-
-# set(PUBLIC_HEADERS
-#         include/Engine.h
-#         include/Application.h
-#         include/VertexBuffer.h
-# )
-
 set(BACKEND_SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/backend/src)
+set(ENGINE_SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
 set(BACKEND_SRCS
         ${BACKEND_SRC_DIR}/vulkan/VulkanAsset.cpp
@@ -24,9 +15,13 @@ set(BACKEND_SRCS
 )
 
 set(ENGINE_SRCS
-        src/Engine.cpp
-        src/Application.cpp
-        src/VertexBuffer.cpp
+        ${ENGINE_SRC_DIR}/Engine.cpp
+)
+
+set(ENGINE_MODULE_INTERFACES
+        ${ENGINE_SRC_DIR}/Engine.cppm
+        ${ENGINE_SRC_DIR}/Application.cppm
+        ${ENGINE_SRC_DIR}/VertexBuffer.cppm
 )
 
 # set(KTX_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../external/ktx)
@@ -48,8 +43,20 @@ set(ENGINE_SRCS
 #     ${IMGUI_DIR}/backends/imgui_impl_vulkan.h
 # )
 
-add_library(base STATIC ${BACKEND_SRCS} ${ENGINE_SRCS} ${PUBLIC_HEADERS} ${PRIVATE_HEADERS}) # ${KTX_SOURCES} ${IMGUI_SOURCES})
+add_library(base STATIC) #  ${PUBLIC_HEADERS} ${PRIVATE_HEADERS} ${KTX_SOURCES} ${IMGUI_SOURCES})
+
+target_sources(base
+    PRIVATE
+        FILE_SET cxx_modules TYPE CXX_MODULES FILES
+        ${ENGINE_MODULE_INTERFACES})
+
+target_sources(base
+    PRIVATE
+        ${BACKEND_SRCS} ${ENGINE_SRCS}
+)
+
 # source_group("Header Files" FILES ${PUBLIC_HEADERS} ${PRIVATE_HEADERS})
+source_group("Engine interfaces" FILES ${ENGINE_MODULE_INTERFACES})
 source_group("Backend sources" FILES ${BACKEND_SRCS})
 source_group("Engine sources" FILES ${ENGINE_SRCS})
 # source_group("KTX sources" FILES ${KTX_SOURCES})

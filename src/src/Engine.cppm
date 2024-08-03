@@ -1,9 +1,8 @@
-#pragma once
+export module engine;
 
 namespace alkaid {
 
-
-class Engine {
+export class Engine {
 public:
 	class Builder {
 	public:
@@ -18,6 +17,5 @@ public:
 private:
 	static Engine* create(const Builder& builder);
 };
-
 
 }

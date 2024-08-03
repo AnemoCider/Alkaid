@@ -3,25 +3,9 @@ module;
 
 #include <thread>
 
-export module engine;
+module engine;
 
-export namespace alkaid {
-
-class Engine {
-public:
-	class Builder {
-	public:
-		Builder() = default;
-		Engine* build();
-	};
-
-	Engine(const Builder& builder);
-
-	int loop();
-
-private:
-	static Engine* create(const Builder& builder);
-};
+namespace alkaid {
 
 Engine* Engine::Builder::build() {
 	return Engine::create(*this);

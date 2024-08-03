@@ -1,8 +1,8 @@
-#pragma once
+export module vertexbuffer;
 
 namespace alkaid {
 
-class VertexBuffer {
+export class VertexBuffer {
 
 public:
     class Builder {
@@ -16,5 +16,12 @@ public:
 
 };
 
+VertexBuffer::VertexBuffer(const Builder& builder) {
+    
 }
 
+VertexBuffer* VertexBuffer::Builder::build() {
+    return new VertexBuffer(*this);
+}
+
+}

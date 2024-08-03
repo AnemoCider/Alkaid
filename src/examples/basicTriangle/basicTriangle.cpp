@@ -1,6 +1,3 @@
-#include "Application.h"
-#include "VertexBuffer.h"
-
 #include <utility>
 #include <memory>
 #include <iostream>
@@ -12,6 +9,8 @@
 #include <chrono>
 
 import engine;
+import application;
+import vertexbuffer;
 
 using namespace alkaid;
 
