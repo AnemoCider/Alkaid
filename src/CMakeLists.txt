@@ -2,16 +2,16 @@ set(BACKEND_SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/backend/src)
 set(ENGINE_SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
 set(BACKEND_SRCS
-        ${BACKEND_SRC_DIR}/vulkan/VulkanAsset.cpp
+        # ${BACKEND_SRC_DIR}/vulkan/VulkanAsset.cpp
         # src/vulkan/VulkanBase.cpp
-        ${BACKEND_SRC_DIR}/vulkan/VulkanBuffer.cpp
-        ${BACKEND_SRC_DIR}/vulkan/VulkanCommand.cpp
-        ${BACKEND_SRC_DIR}/vulkan/VulkanCamera.cpp
-        ${BACKEND_SRC_DIR}/vulkan/VulkanDevice.cpp
-        ${BACKEND_SRC_DIR}/vulkan/VulkanInstance.cpp
-        ${BACKEND_SRC_DIR}/vulkan/VulkanPipeline.cpp
-        ${BACKEND_SRC_DIR}/vulkan/VulkanSwapChain.cpp
-        ${BACKEND_SRC_DIR}/vulkan/VulkanUtils.cpp
+        # ${BACKEND_SRC_DIR}/vulkan/VulkanBuffer.cpp
+        # ${BACKEND_SRC_DIR}/vulkan/VulkanCommand.cpp
+        # ${BACKEND_SRC_DIR}/vulkan/VulkanCamera.cpp
+        # ${BACKEND_SRC_DIR}/vulkan/VulkanDevice.cpp
+        ${BACKEND_SRC_DIR}/vulkan/VulkanDriver.cpp
+        # ${BACKEND_SRC_DIR}/vulkan/VulkanInstance.cpp
+        # ${BACKEND_SRC_DIR}/vulkan/VulkanPipeline.cpp
+        # ${BACKEND_SRC_DIR}/vulkan/VulkanSwapChain.cpp
 )
 
 set(ENGINE_SRCS

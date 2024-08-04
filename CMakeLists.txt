@@ -38,7 +38,7 @@ elseif(APPLE)
 endif()
 
 if (MSVC)
-    add_compile_options(/ifcSearchDir ${CMAKE_BINARY_DIR}/ifc)
+    # add_compile_options(/ifcSearchDir ${CMAKE_BINARY_DIR}/ifc)
     # message(STATUS "IFC search directory:  ${CMAKE_BINARY_DIR}/ifc")
 endif()
 
@@ -76,6 +76,8 @@ function(buildExample EXAMPLE_NAME)
     target_link_libraries(${EXAMPLE_NAME} PRIVATE base glfw)
     source_group(Shaders FILES ${SHADER_SOURCES})
     message(STATUS "Runtime executables written to ${EXAMPLE_FOLDER}")
+
+    target_compile_definitions(${EXAMPLE_NAME} PRIVATE APP_NAME="${EXAMPLE_NAME}")
 
 endfunction(buildExample)
 

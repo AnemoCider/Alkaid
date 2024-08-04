@@ -1,7 +1,9 @@
 module;
-#include "vulkan/VulkanInstance.h"
+
+#include "vulkan/VulkanDriver.h"
 
 #include <thread>
+#include <iostream>
 
 module engine;
 
@@ -12,15 +14,27 @@ Engine* Engine::Builder::build() {
 }
 
 Engine::Engine(const Builder& builder) {
-
+    
 }
 
 Engine* Engine::create(const Builder& builder) {
-	return new Engine(builder);
+	Engine* instance = new Engine(builder);
+
+    instance->mDriverThread = std::thread(&Engine::loop, instance);
+    instance->mDriverSemaphore.acquire();
+
+    return instance;
 }
 
 int Engine::loop() {
-	return 0;
+	mDriver = vki::Driver::create();
+    mDriverSemaphore.release();
+    return 0;
+}
+
+Engine::~Engine() noexcept {
+    mDriverThread.join();
+    delete mDriver;
 }
 
 }

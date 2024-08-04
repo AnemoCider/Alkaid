@@ -48,4 +48,11 @@ int main() {
         VertexBuffer::Builder().build();
     Engine* engine = Engine::Builder().build();
     Application::get().run();
+
+    auto clear = [&]() {
+        delete triangleVertBuf;
+        delete engine;
+    };
+
+    clear();
 }

@@ -1,3 +1,10 @@
+module;
+
+#include "vulkan/VulkanDriver.h"
+
+#include <thread>
+#include <semaphore>
+
 export module engine;
 
 namespace alkaid {
@@ -12,10 +19,16 @@ public:
 
 	Engine(const Builder& builder);
 
-	int loop();
+    ~Engine() noexcept;
 
 private:
+    std::thread mDriverThread;
+    std::binary_semaphore mDriverSemaphore{0};
+
+    vki::Driver* mDriver = nullptr;
+
 	static Engine* create(const Builder& builder);
+    int loop();
 };
 
 }
